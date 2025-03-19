@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import ConversationLog, { Message } from './ConversationLog';
@@ -9,9 +10,14 @@ import VoiceControls from './VoiceControls';
 interface ConversationInterfaceProps {
   apiKey: string;
   agentId: string;
+  onLogout?: () => void;
 }
 
-const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, agentId }) => {
+const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ 
+  apiKey, 
+  agentId,
+  onLogout 
+}) => {
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [transcript, setTranscript] = useState("");
@@ -279,6 +285,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
           isGeneratingAudio={isGenerating} 
           isPlayingAudio={isPlaying}
           onToggleAudio={generateSpeech}
+          onLogout={onLogout}
           className="h-full" 
         />
       </div>

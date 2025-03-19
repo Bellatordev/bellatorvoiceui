@@ -31,12 +31,27 @@ const VoiceAgent: React.FC = () => {
     });
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setApiKey('');
+    setAgentId('');
+    
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out",
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       {!isLoggedIn ? (
         <LoginScreen onLogin={handleLogin} />
       ) : (
-        <ConversationInterface apiKey={apiKey} agentId={agentId} />
+        <ConversationInterface 
+          apiKey={apiKey} 
+          agentId={agentId} 
+          onLogout={handleLogout}
+        />
       )}
     </div>
   );

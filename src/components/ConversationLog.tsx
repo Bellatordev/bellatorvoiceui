@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { DownloadIcon, CopyIcon } from 'lucide-react';
+import { DownloadIcon, LogOut } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
 
 export type Message = {
@@ -16,6 +16,7 @@ type ConversationLogProps = {
   isPlayingAudio?: boolean;
   onToggleAudio?: (text: string) => void;
   className?: string;
+  onLogout?: () => void;
 };
 
 const ConversationLog: React.FC<ConversationLogProps> = ({ 
@@ -23,7 +24,8 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   isGeneratingAudio = false, 
   isPlayingAudio = false,
   onToggleAudio,
-  className = ''
+  className = '',
+  onLogout
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,13 +39,6 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
 
   const formatTimestamp = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const copyConversation = () => {
-    const text = messages
-      .map(msg => `${msg.sender === 'user' ? 'You' : 'Assistant'}: ${msg.text}`)
-      .join('\n\n');
-    navigator.clipboard.writeText(text);
   };
 
   const downloadConversation = () => {
@@ -84,13 +79,15 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
         <h2 className="text-lg font-semibold text-gray-800">Conversation</h2>
         
         <div className="flex space-x-2">
-          <button 
-            onClick={copyConversation}
-            className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 transition-colors focus-ring"
-            aria-label="Copy conversation"
-          >
-            <CopyIcon className="w-4 h-4" />
-          </button>
+          {onLogout && (
+            <button 
+              onClick={onLogout}
+              className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 transition-colors focus-ring"
+              aria-label="Log out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
           <button 
             onClick={downloadConversation}
             className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 transition-colors focus-ring"
