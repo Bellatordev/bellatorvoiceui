@@ -1,3 +1,4 @@
+
 // Service to handle Eleven Labs TTS API integration
 
 interface TTSOptions {
@@ -118,6 +119,10 @@ class ElevenLabsService {
       const audioUrl = URL.createObjectURL(audioBlob);
       
       if (this.audioElement) {
+        // Ensure we're not playing anything before starting
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
+        
         this.audioElement.src = audioUrl;
         this.audioElement.play().catch(error => {
           console.error('Error playing audio:', error);
@@ -137,10 +142,11 @@ class ElevenLabsService {
   }
 
   public stopAudio(): void {
-    if (this.audioElement && !this.audioElement.paused) {
+    if (this.audioElement) {
       console.log('Stopping audio playback');
       this.audioElement.pause();
       this.audioElement.currentTime = 0;
+      this.updateState({ isPlaying: false });
     }
   }
 

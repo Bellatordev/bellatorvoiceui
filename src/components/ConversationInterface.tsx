@@ -41,23 +41,24 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     voiceId: agentId,
   });
 
-  // Auto-start microphone when audio playback ends
-  useEffect(() => {
-    if (autoStartMic && !isGenerating && !isPlaying && !isListening) {
-      console.log('Auto-starting microphone after audio playback');
-      startListening();
-    }
-  }, [isPlaying, isGenerating]);
-
-  // Stop listening when audio is playing or generating to avoid feedback loop
+  // Completely stop microphone when audio is playing or generating
   useEffect(() => {
     if (isGenerating || isPlaying) {
-      if (isListening && recognitionRef.current) {
-        console.log('Pausing microphone while audio is playing to avoid feedback');
+      if (recognitionRef.current) {
+        console.log('Stopping microphone completely while audio is active');
         recognitionRef.current.stop();
+        setIsListening(false);
       }
+    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying) {
+      // Only auto-start mic if audio is not playing and we're not already listening
+      console.log('Auto-starting microphone after audio playback complete');
+      const timer = setTimeout(() => {
+        startListening();
+      }, 500); // Add a small delay to ensure audio is fully stopped
+      
+      return () => clearTimeout(timer);
     }
-  }, [isGenerating, isPlaying, isListening]);
+  }, [isGenerating, isPlaying, isListening, autoStartMic]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -90,6 +91,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           if (result.isFinal) {
             processUserInput(text);
             setTranscript("");
+            
+            // Important: Stop listening after processing input to prevent feedback
+            if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
           }
         };
         
@@ -179,6 +185,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const processUserInput = (text: string) => {
     if (!text.trim()) return;
     
+    // Stop listening immediately to avoid picking up the AI's response
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+    }
+    
     // Add user message
     const userMessage: Message = {
       id: uuidv4(),
@@ -203,14 +214,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       // Generate speech for assistant response if not muted
       if (!isMuted) {
+        // When we're about to generate speech, ensure mic is off
+        if (recognitionRef.current && isListening) {
+          recognitionRef.current.stop();
+        }
         generateSpeech(assistantResponse);
+      } else if (autoStartMic) {
+        // If muted but auto-start is on, start listening after a delay
+        setTimeout(startListening, 500);
       }
     }, 1000);
   };
 
   const startListening = async () => {
+    // Don't start if audio is playing or being generated
     if (isPlaying || isGenerating) {
-      stopAudio();
+      console.log('Cannot start listening: audio is active');
+      return;
     }
     
     if (isListening) return;
@@ -229,8 +249,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     try {
       recognitionRef.current.start();
-      setIsListening(true);
-      console.log('Microphone activated automatically');
+      console.log('Microphone activated');
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       toast({
@@ -242,16 +261,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const toggleListening = async () => {
-    // If audio is playing or generating, stop it first to avoid feedback
+    // If audio is playing or generating, stop it first
     if (isPlaying || isGenerating) {
       stopAudio();
+      await new Promise(resolve => setTimeout(resolve, 300)); // Short delay to ensure audio is stopped
     }
     
     if (isListening) {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      setIsListening(false);
     } else {
       await startListening();
     }
