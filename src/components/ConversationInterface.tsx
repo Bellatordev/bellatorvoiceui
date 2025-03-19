@@ -25,7 +25,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
     error 
   } = useElevenLabs({
     apiKey,
-    voiceId: agentId, // Using the agent ID as the voice ID
+    voiceId: agentId,
   });
 
   // Initialize speech recognition
@@ -97,6 +97,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
         description: error,
         variant: "destructive"
       });
+      
+      // Add a system message about the error
+      const errorMessage: Message = {
+        id: uuidv4(),
+        text: `I'm having trouble with my voice. Please check if the Voice ID is correct. Error: ${error}`,
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     }
   }, [error]);
 

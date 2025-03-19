@@ -60,12 +60,15 @@ class ElevenLabsService {
 
   public async generateSpeech({ text, voiceId, apiKey, modelId = "eleven_multilingual_v2" }: TTSOptions): Promise<void> {
     if (!text || !voiceId || !apiKey) {
-      this.updateState({ error: 'Missing required parameters' });
+      const errorMsg = 'Missing required parameters for speech generation';
+      console.error(errorMsg);
+      this.updateState({ error: errorMsg });
       return;
     }
 
     try {
       this.updateState({ isGenerating: true, error: null });
+      console.log(`Attempting to generate speech with voice ID: ${voiceId}`);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
@@ -85,8 +88,17 @@ class ElevenLabsService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.detail || `Error: ${response.status}`);
+        let errorMessage = `Error ${response.status}: `;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage += errorData.detail?.message || JSON.stringify(errorData);
+          console.error('Response error data:', errorData);
+        } catch (parseError) {
+          errorMessage += await response.text() || 'Unknown error';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const audioBlob = await response.blob();
@@ -99,10 +111,11 @@ class ElevenLabsService {
       
       this.updateState({ isGenerating: false });
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Error generating speech';
       console.error('Error generating speech:', error);
       this.updateState({ 
         isGenerating: false, 
-        error: error instanceof Error ? error.message : 'Error generating speech' 
+        error: errorMsg
       });
     }
   }
