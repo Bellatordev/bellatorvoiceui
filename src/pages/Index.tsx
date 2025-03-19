@@ -15,7 +15,7 @@ const Index = () => {
         </main>
         
         <footer className="mt-8 text-center text-sm text-gray-500">
-          <p>Designed with minimalist principles. Inspired by modern voice interfaces.</p>
+          <p>Powered by Eleven Labs Voice AI</p>
         </footer>
       </div>
     </div>
