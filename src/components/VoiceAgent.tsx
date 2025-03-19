@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from '@/components/ui/use-toast';
 import VoiceControls from './VoiceControls';
 import ConversationLog, { Message } from './ConversationLog';
 import Settings, { VoiceOption } from './Settings';
@@ -51,6 +52,10 @@ const VoiceAgent: React.FC = () => {
   const [volume, setVolume] = useState(0.8);
   const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [transcript, setTranscript] = useState("");
+  
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const hasRequestedMicPermission = useRef(false);
 
   // Add a welcome message when the component mounts
   useEffect(() => {
@@ -65,37 +70,150 @@ const VoiceAgent: React.FC = () => {
     ]);
   }, []);
 
-  const handleListen = () => {
-    setIsListening(true);
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = () => {
+          console.log('Speech recognition started');
+          setIsListening(true);
+        };
+        
+        recognition.onend = () => {
+          console.log('Speech recognition ended');
+          setIsListening(false);
+        };
+        
+        recognition.onresult = (event) => {
+          const last = event.results.length - 1;
+          const result = event.results[last];
+          const text = result[0].transcript;
+          setTranscript(text);
+          
+          // If this is a final result, process it
+          if (result.isFinal) {
+            processTranscript(text);
+            setTranscript("");
+          }
+        };
+        
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+          toast({
+            title: "Microphone Error",
+            description: `Error: ${event.error}. Please check your microphone permissions.`,
+            variant: "destructive"
+          });
+        };
+        
+        recognitionRef.current = recognition;
+      } else {
+        toast({
+          title: "Browser Not Supported",
+          description: "Speech recognition is not supported in this browser. Please try Chrome, Edge, or Safari.",
+          variant: "destructive"
+        });
+      }
+    }
     
-    // Simulating user speech recognition
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+
+  const requestMicrophonePermission = async () => {
+    if (hasRequestedMicPermission.current) return true;
+    
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      hasRequestedMicPermission.current = true;
+      return true;
+    } catch (err) {
+      console.error('Microphone permission denied:', err);
+      toast({
+        title: "Microphone Access Denied",
+        description: "Please allow microphone access to use voice features.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const processTranscript = (text: string) => {
+    if (!text.trim()) return;
+    
+    // Add user message
+    const userMessage: Message = {
+      id: uuidv4(),
+      text: text,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Simulate assistant response
     setTimeout(() => {
-      const userMessage: Message = {
+      const randomResponse = EXAMPLE_RESPONSES[Math.floor(Math.random() * EXAMPLE_RESPONSES.length)];
+      const assistantMessage: Message = {
         id: uuidv4(),
-        text: "Can you tell me more about this topic?",
-        sender: 'user',
+        text: randomResponse,
+        sender: 'assistant',
         timestamp: new Date(),
       };
       
-      setMessages(prev => [...prev, userMessage]);
-      
-      // Simulate processing time
-      setTimeout(() => {
-        const randomResponse = EXAMPLE_RESPONSES[Math.floor(Math.random() * EXAMPLE_RESPONSES.length)];
-        const assistantMessage: Message = {
-          id: uuidv4(),
-          text: randomResponse,
-          sender: 'assistant',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsListening(false);
-      }, 1000);
-    }, 2000);
+      setMessages(prev => [...prev, assistantMessage]);
+    }, 1000);
+  };
+
+  const handleListen = async () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "Speech Recognition Unavailable",
+        description: "Your browser doesn't support speech recognition.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const hasPermission = await requestMicrophonePermission();
+    if (!hasPermission) return;
+    
+    try {
+      recognitionRef.current.start();
+      setIsListening(true);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        toast({
+          title: "Microphone Access Denied",
+          description: "Please allow microphone access to use voice features.",
+          variant: "destructive"
+        });
+      } else {
+        console.error('Error starting speech recognition:', error);
+        toast({
+          title: "Error",
+          description: "Failed to start voice recognition. Please try again.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handleStopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
     setIsListening(false);
   };
 
@@ -128,6 +246,12 @@ const VoiceAgent: React.FC = () => {
       <div className="flex-1 agent-card mb-6 overflow-hidden">
         <ConversationLog messages={messages} className="h-full" />
       </div>
+      
+      {transcript && (
+        <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
+          Listening: {transcript}
+        </div>
+      )}
       
       <div className="agent-card py-8">
         <VoiceControls
