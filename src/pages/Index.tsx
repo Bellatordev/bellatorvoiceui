@@ -15,7 +15,7 @@ const Index = () => {
         </main>
         
         <footer className="mt-8 text-center text-sm text-gray-500">
-          <p>Powered by Eleven Labs Voice AI</p>
+          {/* Footer content removed */}
         </footer>
       </div>
     </div>
