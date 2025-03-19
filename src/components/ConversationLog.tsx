@@ -63,7 +63,14 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   };
 
   // Get the last assistant message for audio controls
-  const lastAssistantMessage = messages.findLast(msg => msg.sender === 'assistant');
+  // Using a loop instead of findLast for compatibility
+  let lastAssistantMessage: Message | undefined = undefined;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].sender === 'assistant') {
+      lastAssistantMessage = messages[i];
+      break;
+    }
+  }
   
   const handleToggleAudio = () => {
     if (onToggleAudio && lastAssistantMessage) {
@@ -120,7 +127,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                     </span>
                     
                     {message.sender === 'assistant' && 
-                     message.id === lastAssistantMessage?.id && 
+                     lastAssistantMessage && message.id === lastAssistantMessage.id && 
                      onToggleAudio && (
                       <AudioVisualizer 
                         isPlaying={isPlayingAudio}

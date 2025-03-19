@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 import VoiceControls from './VoiceControls';
 import ConversationLog, { Message } from './ConversationLog';
 import Settings, { VoiceOption } from './Settings';
@@ -100,7 +101,7 @@ const VoiceAgent: React.FC = () => {
   // Add a welcome message when the component mounts
   useEffect(() => {
     const randomWelcome = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
-    const welcomeMessage = {
+    const welcomeMessage: Message = {
       id: uuidv4(),
       text: randomWelcome,
       sender: 'assistant',
