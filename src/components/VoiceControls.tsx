@@ -35,7 +35,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           aria-label={isListening ? "Stop listening" : "Start listening"}
         >
           {isListening ? (
-            <MicOff className="w-8 h-8" />
+            <Mic className="w-8 h-8 animate-pulse" />
           ) : (
             <Mic className="w-8 h-8" />
           )}
