@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import ConversationLog, { Message } from './ConversationLog';
@@ -20,6 +19,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
   const [textInput, setTextInput] = useState("");
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.8);
+  const [autoStartMic, setAutoStartMic] = useState(true);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
@@ -34,6 +34,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
     apiKey,
     voiceId: agentId,
   });
+
+  // Auto-start microphone when audio playback ends
+  useEffect(() => {
+    if (autoStartMic && !isGenerating && !isPlaying && !isListening) {
+      console.log('Auto-starting microphone after audio playback');
+      startListening();
+    }
+  }, [isPlaying, isGenerating]);
 
   // Stop listening when audio is playing or generating to avoid feedback loop
   useEffect(() => {
@@ -194,6 +202,39 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
     }, 1000);
   };
 
+  const startListening = async () => {
+    if (isPlaying || isGenerating) {
+      stopAudio();
+    }
+    
+    if (isListening) return;
+    
+    if (!recognitionRef.current) {
+      toast({
+        title: "Speech Recognition Unavailable",
+        description: "Your browser doesn't support speech recognition.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const hasPermission = await requestMicrophonePermission();
+    if (!hasPermission) return;
+    
+    try {
+      recognitionRef.current.start();
+      setIsListening(true);
+      console.log('Microphone activated automatically');
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start voice recognition. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const toggleListening = async () => {
     // If audio is playing or generating, stop it first to avoid feedback
     if (isPlaying || isGenerating) {
@@ -206,29 +247,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
       }
       setIsListening(false);
     } else {
-      if (!recognitionRef.current) {
-        toast({
-          title: "Speech Recognition Unavailable",
-          description: "Your browser doesn't support speech recognition.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const hasPermission = await requestMicrophonePermission();
-      if (!hasPermission) return;
-      
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        toast({
-          title: "Error",
-          description: "Failed to start voice recognition. Please try again.",
-          variant: "destructive"
-        });
-      }
+      await startListening();
     }
   };
 

@@ -1,4 +1,3 @@
-
 // Service to handle Eleven Labs TTS API integration
 
 interface TTSOptions {
@@ -33,6 +32,7 @@ class ElevenLabsService {
     this.audioElement.addEventListener('ended', () => {
       console.log('Audio finished playing');
       this.updateState({ isPlaying: false });
+      // Notify audio has ended - listeners will handle auto-start microphone
     });
     this.audioElement.addEventListener('pause', () => {
       console.log('Audio paused');
