@@ -29,6 +29,21 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   isMicMuted,
   onMicMuteToggle,
 }) => {
+  // Function to handle the tap-to-speak button click
+  const handleTapToSpeakClick = () => {
+    // If microphone is muted, unmute it first
+    if (isMicMuted) {
+      onMicMuteToggle();
+    }
+    
+    // Then toggle listening state
+    if (isListening) {
+      onStopListening();
+    } else {
+      onListen();
+    }
+  };
+  
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
       <div className="relative w-64 h-64 flex items-center justify-center">
@@ -66,7 +81,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         {/* Center white pill with status text */}
         <div 
           className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
-          onClick={isListening ? onStopListening : onListen}
+          onClick={handleTapToSpeakClick}
         >
           <span className="text-gray-800 font-medium">
             {isListening ? "Listening" : "Tap to speak"}
