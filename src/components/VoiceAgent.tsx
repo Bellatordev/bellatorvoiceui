@@ -5,26 +5,28 @@ import { toast } from '@/components/ui/use-toast';
 import VoiceControls from './VoiceControls';
 import ConversationLog, { Message } from './ConversationLog';
 import Settings, { VoiceOption } from './Settings';
+import ApiKeyForm from './ApiKeyForm';
+import useElevenLabs from '@/hooks/useElevenLabs';
 
-// Mock voice options
+// Mock voice options with Eleven Labs voice IDs
 const VOICE_OPTIONS: VoiceOption[] = [
   { 
-    id: 'voice-1', 
+    id: '9BWtsMINqrJLrRacOk9x', 
     name: 'Aria', 
     description: 'Warm and professional female voice' 
   },
   { 
-    id: 'voice-2', 
+    id: 'CwhRBWXzGAHq8TQ4Fs17', 
     name: 'Roger', 
     description: 'Clear and authoritative male voice' 
   },
   { 
-    id: 'voice-3', 
+    id: 'EXAVITQu4vr4xnSDxMaL', 
     name: 'Sarah', 
     description: 'Friendly and approachable female voice' 
   },
   { 
-    id: 'voice-4', 
+    id: 'JBFqnCBsd6RMkjVDRZzb', 
     name: 'George', 
     description: 'Deep and calm male voice' 
   },
@@ -46,6 +48,8 @@ const EXAMPLE_RESPONSES = [
   "Great question! Here's what I know about that topic.",
 ];
 
+const LOCAL_STORAGE_KEY = 'elevenlabs-api-key';
+
 const VoiceAgent: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -53,21 +57,62 @@ const VoiceAgent: React.FC = () => {
   const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
   const [messages, setMessages] = useState<Message[]>([]);
   const [transcript, setTranscript] = useState("");
+  const [apiKey, setApiKey] = useState(() => {
+    return typeof window !== 'undefined' 
+      ? localStorage.getItem(LOCAL_STORAGE_KEY) || ''
+      : '';
+  });
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [userInput, setUserInput] = useState("");
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
+  const textInputRef = useRef<HTMLInputElement>(null);
+
+  const { 
+    generateSpeech, 
+    isGenerating, 
+    isPlaying, 
+    error 
+  } = useElevenLabs({
+    apiKey,
+    voiceId: selectedVoice,
+  });
+
+  // Handle TTS errors
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Speech Generation Error",
+        description: error,
+        variant: "destructive"
+      });
+    }
+  }, [error]);
+
+  // Save API key to localStorage
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, apiKey);
+    }
+  }, [apiKey]);
 
   // Add a welcome message when the component mounts
   useEffect(() => {
     const randomWelcome = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
-    setMessages([
-      {
-        id: uuidv4(),
-        text: randomWelcome,
-        sender: 'assistant',
-        timestamp: new Date(),
-      },
-    ]);
+    const welcomeMessage = {
+      id: uuidv4(),
+      text: randomWelcome,
+      sender: 'assistant',
+      timestamp: new Date(),
+    };
+    
+    setMessages([welcomeMessage]);
+    
+    // Generate speech for welcome message if API key exists
+    if (apiKey) {
+      generateSpeech(randomWelcome);
+    }
   }, []);
 
   // Initialize speech recognition
@@ -99,7 +144,7 @@ const VoiceAgent: React.FC = () => {
           
           // If this is a final result, process it
           if (result.isFinal) {
-            processTranscript(text);
+            processUserInput(text);
             setTranscript("");
           }
         };
@@ -145,11 +190,13 @@ const VoiceAgent: React.FC = () => {
         description: "Please allow microphone access to use voice features.",
         variant: "destructive"
       });
+      // If mic permission denied, show text input
+      setShowTextInput(true);
       return false;
     }
   };
 
-  const processTranscript = (text: string) => {
+  const processUserInput = (text: string) => {
     if (!text.trim()) return;
     
     // Add user message
@@ -173,6 +220,11 @@ const VoiceAgent: React.FC = () => {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Generate speech if API key exists
+      if (apiKey) {
+        generateSpeech(randomResponse);
+      }
     }, 1000);
   };
 
@@ -183,6 +235,8 @@ const VoiceAgent: React.FC = () => {
         description: "Your browser doesn't support speech recognition.",
         variant: "destructive"
       });
+      // If speech recognition unavailable, show text input
+      setShowTextInput(true);
       return;
     }
     
@@ -199,6 +253,8 @@ const VoiceAgent: React.FC = () => {
           description: "Please allow microphone access to use voice features.",
           variant: "destructive"
         });
+        // If mic permission denied, show text input
+        setShowTextInput(true);
       } else {
         console.error('Error starting speech recognition:', error);
         toast({
@@ -232,6 +288,27 @@ const VoiceAgent: React.FC = () => {
     setSelectedVoice(voiceId);
   };
 
+  const handleSaveApiKey = (key: string) => {
+    setApiKey(key);
+    toast({
+      title: "API Key Saved",
+      description: "Your Eleven Labs API key has been saved successfully.",
+    });
+  };
+
+  const handleTextInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userInput.trim()) {
+      processUserInput(userInput);
+      setUserInput('');
+      
+      // Focus back on input after submission
+      setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 0);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-6">
@@ -243,8 +320,19 @@ const VoiceAgent: React.FC = () => {
         />
       </div>
       
+      <ApiKeyForm 
+        onSaveApiKey={handleSaveApiKey}
+        hasApiKey={!!apiKey}
+      />
+      
       <div className="flex-1 agent-card mb-6 overflow-hidden">
-        <ConversationLog messages={messages} className="h-full" />
+        <ConversationLog 
+          messages={messages} 
+          isGeneratingAudio={isGenerating} 
+          isPlayingAudio={isPlaying}
+          onToggleAudio={generateSpeech}
+          className="h-full" 
+        />
       </div>
       
       {transcript && (
@@ -253,16 +341,40 @@ const VoiceAgent: React.FC = () => {
         </div>
       )}
       
-      <div className="agent-card py-8">
-        <VoiceControls
-          isListening={isListening}
-          isMuted={isMuted}
-          volume={volume}
-          onListen={handleListen}
-          onStopListening={handleStopListening}
-          onMuteToggle={handleMuteToggle}
-          onVolumeChange={handleVolumeChange}
-        />
+      <div className="agent-card py-6">
+        {showTextInput ? (
+          <form onSubmit={handleTextInputSubmit} className="flex w-full items-center space-x-2">
+            <input
+              ref={textInputRef}
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type your message here..."
+              className="agent-input flex-1"
+            />
+            <Button type="submit">Send</Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setShowTextInput(false)}
+            >
+              Use Voice
+            </Button>
+          </form>
+        ) : (
+          <>
+            <VoiceControls
+              isListening={isListening}
+              isMuted={isMuted}
+              volume={volume}
+              onListen={handleListen}
+              onStopListening={handleStopListening}
+              onMuteToggle={handleMuteToggle}
+              onVolumeChange={handleVolumeChange}
+              onSwitchToText={() => setShowTextInput(true)}
+            />
+          </>
+        )}
       </div>
     </div>
   );

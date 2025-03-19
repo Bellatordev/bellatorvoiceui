@@ -1,6 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { DownloadIcon, CopyIcon } from 'lucide-react';
+import AudioVisualizer from './AudioVisualizer';
 
 export type Message = {
   id: string;
@@ -11,10 +12,19 @@ export type Message = {
 
 type ConversationLogProps = {
   messages: Message[];
+  isGeneratingAudio?: boolean;
+  isPlayingAudio?: boolean;
+  onToggleAudio?: (text: string) => void;
   className?: string;
 };
 
-const ConversationLog: React.FC<ConversationLogProps> = ({ messages, className }) => {
+const ConversationLog: React.FC<ConversationLogProps> = ({ 
+  messages, 
+  isGeneratingAudio = false, 
+  isPlayingAudio = false,
+  onToggleAudio,
+  className = ''
+}) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -50,6 +60,15 @@ const ConversationLog: React.FC<ConversationLogProps> = ({ messages, className }
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // Get the last assistant message for audio controls
+  const lastAssistantMessage = messages.findLast(msg => msg.sender === 'assistant');
+  
+  const handleToggleAudio = () => {
+    if (onToggleAudio && lastAssistantMessage) {
+      onToggleAudio(lastAssistantMessage.text);
+    }
   };
 
   return (
@@ -95,9 +114,22 @@ const ConversationLog: React.FC<ConversationLogProps> = ({ messages, className }
               >
                 <div className="flex flex-col">
                   <span className="text-sm">{message.text}</span>
-                  <span className="text-xs text-gray-500 mt-1 self-end">
-                    {formatTimestamp(message.timestamp)}
-                  </span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-gray-500">
+                      {formatTimestamp(message.timestamp)}
+                    </span>
+                    
+                    {message.sender === 'assistant' && 
+                     message.id === lastAssistantMessage?.id && 
+                     onToggleAudio && (
+                      <AudioVisualizer 
+                        isPlaying={isPlayingAudio}
+                        isGenerating={isGeneratingAudio}
+                        onTogglePlayback={handleToggleAudio}
+                        className="ml-2"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

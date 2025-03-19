@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Mic, MicOff, Volume2, Volume1, VolumeX } from 'lucide-react';
+import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import WaveformVisualizer from './WaveformVisualizer';
+import { Button } from './ui/button';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -11,6 +12,7 @@ type VoiceControlsProps = {
   onStopListening: () => void;
   onMuteToggle: () => void;
   onVolumeChange: (value: number) => void;
+  onSwitchToText: () => void;
 };
 
 const VoiceControls: React.FC<VoiceControlsProps> = ({
@@ -21,6 +23,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   onStopListening,
   onMuteToggle,
   onVolumeChange,
+  onSwitchToText,
 }) => {
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
@@ -49,31 +52,43 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
 
       <WaveformVisualizer isListening={isListening} className="h-12" />
       
-      <div className="flex items-center space-x-4 mt-6">
-        <button
-          onClick={onMuteToggle}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors focus-ring"
-          aria-label={isMuted ? "Unmute" : "Mute"}
-        >
-          {isMuted ? (
-            <VolumeX className="w-5 h-5 text-gray-400" />
-          ) : volume < 0.5 ? (
-            <Volume1 className="w-5 h-5 text-gray-600" />
-          ) : (
-            <Volume2 className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
+      <div className="flex flex-col items-center space-y-4 w-full">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onMuteToggle}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors focus-ring"
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? (
+              <VolumeX className="w-5 h-5 text-gray-400" />
+            ) : volume < 0.5 ? (
+              <Volume1 className="w-5 h-5 text-gray-600" />
+            ) : (
+              <Volume2 className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+          
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+            className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-agent-primary"
+            disabled={isMuted}
+          />
+        </div>
         
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-          className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-agent-primary"
-          disabled={isMuted}
-        />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onSwitchToText}
+          className="flex items-center gap-2"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Type instead
+        </Button>
       </div>
     </div>
   );

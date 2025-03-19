@@ -92,3 +92,57 @@
     @apply opacity-30 h-2;
   }
 }
+
+/* Audio visualizer animations */
+@keyframes soundWave1 {
+  0%, 100% { height: 8px; }
+  50% { height: 12px; }
+}
+
+@keyframes soundWave2 {
+  0%, 100% { height: 12px; }
+  50% { height: 20px; }
+}
+
+@keyframes soundWave3 {
+  0%, 100% { height: 20px; }
+  50% { height: 28px; }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.2; }
+}
+
+@layer utilities {
+  .animate-sound-wave-1 {
+    animation: soundWave1 1.2s ease-in-out infinite;
+  }
+  
+  .animate-sound-wave-2 {
+    animation: soundWave2 1s ease-in-out infinite;
+  }
+  
+  .animate-sound-wave-3 {
+    animation: soundWave3 0.8s ease-in-out infinite;
+  }
+  
+  .animate-breathe {
+    animation: breathe 2s ease-in-out infinite;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.2s ease-out forwards;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
