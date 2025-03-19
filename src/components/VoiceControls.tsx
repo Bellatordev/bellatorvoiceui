@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
-import WaveformVisualizer from './WaveformVisualizer';
+import { Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
+import { AIVoiceInput } from './ui/ai-voice-input';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -31,28 +31,16 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
-      <div className="relative">
-        <button
-          className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 focus-ring ${
-            isListening
-              ? 'bg-agent-primary text-white shadow-lg shadow-agent-primary/20'
-              : 'bg-white text-agent-primary border border-agent-primary/20 hover:bg-agent-primary/5'
-          }`}
-          onClick={isListening ? onStopListening : onListen}
-          aria-label={isListening ? "Stop listening" : "Start listening"}
-          disabled={isMicMuted}
-        >
-          {isListening ? (
-            <Mic className="w-8 h-8 animate-pulse" />
-          ) : (
-            <Mic className="w-8 h-8" />
-          )}
-        </button>
-        
-        {/* Pulsing background effect when listening */}
-        {isListening && (
-          <div className="absolute inset-0 rounded-full bg-agent-primary/10 animate-breathe" />
-        )}
+      {/* New AI Voice Input UI */}
+      <div className="w-full">
+        <AIVoiceInput 
+          onStart={onListen}
+          onStop={(duration) => {
+            console.log(`Recording stopped after ${duration} seconds`);
+            onStopListening();
+          }}
+          demoMode={false}
+        />
       </div>
 
       {/* Microphone Mute Button */}
@@ -68,8 +56,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       >
         {isMicMuted ? "Unmute" : "Mute"}
       </Button>
-
-      <WaveformVisualizer isListening={isListening && !isMicMuted} className="h-12" />
       
       <div className="flex flex-col items-center space-y-4 w-full">
         <div className="flex items-center space-x-4">
