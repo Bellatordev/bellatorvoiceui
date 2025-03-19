@@ -74,4 +74,21 @@
   .agent-input {
     @apply w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-agent-primary focus:ring-1 focus:ring-agent-primary focus-ring;
   }
+  
+  /* Waveform animation helpers */
+  .waveform-container {
+    @apply flex items-end justify-center h-16 space-x-1;
+  }
+  
+  .waveform-bar {
+    @apply bg-agent-primary rounded-full transition-all duration-300;
+  }
+  
+  .waveform-bar-active {
+    @apply opacity-100;
+  }
+  
+  .waveform-bar-inactive {
+    @apply opacity-30 h-2;
+  }
 }
