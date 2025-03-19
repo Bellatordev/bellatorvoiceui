@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -32,22 +32,28 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
       <div className="relative w-64 h-64 flex items-center justify-center">
-        {/* Animated gradient background */}
+        {/* Animated gradient background - made perfectly circular and smoother animation */}
         <div 
           className={cn(
             "absolute w-full h-full rounded-full overflow-hidden",
             isListening ? "animate-pulse" : ""
           )}
-          style={{
-            background: "linear-gradient(135deg, #0EA5E9, #33C3F0, #0FA0CE, #D3E4FD)",
-            backgroundSize: "300% 300%",
-            animation: isListening ? "gradient-shift 3s ease infinite, pulse 2s ease-in-out infinite" : "none",
-          }}
         >
-          {/* Inner animated rays effect */}
           <div 
             className={cn(
-              "absolute inset-0 opacity-80",
+              "absolute inset-0 rounded-full",
+              isListening ? "animate-gradient-shift" : ""
+            )}
+            style={{
+              background: "linear-gradient(135deg, #0EA5E9, #33C3F0, #0FA0CE, #D3E4FD)",
+              backgroundSize: "300% 300%",
+            }}
+          />
+          
+          {/* Inner animated pulse effect */}
+          <div 
+            className={cn(
+              "absolute inset-0 rounded-full",
               isListening ? "animate-breathe" : ""
             )}
             style={{
@@ -59,7 +65,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         
         {/* Center white pill with status text */}
         <div 
-          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md"
+          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
           onClick={isListening ? onStopListening : onListen}
         >
           <span className="text-gray-800 font-medium">
@@ -71,7 +77,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         <Button
           onClick={onMicMuteToggle}
           className={cn(
-            "absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center",
+            "absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300",
             isMicMuted 
               ? "bg-red-500 text-white hover:bg-red-600" 
               : "bg-white/80 text-gray-800 hover:bg-white/90 border border-gray-200"
