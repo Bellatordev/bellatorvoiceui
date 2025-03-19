@@ -37,7 +37,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           {isListening ? (
             <MicOff className="w-8 h-8" />
           ) : (
-            <Mic className={`w-8 h-8 ${isListening ? 'animate-pulse' : ''}`} />
+            <Mic className="w-8 h-8" />
           )}
         </button>
         
