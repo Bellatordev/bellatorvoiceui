@@ -114,6 +114,17 @@
   50% { transform: scale(1.1); opacity: 0.2; }
 }
 
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
 @layer utilities {
   .animate-sound-wave-1 {
     animation: soundWave1 1.2s ease-in-out infinite;
@@ -129,6 +140,14 @@
   
   .animate-breathe {
     animation: breathe 2s ease-in-out infinite;
+  }
+  
+  .animate-gradient-shift {
+    animation: gradient-shift 3s ease infinite;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
   }
   
   .animate-slide-up {

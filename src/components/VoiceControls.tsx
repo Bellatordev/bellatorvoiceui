@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
-import WaveformVisualizer from './WaveformVisualizer';
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -31,45 +31,58 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
-      <div className="relative">
-        <button
-          className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 focus-ring ${
-            isListening
-              ? 'bg-agent-primary text-white shadow-lg shadow-agent-primary/20'
-              : 'bg-white text-agent-primary border border-agent-primary/20 hover:bg-agent-primary/5'
-          }`}
-          onClick={isListening ? onStopListening : onListen}
-          aria-label={isListening ? "Stop listening" : "Start listening"}
-          disabled={isMicMuted}
-        >
-          {isListening ? (
-            <Mic className="w-8 h-8 animate-pulse" />
-          ) : (
-            <Mic className="w-8 h-8" />
+      <div className="relative w-64 h-64 flex items-center justify-center">
+        {/* Animated gradient background */}
+        <div 
+          className={cn(
+            "absolute w-full h-full rounded-full overflow-hidden",
+            isListening ? "animate-pulse" : ""
           )}
-        </button>
+          style={{
+            background: "linear-gradient(135deg, #0EA5E9, #33C3F0, #0FA0CE, #D3E4FD)",
+            backgroundSize: "300% 300%",
+            animation: isListening ? "gradient-shift 3s ease infinite, pulse 2s ease-in-out infinite" : "none",
+          }}
+        >
+          {/* Inner animated rays effect */}
+          <div 
+            className={cn(
+              "absolute inset-0 opacity-80",
+              isListening ? "animate-breathe" : ""
+            )}
+            style={{
+              background: "radial-gradient(circle, transparent 30%, #0EA5E9 70%)",
+              mixBlendMode: "overlay"
+            }}
+          />
+        </div>
         
-        {/* Pulsing background effect when listening */}
-        {isListening && (
-          <div className="absolute inset-0 rounded-full bg-agent-primary/10 animate-breathe" />
-        )}
+        {/* Center white pill with status text */}
+        <div 
+          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md"
+          onClick={isListening ? onStopListening : onListen}
+        >
+          <span className="text-gray-800 font-medium">
+            {isListening ? "Listening" : "Tap to speak"}
+          </span>
+        </div>
+
+        {/* Circular button for toggling microphone mute */}
+        <Button
+          onClick={onMicMuteToggle}
+          className={cn(
+            "absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center",
+            isMicMuted 
+              ? "bg-red-500 text-white hover:bg-red-600" 
+              : "bg-white/80 text-gray-800 hover:bg-white/90 border border-gray-200"
+          )}
+          variant="ghost"
+          size="icon"
+          aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+        >
+          {isMicMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+        </Button>
       </div>
-
-      {/* Microphone Mute Button */}
-      <Button
-        onClick={onMicMuteToggle}
-        className={`px-6 py-2 rounded-full transition-colors focus-ring ${
-          isMicMuted 
-            ? 'bg-red-500 text-white hover:bg-red-600' 
-            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-        }`}
-        aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
-        variant={isMicMuted ? "destructive" : "outline"}
-      >
-        {isMicMuted ? "Unmute" : "Mute"}
-      </Button>
-
-      <WaveformVisualizer isListening={isListening && !isMicMuted} className="h-12" />
       
       <div className="flex flex-col items-center space-y-4 w-full">
         <div className="flex items-center space-x-4">
