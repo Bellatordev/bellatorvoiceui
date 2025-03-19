@@ -13,6 +13,8 @@ type VoiceControlsProps = {
   onMuteToggle: () => void;
   onVolumeChange: (value: number) => void;
   onSwitchToText: () => void;
+  isMicMuted: boolean;
+  onMicMuteToggle: () => void;
 };
 
 const VoiceControls: React.FC<VoiceControlsProps> = ({
@@ -24,6 +26,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   onMuteToggle,
   onVolumeChange,
   onSwitchToText,
+  isMicMuted,
+  onMicMuteToggle,
 }) => {
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
@@ -36,6 +40,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           }`}
           onClick={isListening ? onStopListening : onListen}
           aria-label={isListening ? "Stop listening" : "Start listening"}
+          disabled={isMicMuted}
         >
           {isListening ? (
             <Mic className="w-8 h-8 animate-pulse" />
@@ -50,14 +55,31 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         )}
       </div>
 
-      <WaveformVisualizer isListening={isListening} className="h-12" />
+      {/* Microphone Mute Button */}
+      <button
+        onClick={onMicMuteToggle}
+        className={`p-4 rounded-full transition-colors focus-ring ${
+          isMicMuted 
+            ? 'bg-red-500 text-white hover:bg-red-600' 
+            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        }`}
+        aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+      >
+        {isMicMuted ? (
+          <MicOff className="w-6 h-6" />
+        ) : (
+          <Mic className="w-6 h-6" />
+        )}
+      </button>
+
+      <WaveformVisualizer isListening={isListening && !isMicMuted} className="h-12" />
       
       <div className="flex flex-col items-center space-y-4 w-full">
         <div className="flex items-center space-x-4">
           <button
             onClick={onMuteToggle}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors focus-ring"
-            aria-label={isMuted ? "Unmute" : "Mute"}
+            aria-label={isMuted ? "Unmute speaker" : "Mute speaker"}
           >
             {isMuted ? (
               <VolumeX className="w-5 h-5 text-gray-400" />

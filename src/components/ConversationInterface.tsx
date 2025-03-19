@@ -24,6 +24,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   const [textInput, setTextInput] = useState("");
   const [isMuted, setIsMuted] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
   const [volume, setVolume] = useState(0.8);
   const [autoStartMic, setAutoStartMic] = useState(true);
   
@@ -49,8 +50,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognitionRef.current.stop();
         setIsListening(false);
       }
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying) {
-      // Only auto-start mic if audio is not playing and we're not already listening
+    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted) {
+      // Only auto-start mic if audio is not playing, we're not already listening, and mic is not muted
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
         startListening();
@@ -58,7 +59,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isGenerating, isPlaying, isListening, autoStartMic]);
+  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -227,9 +228,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const startListening = async () => {
-    // Don't start if audio is playing or being generated
-    if (isPlaying || isGenerating) {
-      console.log('Cannot start listening: audio is active');
+    // Don't start if audio is playing or being generated or microphone is muted
+    if (isPlaying || isGenerating || isMicMuted) {
+      console.log('Cannot start listening: audio is active or mic is muted');
       return;
     }
     
@@ -261,6 +262,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const toggleListening = async () => {
+    if (isMicMuted) {
+      console.log('Microphone is muted, cannot toggle listening');
+      return;
+    }
+    
     // If audio is playing or generating, stop it first
     if (isPlaying || isGenerating) {
       stopAudio();
@@ -273,6 +279,21 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
     } else {
       await startListening();
+    }
+  };
+
+  const handleMicMuteToggle = () => {
+    const newMuteState = !isMicMuted;
+    setIsMicMuted(newMuteState);
+    
+    // If we're unmuting and auto-start is enabled, try to start listening
+    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
+      setTimeout(startListening, 300);
+    }
+    
+    // If we're muting and currently listening, stop listening
+    if (newMuteState && isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
     }
   };
 
@@ -309,7 +330,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         />
       </div>
       
-      {transcript && (
+      {transcript && !isMicMuted && (
         <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
           Listening: {transcript}
         </div>
@@ -326,6 +347,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             onMuteToggle={handleMuteToggle}
             onVolumeChange={handleVolumeChange}
             onSwitchToText={() => setInputMode('text')}
+            isMicMuted={isMicMuted}
+            onMicMuteToggle={handleMicMuteToggle}
           />
         </div>
       ) : (
