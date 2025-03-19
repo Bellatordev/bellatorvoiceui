@@ -5,6 +5,7 @@ import ConversationLog, { Message } from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
+import VoiceControls from './VoiceControls';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -15,6 +16,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [transcript, setTranscript] = useState("");
+  const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
+  const [textInput, setTextInput] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(0.8);
+  
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
   
@@ -22,11 +28,22 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
     generateSpeech, 
     isGenerating, 
     isPlaying, 
-    error 
+    error,
+    stopAudio 
   } = useElevenLabs({
     apiKey,
     voiceId: agentId,
   });
+
+  // Stop listening when audio is playing or generating to avoid feedback loop
+  useEffect(() => {
+    if (isGenerating || isPlaying) {
+      if (isListening && recognitionRef.current) {
+        console.log('Pausing microphone while audio is playing to avoid feedback');
+        recognitionRef.current.stop();
+      }
+    }
+  }, [isGenerating, isPlaying, isListening]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -121,8 +138,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
     
     setMessages([welcomeMessage]);
     
-    // Generate speech for welcome message
-    generateSpeech(welcomeMessage.text);
+    // Generate speech for welcome message only if not muted
+    if (!isMuted) {
+      generateSpeech(welcomeMessage.text);
+    }
   }, []);
 
   const requestMicrophonePermission = async () => {
@@ -168,12 +187,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
       
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Generate speech for assistant response
-      generateSpeech(assistantResponse);
+      // Generate speech for assistant response if not muted
+      if (!isMuted) {
+        generateSpeech(assistantResponse);
+      }
     }, 1000);
   };
 
   const toggleListening = async () => {
+    // If audio is playing or generating, stop it first to avoid feedback
+    if (isPlaying || isGenerating) {
+      stopAudio();
+    }
+    
     if (isListening) {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -206,6 +232,26 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
     }
   };
 
+  const handleTextSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (textInput.trim()) {
+      processUserInput(textInput);
+      setTextInput("");
+    }
+  };
+
+  const handleMuteToggle = () => {
+    setIsMuted(!isMuted);
+    if (isPlaying) {
+      stopAudio();
+    }
+  };
+
+  const handleVolumeChange = (value: number) => {
+    setVolume(value);
+    // In a real app, you'd also adjust audio volume
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 agent-card mb-6 overflow-hidden">
@@ -224,28 +270,43 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ apiKey, a
         </div>
       )}
       
-      <div className="flex justify-center py-8">
-        <button
-          className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 focus-ring ${
-            isListening
-              ? 'bg-agent-primary text-white shadow-lg shadow-agent-primary/20'
-              : 'bg-white text-agent-primary border border-agent-primary/20 hover:bg-agent-primary/5'
-          }`}
-          onClick={toggleListening}
-          aria-label={isListening ? "Stop listening" : "Start listening"}
-        >
-          {isListening ? (
-            <MicOff className="w-8 h-8 animate-pulse" />
-          ) : (
-            <Mic className="w-8 h-8" />
-          )}
-          
-          {/* Pulsing background effect when listening */}
-          {isListening && (
-            <div className="absolute inset-0 rounded-full bg-agent-primary/10 animate-breathe" />
-          )}
-        </button>
-      </div>
+      {inputMode === 'voice' ? (
+        <div className="flex justify-center py-4">
+          <VoiceControls 
+            isListening={isListening}
+            isMuted={isMuted}
+            volume={volume}
+            onListen={toggleListening}
+            onStopListening={toggleListening}
+            onMuteToggle={handleMuteToggle}
+            onVolumeChange={handleVolumeChange}
+            onSwitchToText={() => setInputMode('text')}
+          />
+        </div>
+      ) : (
+        <form onSubmit={handleTextSubmit} className="flex items-center space-x-2 p-4">
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-agent-primary"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-agent-primary text-white rounded-md hover:bg-agent-primary/90"
+          >
+            Send
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode('voice')}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+          >
+            Use Voice
+          </button>
+        </form>
+      )}
     </div>
   );
 };

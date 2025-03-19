@@ -26,10 +26,20 @@ class ElevenLabsService {
 
   private constructor() {
     this.audioElement = new Audio();
-    this.audioElement.addEventListener('play', () => this.updateState({ isPlaying: true }));
-    this.audioElement.addEventListener('ended', () => this.updateState({ isPlaying: false }));
-    this.audioElement.addEventListener('pause', () => this.updateState({ isPlaying: false }));
-    this.audioElement.addEventListener('error', () => {
+    this.audioElement.addEventListener('play', () => {
+      console.log('Audio started playing');
+      this.updateState({ isPlaying: true });
+    });
+    this.audioElement.addEventListener('ended', () => {
+      console.log('Audio finished playing');
+      this.updateState({ isPlaying: false });
+    });
+    this.audioElement.addEventListener('pause', () => {
+      console.log('Audio paused');
+      this.updateState({ isPlaying: false });
+    });
+    this.audioElement.addEventListener('error', (e) => {
+      console.error('Audio playback error:', e);
       this.updateState({ 
         isPlaying: false, 
         error: 'Error playing audio' 
@@ -65,6 +75,9 @@ class ElevenLabsService {
       this.updateState({ error: errorMsg });
       return;
     }
+
+    // Stop any currently playing audio first
+    this.stopAudio();
 
     try {
       this.updateState({ isGenerating: true, error: null });
@@ -106,7 +119,10 @@ class ElevenLabsService {
       
       if (this.audioElement) {
         this.audioElement.src = audioUrl;
-        this.audioElement.play();
+        this.audioElement.play().catch(error => {
+          console.error('Error playing audio:', error);
+          this.updateState({ error: 'Failed to play audio' });
+        });
       }
       
       this.updateState({ isGenerating: false });
@@ -122,6 +138,7 @@ class ElevenLabsService {
 
   public stopAudio(): void {
     if (this.audioElement && !this.audioElement.paused) {
+      console.log('Stopping audio playback');
       this.audioElement.pause();
       this.audioElement.currentTime = 0;
     }
@@ -131,8 +148,13 @@ class ElevenLabsService {
     if (!this.audioElement) return;
     
     if (this.audioElement.paused) {
-      this.audioElement.play();
+      console.log('Resuming audio playback');
+      this.audioElement.play().catch(error => {
+        console.error('Error playing audio:', error);
+        this.updateState({ error: 'Failed to play audio' });
+      });
     } else {
+      console.log('Pausing audio playback');
       this.audioElement.pause();
     }
   }
