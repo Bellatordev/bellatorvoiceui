@@ -56,21 +56,18 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       </div>
 
       {/* Microphone Mute Button */}
-      <button
+      <Button
         onClick={onMicMuteToggle}
-        className={`p-4 rounded-full transition-colors focus-ring ${
+        className={`px-6 py-2 rounded-full transition-colors focus-ring ${
           isMicMuted 
             ? 'bg-red-500 text-white hover:bg-red-600' 
             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
         }`}
         aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+        variant={isMicMuted ? "destructive" : "outline"}
       >
-        {isMicMuted ? (
-          <MicOff className="w-6 h-6" />
-        ) : (
-          <Mic className="w-6 h-6" />
-        )}
-      </button>
+        {isMicMuted ? "Unmute" : "Mute"}
+      </Button>
 
       <WaveformVisualizer isListening={isListening && !isMicMuted} className="h-12" />
       
