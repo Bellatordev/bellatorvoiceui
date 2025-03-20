@@ -4,6 +4,7 @@ import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-re
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import DarkModeToggle from './DarkModeToggle';
+import { Slider } from '@/components/ui/slider';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -47,6 +48,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
     } else {
       onListen();
     }
+  };
+
+  const handleVolumeSliderChange = (value: number[]) => {
+    onVolumeChange(value[0]);
   };
   
   return (
@@ -119,7 +124,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       </div>
       
       <div className="flex flex-col items-center space-y-4 w-full">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 w-full max-w-xs">
           <button
             onClick={onMuteToggle}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
@@ -134,16 +139,20 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             )}
           </button>
           
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-agent-primary dark:[&::-webkit-slider-thumb]:bg-premium-accent"
-            disabled={isMuted}
-          />
+          <div className="w-full">
+            <Slider
+              disabled={isMuted}
+              value={[isMuted ? 0 : volume]}
+              min={0}
+              max={1}
+              step={0.01}
+              onValueChange={handleVolumeSliderChange}
+              className={cn(
+                "w-full",
+                isMuted ? "opacity-50" : "opacity-100"
+              )}
+            />
+          </div>
         </div>
         
         <Button 

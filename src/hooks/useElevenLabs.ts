@@ -12,8 +12,10 @@ interface UseElevenLabsReturn {
   generateSpeech: (text: string) => Promise<void>;
   stopAudio: () => void;
   togglePlayback: () => void;
+  setVolume: (volume: number) => void;
   isGenerating: boolean;
   isPlaying: boolean;
+  volume: number;
   error: string | null;
 }
 
@@ -21,7 +23,8 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
   const [state, setState] = useState({
     isGenerating: false,
     isPlaying: false,
-    error: null as string | null
+    error: null as string | null,
+    volume: 0.8
   });
 
   useEffect(() => {
@@ -48,10 +51,16 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     service.togglePlayback();
   };
 
+  const setVolume = (volume: number): void => {
+    const service = ElevenLabsService.getInstance();
+    service.setVolume(volume);
+  };
+
   return {
     generateSpeech,
     stopAudio,
     togglePlayback,
+    setVolume,
     ...state
   };
 };

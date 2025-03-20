@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import ConversationLog, { Message } from './ConversationLog';
@@ -29,7 +28,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [textInput, setTextInput] = useState("");
   const [isMuted, setIsMuted] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
-  const [volume, setVolume] = useState(0.8);
   const [autoStartMic, setAutoStartMic] = useState(true);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -40,7 +38,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     isGenerating, 
     isPlaying, 
     error,
-    stopAudio 
+    stopAudio,
+    setVolume,
+    volume 
   } = useElevenLabs({
     apiKey,
     voiceId: agentId,
@@ -310,15 +310,39 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleMuteToggle = () => {
-    setIsMuted(!isMuted);
+    const newMuteState = !isMuted;
+    setIsMuted(newMuteState);
+    
+    // Set the volume to 0 when muted, restore to previous volume when unmuted
+    if (newMuteState) {
+      // When muting, remember previous volume by keeping current state
+      // but set actual audio volume to 0
+      setVolume(0);
+    } else {
+      // When unmuting, restore the previous volume
+      setVolume(volume || 0.8); // Default to 0.8 if volume was somehow 0
+    }
+    
     if (isPlaying) {
       stopAudio();
     }
   };
 
   const handleVolumeChange = (value: number) => {
+    // If we're changing the volume while muted, unmute first
+    if (isMuted && value > 0) {
+      setIsMuted(false);
+    }
+    
+    // Update volume in the ElevenLabs service
     setVolume(value);
-    // In a real app, you'd also adjust audio volume
+    
+    // If volume is set to 0, consider it as muted
+    if (value === 0 && !isMuted) {
+      setIsMuted(true);
+    } else if (value > 0 && isMuted) {
+      setIsMuted(false);
+    }
   };
 
   return (

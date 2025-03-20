@@ -12,6 +12,7 @@ interface ElevenLabsState {
   isGenerating: boolean;
   isPlaying: boolean;
   error: string | null;
+  volume: number;
 }
 
 class ElevenLabsService {
@@ -20,7 +21,8 @@ class ElevenLabsService {
   private state: ElevenLabsState = {
     isGenerating: false,
     isPlaying: false,
-    error: null
+    error: null,
+    volume: 0.8
   };
   private stateListeners: ((state: ElevenLabsState) => void)[] = [];
 
@@ -46,6 +48,11 @@ class ElevenLabsService {
         error: 'Error playing audio' 
       });
     });
+    
+    // Set initial volume
+    if (this.audioElement) {
+      this.audioElement.volume = this.state.volume;
+    }
   }
 
   public static getInstance(): ElevenLabsService {
@@ -163,6 +170,19 @@ class ElevenLabsService {
       console.log('Pausing audio playback');
       this.audioElement.pause();
     }
+  }
+
+  public setVolume(volume: number): void {
+    if (volume < 0) volume = 0;
+    if (volume > 1) volume = 1;
+    
+    console.log(`Setting audio volume to ${volume}`);
+    
+    if (this.audioElement) {
+      this.audioElement.volume = volume;
+    }
+    
+    this.updateState({ volume });
   }
 
   public getState(): ElevenLabsState {
