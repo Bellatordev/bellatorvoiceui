@@ -13,6 +13,7 @@ interface AIVoiceInputProps {
   demoInterval?: number;
   className?: string;
   isListening?: boolean; // Add this prop to control the component externally
+  transcript?: string; // Add transcript prop to show live transcription
 }
 
 export function AIVoiceInput({
@@ -22,7 +23,8 @@ export function AIVoiceInput({
   demoMode = false,
   demoInterval = 3000,
   className,
-  isListening: externalListening // Allow external control of listening state
+  isListening: externalListening, // Allow external control of listening state
+  transcript
 }: AIVoiceInputProps) {
   const [submitted, setSubmitted] = useState(false);
   const [time, setTime] = useState(0);
@@ -98,6 +100,13 @@ export function AIVoiceInput({
   return (
     <div className={cn("w-full py-4", className)}>
       <div className="relative max-w-xl w-full mx-auto flex items-center flex-col gap-2">
+        {/* Live transcript display */}
+        {submitted && transcript && (
+          <div className="w-full max-w-md mx-auto bg-white/80 dark:bg-black/20 p-2 rounded-lg mb-2 text-center">
+            <p className="text-sm text-black/70 dark:text-white/70 italic">{transcript}</p>
+          </div>
+        )}
+        
         <button
           className={cn(
             "group w-16 h-16 rounded-xl flex items-center justify-center transition-colors",

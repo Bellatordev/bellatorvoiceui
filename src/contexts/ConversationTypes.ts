@@ -24,6 +24,7 @@ export interface ConversationContextType {
   setIsDarkMode: (value: boolean) => void;
   isGenerating: boolean;
   isPlaying: boolean;
+  currentTranscript: string;
   sendMessage: (text: string) => Promise<void>;
   handleToggleAudio: (text: string) => void;
   handleListenStart: () => void;

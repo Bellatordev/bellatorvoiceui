@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/contexts/ConversationTypes';
 import useElevenLabs from './useElevenLabs';
+import useSpeechRecognition from './useSpeechRecognition';
 import { toast } from '@/components/ui/use-toast';
 import { createUserMessage, createAssistantMessage, createWelcomeMessage } from '@/utils/messageUtils';
 
@@ -18,6 +19,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
   const [volume, setVolume] = useState(0.8);
   const [isLoading, setIsLoading] = useState(false);
   const [shouldAutoListen, setShouldAutoListen] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     const savedTheme = localStorage.getItem('theme');
@@ -37,6 +39,23 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     apiKey, 
     voiceId: 'EXAVITQu4vr4xnSDxMaL', // Using 'Sarah' voice by default
     modelId: 'eleven_multilingual_v2'
+  });
+
+  // Speech recognition integration
+  const { transcript } = useSpeechRecognition({
+    isListening,
+    isMicMuted,
+    onTranscript: (text) => {
+      setCurrentTranscript(text);
+    },
+    onFinalTranscript: (text) => {
+      if (text.trim()) {
+        console.log('Sending final transcript:', text);
+        sendMessage(text);
+        setIsListening(false);
+      }
+      setCurrentTranscript('');
+    }
   });
 
   // Memoize the volume setting function to prevent infinite loops
@@ -117,14 +136,14 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     setIsListening(false);
     if (duration < 1) return; // Ignore very short recordings
     
-    // In a real implementation, this would send audio to be transcribed
-    // For now, we'll simulate with a mock transcription
-    const mockTranscription = "This is a simulated voice message transcription.";
-    await sendMessage(mockTranscription);
+    // Voice transcription is now handled by speech recognition
+    // This function is kept for backward compatibility
   }, []);
 
   // Common function to handle sending messages to the agent
   const sendMessage = useCallback(async (text: string): Promise<void> => {
+    if (!text.trim()) return;
+    
     setIsLoading(true);
     
     // Add user message to conversation
@@ -162,15 +181,12 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
         setShouldAutoListen(true);
       } else {
         // Even if audio is muted, we should still auto-listen after a delay
-        const timer = setTimeout(() => {
+        setTimeout(() => {
           if (!isMicMuted) {
             console.log('Setting isListening to true when audio is muted');
             setIsListening(true);
           }
         }, 1000);
-        
-        // Make sure we clear the timeout
-        clearTimeout(timer);
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -217,6 +233,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     setIsDarkMode,
     isGenerating,
     isPlaying,
+    currentTranscript,
     sendMessage,
     handleToggleAudio,
     handleListenStart,
