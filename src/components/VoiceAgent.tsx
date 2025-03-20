@@ -1,13 +1,11 @@
 
 import React, { useState } from 'react';
 import LoginScreen from './LoginScreen';
-import ConversationInterface from './ConversationInterface';
 import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const VoiceAgent: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [agentId, setAgentId] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = (key: string, id: string) => {
     if (!key.trim() || !id.trim()) {
@@ -19,9 +17,13 @@ const VoiceAgent: React.FC = () => {
       return;
     }
     
-    setApiKey(key);
-    setAgentId(id);
-    setIsLoggedIn(true);
+    // Navigate to conversation page with credentials
+    navigate('/conversation', { 
+      state: { 
+        apiKey: key,
+        agentId: id
+      }
+    });
     
     toast({
       title: "Welcome",
@@ -29,30 +31,9 @@ const VoiceAgent: React.FC = () => {
     });
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setApiKey('');
-    setAgentId('');
-    
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out",
-    });
-  };
-
   return (
     <div className="flex flex-col h-full">
-      {!isLoggedIn ? (
-        <LoginScreen 
-          onLogin={handleLogin}
-        />
-      ) : (
-        <ConversationInterface 
-          apiKey={apiKey} 
-          agentId={agentId} 
-          onLogout={handleLogout}
-        />
-      )}
+      <LoginScreen onLogin={handleLogin} />
     </div>
   );
 };
