@@ -26,12 +26,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <div className="max-w-md w-full mx-auto">
-      <div className="text-center mb-8">
-        <p className="text-gray-600 dark:text-gray-400">Enter your credentials to start</p>
+    <div className="max-w-md w-full mx-auto relative z-20 bg-white/10 dark:bg-gray-900/30 p-8 rounded-xl backdrop-blur-sm">
+      <div className="text-center mb-10">
+        <p className="text-gray-700 dark:text-gray-300 font-medium">Enter your credentials to start</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Eleven Labs API Key

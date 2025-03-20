@@ -1,3 +1,4 @@
+
 import React from 'react';
 import VoiceAgent from '../components/VoiceAgent';
 import { Hero } from '@/components/ui/animated-hero';
@@ -48,7 +49,7 @@ const Index = () => {
           <div className="w-full h-full absolute inset-0 overflow-hidden">
             <LampDemo />
           </div>
-          <div className="max-w-2xl w-full mx-auto z-10 mt-48 relative">
+          <div className="max-w-2xl w-full mx-auto z-10 mt-24 md:mt-40 relative">
             <VoiceAgent />
           </div>
         </section>
