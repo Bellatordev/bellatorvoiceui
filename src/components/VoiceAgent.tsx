@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import LoginScreen from './LoginScreen';
 import ConversationInterface from './ConversationInterface';
@@ -62,15 +63,12 @@ const VoiceAgent: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex justify-end mb-4">
-        <DarkModeToggle 
+      {!isLoggedIn ? (
+        <LoginScreen 
+          onLogin={handleLogin} 
           isDarkMode={isDarkMode}
           toggleDarkMode={toggleDarkMode}
         />
-      </div>
-      
-      {!isLoggedIn ? (
-        <LoginScreen onLogin={handleLogin} />
       ) : (
         <ConversationInterface 
           apiKey={apiKey} 
