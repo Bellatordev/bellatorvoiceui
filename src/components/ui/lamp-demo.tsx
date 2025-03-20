@@ -15,9 +15,9 @@ export function LampDemo() {
           duration: 0.8,
           ease: "easeInOut",
         }}
-        className="mt-8 bg-gradient-to-br from-premium-light to-premium-accent py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl"
+        className="mt-8 bg-gradient-to-br from-premium-light to-premium-accent py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl font-playfair"
       >
-        Bellator<span className="text-yellows-accent">.ai</span>
+        Bellator<span className="text-yellows-accent">.</span><span className="font-normal">ai</span>
       </motion.h1>
     </LampContainer>
   );

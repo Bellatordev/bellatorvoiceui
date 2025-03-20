@@ -49,7 +49,7 @@ const Index = () => {
           <div className="w-full h-full absolute inset-0 overflow-hidden">
             <LampDemo />
           </div>
-          <div className="max-w-2xl w-full mx-auto z-10 mt-24 md:mt-40 relative">
+          <div className="max-w-2xl w-full mx-auto z-10 mt-32 md:mt-48 relative">
             <VoiceAgent />
           </div>
         </section>
