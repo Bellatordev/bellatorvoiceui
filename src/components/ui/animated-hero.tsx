@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MoveRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 function Hero() {
   const [titleNumber, setTitleNumber] = useState(0);
@@ -72,13 +73,12 @@ function Hero() {
             <Button size="lg" className="gap-4 agent-button-secondary" variant="outline">
               About Us <Info className="w-4 h-4" />
             </Button>
-            <Button 
-              size="lg" 
-              className="gap-4 agent-button-yellow"
+            <RainbowButton 
+              className="gap-4 flex items-center justify-center"
               onClick={scrollToApiKeyInput}
             >
               Get Started <MoveRight className="w-4 h-4" />
-            </Button>
+            </RainbowButton>
           </div>
         </div>
       </div>
