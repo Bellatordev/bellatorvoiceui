@@ -22,6 +22,14 @@ function Hero() {
     return () => clearTimeout(timeoutId);
   }, [titleNumber, titles]);
 
+  const scrollToApiKeyInput = () => {
+    // Find the first input element (which should be the API key input)
+    const apiKeyInput = document.querySelector('input[type="password"]');
+    if (apiKeyInput) {
+      apiKeyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="container mx-auto">
@@ -69,7 +77,11 @@ function Hero() {
             <Button size="lg" className="gap-4 agent-button-secondary" variant="outline">
               Voice Chat <PhoneCall className="w-4 h-4" />
             </Button>
-            <Button size="lg" className="gap-4 agent-button-yellow">
+            <Button 
+              size="lg" 
+              className="gap-4 agent-button-yellow"
+              onClick={scrollToApiKeyInput}
+            >
               Get Started <MoveRight className="w-4 h-4" />
             </Button>
           </div>
