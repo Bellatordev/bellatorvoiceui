@@ -1,10 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 
 const Conversation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { apiKey, agentId } = location.state || {};
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -26,8 +27,8 @@ const Conversation = () => {
   }
   
   const handleLogout = () => {
-    // Navigate back to the login page
-    window.location.href = '/';
+    // Navigate back to the index page
+    navigate('/', { replace: true });
   };
   
   return (
