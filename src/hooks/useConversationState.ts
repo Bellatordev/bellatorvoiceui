@@ -60,7 +60,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     }
   }, []);
 
-  // Auto-listen after speech generation is complete
+  // Enhanced auto-listen effect - improved to more reliably activate microphone after speech
   useEffect(() => {
     if (shouldAutoListen && !isPlaying && !isGenerating) {
       console.log('Auto-activating microphone after speech generation');
@@ -69,13 +69,31 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       // Wait a short time before activating the microphone
       const timer = setTimeout(() => {
         if (!isMicMuted) {
+          console.log('Setting isListening to true after voice generation');
+          setIsListening(true);
+        } else {
+          console.log('Not auto-activating mic because it is muted');
+        }
+      }, 750); // Slightly longer delay for more reliable activation
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted]);
+
+  // Add an effect to handle ending of speech playback
+  useEffect(() => {
+    // When speech stops playing, consider auto-activating the mic
+    if (!isPlaying && !isGenerating && !isListening && !isMicMuted) {
+      const timer = setTimeout(() => {
+        if (!isListening && !isMicMuted) {
+          console.log('Auto-activating microphone after playback ended');
           setIsListening(true);
         }
       }, 500);
       
       return () => clearTimeout(timer);
     }
-  }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted]);
+  }, [isPlaying, isGenerating, isListening, isMicMuted]);
 
   const toggleDarkMode = useCallback(() => {
     const newMode = !isDarkMode;
@@ -139,12 +157,18 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       
       // Generate speech for the response if not muted
       if (!isMuted && volume > 0) {
-        generateSpeech(responseText);
+        await generateSpeech(responseText);
         // Set flag to auto-listen after speech generation
         setShouldAutoListen(true);
       } else {
-        // If audio is muted, we should still auto-listen
-        setShouldAutoListen(true);
+        // Even if audio is muted, we should still auto-listen after a delay
+        const timer = setTimeout(() => {
+          if (!isMicMuted) {
+            console.log('Setting isListening to true when audio is muted');
+            setIsListening(true);
+          }
+        }, 1000);
+        return () => clearTimeout(timer);
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -156,7 +180,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, agentId, generateSpeech, isMuted, volume]);
+  }, [apiKey, agentId, generateSpeech, isMuted, volume, isMicMuted]);
 
   const handleToggleAudio = useCallback((text: string) => {
     togglePlayback();
@@ -164,7 +188,11 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
 
   const toggleMic = useCallback(() => {
     setIsMicMuted(!isMicMuted);
-  }, [isMicMuted]);
+    if (isListening && !isMicMuted) {
+      // If we're turning the mic off and it's currently listening, stop listening
+      setIsListening(false);
+    }
+  }, [isMicMuted, isListening]);
 
   const toggleMute = useCallback(() => {
     setIsMuted(!isMuted);

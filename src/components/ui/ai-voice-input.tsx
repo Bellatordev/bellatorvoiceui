@@ -32,6 +32,7 @@ export function AIVoiceInput({
   // Sync with external listening state if provided
   useEffect(() => {
     if (externalListening !== undefined) {
+      console.log(`AIVoiceInput - External listening state changed to: ${externalListening}`);
       setSubmitted(externalListening);
     }
   }, [externalListening]);
@@ -44,12 +45,16 @@ export function AIVoiceInput({
     let intervalId: NodeJS.Timeout;
 
     if (submitted) {
+      console.log('AIVoiceInput - Started listening');
       onStart?.();
       intervalId = setInterval(() => {
         setTime((t) => t + 1);
       }, 1000);
     } else {
-      onStop?.(time);
+      console.log(`AIVoiceInput - Stopped listening after ${time} seconds`);
+      if (time > 0) { // Only trigger onStop if there was actual recording time
+        onStop?.(time);
+      }
       setTime(0);
     }
 

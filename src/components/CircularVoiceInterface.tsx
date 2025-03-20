@@ -21,6 +21,11 @@ const CircularVoiceInterface: React.FC = () => {
     isGenerating
   } = useConversation();
 
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}`);
+  }, [isListening, isPlaying, isGenerating]);
+
   return (
     <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
       {/* Circular blue gradient background */}
@@ -52,11 +57,14 @@ const CircularVoiceInterface: React.FC = () => {
       {/* Center listening button */}
       <button
         onClick={handleListenStart}
-        className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
+        className={cn(
+          "relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg",
+          (isPlaying || isGenerating) ? "opacity-50 cursor-not-allowed" : "opacity-100"
+        )}
         disabled={isPlaying || isGenerating}
       >
         <span className="text-blue-800 font-medium">
-          {isListening ? "Listening" : isPlaying ? "Playing..." : "Tap to speak"}
+          {isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
         </span>
       </button>
 
