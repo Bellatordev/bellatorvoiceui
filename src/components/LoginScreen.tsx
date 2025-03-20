@@ -28,7 +28,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   return (
     <div className="max-w-md w-full mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold font-playfair bg-gradient-to-r from-gray-800 to-gray-600 dark:from-premium-accent dark:to-premium-light bg-clip-text text-transparent mb-2">Bellator<span className="text-yellows-accent">.ai</span></h1>
         <p className="text-gray-600 dark:text-gray-400">Enter your credentials to start</p>
       </div>
       
