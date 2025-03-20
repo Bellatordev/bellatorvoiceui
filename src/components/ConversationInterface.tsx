@@ -1,14 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Mic, Send, User, Bot, Volume2, VolumeX } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Mic, MicOff, Volume2, VolumeX, MessageSquare } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import ConversationLog from './ConversationLog';
 import { v4 as uuidv4 } from 'uuid';
 import useElevenLabs from '../hooks/useElevenLabs';
-import VoiceControls from './VoiceControls';
 import WaveformVisualizer from './WaveformVisualizer';
 import { AIVoiceInput } from './ui/ai-voice-input';
 
@@ -31,9 +28,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   agentId,
   onLogout,
 }) => {
-  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isVoiceMode, setIsVoiceMode] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -72,6 +67,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }
   }, [messages]);
 
+  // Add initial greeting message when component mounts
+  useEffect(() => {
+    const welcomeMessage: Message = {
+      id: uuidv4(),
+      sender: 'assistant',
+      text: 'Hello, how can I help you today?',
+      timestamp: new Date()
+    };
+    
+    setMessages([welcomeMessage]);
+    
+    // Generate speech for welcome message
+    if (!isMuted && volume > 0) {
+      generateSpeech(welcomeMessage.text);
+    }
+  }, []);
+
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
@@ -82,14 +94,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     } else {
       document.documentElement.classList.remove('dark');
     }
-  };
-
-  // Handle sending text message
-  const sendTextMessage = async () => {
-    if (!message.trim()) return;
-    
-    await sendMessage(message.trim());
-    setMessage('');
   };
 
   // Handle voice input start
@@ -170,15 +174,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     togglePlayback();
   };
 
-  const switchToTextMode = () => {
-    setIsVoiceMode(false);
-    if (isListening) {
-      setIsListening(false);
-    }
+  const toggleMic = () => {
+    setIsMicMuted(!isMicMuted);
   };
 
-  const switchToVoiceMode = () => {
-    setIsVoiceMode(true);
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
   };
 
   return (
@@ -191,102 +192,94 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       </div>
 
       <div className="flex-1 flex flex-col p-4 overflow-hidden">
-        {isVoiceMode ? (
-          // Voice Mode
-          <div className="flex-1 flex flex-col">
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto mb-4">
-              <ConversationLog 
-                messages={messages}
-                isGeneratingAudio={isGenerating}
-                isPlayingAudio={isPlaying}
-                onToggleAudio={handleToggleAudio}
-              />
-            </div>
-            
-            <div className="mt-auto">
-              <VoiceControls 
-                isListening={isListening}
-                isMuted={isMuted}
-                volume={volume}
-                onListen={handleListenStart}
-                onStopListening={() => setIsListening(false)}
-                onMuteToggle={() => setIsMuted(!isMuted)}
-                onVolumeChange={setVolume}
-                onSwitchToText={switchToTextMode}
-                isMicMuted={isMicMuted}
-                onMicMuteToggle={() => setIsMicMuted(!isMicMuted)}
-                isDarkMode={isDarkMode}
-                toggleDarkMode={toggleDarkMode}
-              />
-              
-              <div className="py-4">
-                <AIVoiceInput 
-                  onStart={handleListenStart}
-                  onStop={handleListenStop}
-                  className={isListening ? '' : 'opacity-50'}
-                />
-              </div>
-            </div>
+        <div className="flex-1 flex flex-col">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto mb-4">
+            <ConversationLog 
+              messages={messages}
+              isGeneratingAudio={isGenerating}
+              isPlayingAudio={isPlaying}
+              onToggleAudio={handleToggleAudio}
+            />
           </div>
-        ) : (
-          // Text Mode
-          <div className="flex-1 flex flex-col">
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto mb-4">
-              <ConversationLog 
-                messages={messages}
-                isGeneratingAudio={isGenerating}
-                isPlayingAudio={isPlaying}
-                onToggleAudio={handleToggleAudio}
-              />
-            </div>
-            
-            <div className="p-4 border-t dark:border-gray-700 mt-auto">
-              <div className="flex items-center gap-2 mb-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={switchToVoiceMode}
-                  className="flex items-center gap-2"
-                >
-                  <Mic className="w-4 h-4" />
-                  Voice mode
-                </Button>
-                
-                <Button
-                  variant={isMuted ? "destructive" : "outline"}
-                  size="sm"
-                  onClick={() => setIsMuted(!isMuted)}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </Button>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 resize-none border rounded-md py-2 px-3 bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                  rows={3}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendTextMessage();
-                    }
+          
+          <div className="mt-auto">
+            <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+              {/* Animated gradient background */}
+              <div 
+                className={`absolute w-full h-full rounded-full overflow-hidden ${isListening ? "animate-pulse" : ""}`}
+              >
+                <div 
+                  className={`absolute inset-0 rounded-full ${isListening ? "animate-gradient-shift" : ""} dark:bg-gradient-premium-dark bg-gradient-premium-light`}
+                  style={{
+                    backgroundSize: "300% 300%",
                   }}
                 />
-                <Button 
-                  onClick={sendTextMessage} 
-                  disabled={isLoading || !message.trim()} 
-                  className="bg-agent-primary hover:bg-agent-primary/90 text-white"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send
-                </Button>
+                
+                {/* Inner animated pulse effect */}
+                <div 
+                  className={`absolute inset-0 rounded-full ${isListening ? "animate-breathe" : ""}`}
+                  style={{
+                    background: "radial-gradient(circle, transparent 30%, var(--gradient-center-color) 70%)",
+                    mixBlendMode: "overlay"
+                  }}
+                />
               </div>
+              
+              {/* Center white pill with status text */}
+              <AIVoiceInput 
+                onStart={handleListenStart}
+                onStop={handleListenStop}
+                className={isListening ? '' : 'opacity-75 hover:opacity-100 transition-opacity'}
+              />
+
+              {/* Circular buttons for controls */}
+              <Button
+                onClick={toggleMic}
+                className={`absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300 ${
+                  isMicMuted 
+                    ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700" 
+                    : "bg-white/80 text-gray-800 hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90 border border-gray-200 dark:border-gray-700"
+                }`}
+                variant="ghost"
+                size="icon"
+                aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+              >
+                {isMicMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </Button>
+              
+              <Button
+                onClick={toggleMute}
+                className={`absolute bottom-0 left-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300 ${
+                  isMuted 
+                    ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700" 
+                    : "bg-white/80 text-gray-800 hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90 border border-gray-200 dark:border-gray-700"
+                }`}
+                variant="ghost"
+                size="icon"
+                aria-label={isMuted ? "Unmute speaker" : "Mute speaker"}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+              
+              <Button
+                onClick={toggleDarkMode}
+                className="absolute top-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300 bg-white/80 text-gray-800 hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90 border border-gray-200 dark:border-gray-700"
+                variant="ghost"
+                size="icon"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? 
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                  </svg> : 
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                }
+              </Button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
