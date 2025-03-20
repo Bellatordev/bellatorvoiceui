@@ -154,9 +154,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               onValueChange={handleVolumeSliderChange}
               className="w-full"
               aria-label="Volume"
-              // Make the slider more responsive with more visual feedback
-              thumbClassName="h-4 w-4 bg-primary border-0 shadow-lg hover:scale-110 transition-transform"
-              trackClassName="h-2 bg-gray-200 dark:bg-gray-700"
             />
           </div>
         </div>
