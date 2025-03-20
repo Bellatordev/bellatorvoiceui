@@ -83,7 +83,7 @@ const CircularVoiceInterface: React.FC = () => {
         disabled={isPlaying || isGenerating}
       >
         <span className="text-blue-800 font-medium">
-          {isMicMuted ? "Mic Off" : isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
+          {isMicMuted ? "Unmute" : isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
         </span>
       </button>
 
