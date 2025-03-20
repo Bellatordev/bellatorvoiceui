@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MoveRight, PhoneCall } from "lucide-react";
+import { MoveRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function Hero() {
@@ -75,7 +75,7 @@ function Hero() {
           </div>
           <div className="flex flex-row gap-3">
             <Button size="lg" className="gap-4 agent-button-secondary" variant="outline">
-              Voice Chat <PhoneCall className="w-4 h-4" />
+              About Us <Info className="w-4 h-4" />
             </Button>
             <Button 
               size="lg" 
