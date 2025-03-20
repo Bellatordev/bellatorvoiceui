@@ -26,27 +26,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <div className="max-w-md w-full mx-auto relative z-20 bg-white/10 dark:bg-gray-900/30 p-8 rounded-xl backdrop-blur-sm">
+    <div className="max-w-md w-full mx-auto relative z-20 bg-gray-950/30 dark:bg-gray-900/30 p-8 rounded-xl backdrop-blur-sm border border-white/10">
       <div className="text-center mb-10">
-        <p className="text-gray-700 dark:text-gray-300 font-medium">Enter your credentials to start</p>
+        <p className="text-gray-200 dark:text-gray-300 font-medium">Enter your credentials to start</p>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="apiKey" className="block text-sm font-medium text-gray-200 dark:text-gray-300">
             Eleven Labs API Key
           </label>
-          <Input id="apiKey" type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="Enter your Eleven Labs API Key" className="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:border-yellows-accent focus:ring-yellows-accent" required />
+          <Input id="apiKey" type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="Enter your Eleven Labs API Key" className="bg-gray-800/50 border-gray-700 text-gray-100 focus:border-yellows-accent focus:ring-yellows-accent" required />
         </div>
         
         <div className="space-y-2">
-          <label htmlFor="agentId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="agentId" className="block text-sm font-medium text-gray-200 dark:text-gray-300">
             Voice Agent ID
           </label>
-          <Input id="agentId" type="text" value={agentId} onChange={e => setAgentId(e.target.value)} placeholder="Enter your Voice Agent ID" className="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:border-yellows-accent focus:ring-yellows-accent" required />
+          <Input id="agentId" type="text" value={agentId} onChange={e => setAgentId(e.target.value)} placeholder="Enter your Voice Agent ID" className="bg-gray-800/50 border-gray-700 text-gray-100 focus:border-yellows-accent focus:ring-yellows-accent" required />
         </div>
         
-        <Button type="submit" className="w-full font-playfair dark:bg-premium-accent bg-yellows-accent hover:bg-yellows-deep text-black hover:text-white dark:text-white" disabled={isLoading}>
+        <Button type="submit" className="w-full font-playfair bg-premium-accent hover:bg-premium-accent/90 text-white dark:text-white" disabled={isLoading}>
           {isLoading ? 'Connecting...' : 'Start Session'}
         </Button>
       </form>

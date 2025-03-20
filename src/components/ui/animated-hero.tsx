@@ -5,7 +5,11 @@ import { MoveRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 
-function Hero() {
+interface HeroProps {
+  scrollHandler?: (e: React.MouseEvent) => void;
+}
+
+function Hero({ scrollHandler }: HeroProps) {
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
     () => ["helpful", "intelligent", "responsive", "friendly", "smart", "efficient"],
@@ -22,14 +26,6 @@ function Hero() {
     }, 2000);
     return () => clearTimeout(timeoutId);
   }, [titleNumber, titles]);
-
-  const scrollToApiKeyInput = () => {
-    // Find the first input element (which should be the API key input)
-    const apiKeyInput = document.querySelector('input[type="password"]');
-    if (apiKeyInput) {
-      apiKeyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
 
   return (
     <div className="w-full">
@@ -75,7 +71,7 @@ function Hero() {
             </Button>
             <RainbowButton 
               className="gap-4 flex items-center justify-center"
-              onClick={scrollToApiKeyInput}
+              onClick={scrollHandler}
             >
               Get Started <MoveRight className="w-4 h-4" />
             </RainbowButton>
