@@ -44,6 +44,8 @@ export const useSpeechRecognition = ({
         }
         
         setTranscript(currentTranscript);
+        
+        // Always call onTranscript with the current transcript for real-time display
         onTranscript?.(currentTranscript);
         
         if (isFinal) {
@@ -91,6 +93,10 @@ export const useSpeechRecognition = ({
       try {
         recognition.stop();
         console.log('Speech recognition stopped');
+        
+        // Clear transcript when stopping
+        setTranscript('');
+        onTranscript?.('');
       } catch (error) {
         console.error('Error stopping speech recognition:', error);
       }
@@ -103,7 +109,7 @@ export const useSpeechRecognition = ({
         // Ignore errors when stopping during cleanup
       }
     };
-  }, [isListening, isMicMuted, recognition]);
+  }, [isListening, isMicMuted, recognition, onTranscript]);
 
   return { transcript, isRecognitionSupported };
 };

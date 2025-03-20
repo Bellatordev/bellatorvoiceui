@@ -54,10 +54,10 @@ const CircularVoiceInterface: React.FC = () => {
       </div>
       
       {/* Live transcription display */}
-      {isListening && !isMicMuted && currentTranscript && (
+      {isListening && !isMicMuted && (
         <div className="absolute -top-16 w-96 max-w-full p-3 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md z-20 text-center">
           <p className="text-sm text-gray-700 dark:text-gray-200 italic">
-            {currentTranscript}
+            {currentTranscript ? currentTranscript : "Listening..."}
           </p>
         </div>
       )}
