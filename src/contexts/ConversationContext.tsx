@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import useElevenLabs from '../hooks/useElevenLabs';
 import { toast } from '@/components/ui/use-toast';
@@ -86,10 +86,15 @@ export const ConversationProvider: React.FC<ConversationProviderProps> = ({
     modelId: 'eleven_multilingual_v2'
   });
 
-  useEffect(() => {
-    // Set volume for TTS
+  // Memoize the volume setting function to prevent infinite loops
+  const updateTtsVolume = useCallback(() => {
     setTtsVolume(isMuted ? 0 : volume);
   }, [volume, isMuted, setTtsVolume]);
+
+  useEffect(() => {
+    // Set volume for TTS
+    updateTtsVolume();
+  }, [updateTtsVolume]);
 
   // Add initial greeting message when component mounts
   useEffect(() => {
@@ -113,11 +118,15 @@ export const ConversationProvider: React.FC<ConversationProviderProps> = ({
     if (shouldAutoListen && !isPlaying && !isGenerating) {
       console.log('Auto-activating microphone after speech generation');
       setShouldAutoListen(false);
-      if (!isMicMuted) {
-        setTimeout(() => {
+      
+      // Wait a short time before activating the microphone
+      const timer = setTimeout(() => {
+        if (!isMicMuted) {
           setIsListening(true);
-        }, 500); // Small delay to ensure smooth transition
-      }
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
   }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted]);
 

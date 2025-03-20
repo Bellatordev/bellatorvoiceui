@@ -12,6 +12,7 @@ interface AIVoiceInputProps {
   demoMode?: boolean;
   demoInterval?: number;
   className?: string;
+  isListening?: boolean; // Add this prop to control the component externally
 }
 
 export function AIVoiceInput({
@@ -20,12 +21,20 @@ export function AIVoiceInput({
   visualizerBars = 48,
   demoMode = false,
   demoInterval = 3000,
-  className
+  className,
+  isListening: externalListening // Allow external control of listening state
 }: AIVoiceInputProps) {
   const [submitted, setSubmitted] = useState(false);
   const [time, setTime] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [isDemo, setIsDemo] = useState(demoMode);
+
+  // Sync with external listening state if provided
+  useEffect(() => {
+    if (externalListening !== undefined) {
+      setSubmitted(externalListening);
+    }
+  }, [externalListening]);
 
   useEffect(() => {
     setIsClient(true);
@@ -136,8 +145,6 @@ export function AIVoiceInput({
             />
           ))}
         </div>
-
-        {/* Removed the "Click to speak" / "Listening..." paragraph */}
       </div>
     </div>
   );

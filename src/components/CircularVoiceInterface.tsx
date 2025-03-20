@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { AIVoiceInput } from './ui/ai-voice-input';
@@ -16,7 +16,9 @@ const CircularVoiceInterface: React.FC = () => {
     toggleMic,
     toggleMute,
     isDarkMode,
-    toggleDarkMode
+    toggleDarkMode,
+    isPlaying,
+    isGenerating
   } = useConversation();
 
   return (
@@ -51,9 +53,10 @@ const CircularVoiceInterface: React.FC = () => {
       <button
         onClick={handleListenStart}
         className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
+        disabled={isPlaying || isGenerating}
       >
         <span className="text-blue-800 font-medium">
-          {isListening ? "Listening" : "Tap to speak"}
+          {isListening ? "Listening" : isPlaying ? "Playing..." : "Tap to speak"}
         </span>
       </button>
 
