@@ -59,7 +59,7 @@ const Index = () => {
           <div className="w-full h-full absolute inset-0 overflow-hidden">
             <LampDemo />
           </div>
-          <div className={`max-w-2xl w-full mx-auto z-10 relative ${isMobile ? 'mt-48 md:mt-64' : 'mt-64 md:mt-80'}`}>
+          <div className={`max-w-2xl w-full mx-auto z-10 relative ${isMobile ? 'mt-56 md:mt-72' : 'mt-72 md:mt-96'}`}>
             <VoiceAgent />
           </div>
         </section>
