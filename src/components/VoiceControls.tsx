@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare, Moon, Sun } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 
@@ -43,9 +43,54 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       onListen();
     }
   };
+
+  // Handle dark mode toggle
+  const [isDarkMode, setIsDarkMode] = React.useState(() => {
+    // Check if user has a preference stored or prefers dark mode by default
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark' || 
+      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+
+  // Toggle dark mode and update localstorage
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+    
+    // Update document classes for dark mode
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  // Apply dark mode on component mount
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
   
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
+      {/* Dark mode toggle */}
+      <Button
+        onClick={toggleDarkMode}
+        className="self-end mb-4 rounded-full"
+        size="icon"
+        variant="outline"
+        aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {isDarkMode ? 
+          <Sun className="h-4 w-4 text-yellow-400" /> : 
+          <Moon className="h-4 w-4 text-slate-700" />
+        }
+      </Button>
+
       <div className="relative w-64 h-64 flex items-center justify-center">
         {/* Animated gradient background - made perfectly circular and smoother animation */}
         <div 
@@ -57,10 +102,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           <div 
             className={cn(
               "absolute inset-0 rounded-full",
-              isListening ? "animate-gradient-shift" : ""
+              isListening ? "animate-gradient-shift" : "",
+              "dark:bg-gradient-premium-dark bg-gradient-premium-light"
             )}
             style={{
-              background: "linear-gradient(135deg, #0EA5E9, #33C3F0, #0FA0CE, #D3E4FD)",
               backgroundSize: "300% 300%",
             }}
           />
@@ -72,7 +117,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               isListening ? "animate-breathe" : ""
             )}
             style={{
-              background: "radial-gradient(circle, transparent 30%, #0EA5E9 70%)",
+              background: "radial-gradient(circle, transparent 30%, var(--gradient-center-color) 70%)",
               mixBlendMode: "overlay"
             }}
           />
@@ -80,10 +125,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         
         {/* Center white pill with status text */}
         <div 
-          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
+          className="relative z-10 px-6 py-3 bg-white/90 dark:bg-gray-900/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 dark:hover:bg-gray-900/100 hover:shadow-lg font-playfair"
           onClick={handleTapToSpeakClick}
         >
-          <span className="text-gray-800 font-medium">
+          <span className="text-gray-800 dark:text-gray-100 font-medium">
             {isListening ? "Listening" : "Tap to speak"}
           </span>
         </div>
@@ -94,8 +139,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           className={cn(
             "absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300",
             isMicMuted 
-              ? "bg-red-500 text-white hover:bg-red-600" 
-              : "bg-white/80 text-gray-800 hover:bg-white/90 border border-gray-200"
+              ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700" 
+              : "bg-white/80 text-gray-800 hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90 border border-gray-200 dark:border-gray-700"
           )}
           variant="ghost"
           size="icon"
@@ -109,15 +154,15 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         <div className="flex items-center space-x-4">
           <button
             onClick={onMuteToggle}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors focus-ring"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
             aria-label={isMuted ? "Unmute speaker" : "Mute speaker"}
           >
             {isMuted ? (
-              <VolumeX className="w-5 h-5 text-gray-400" />
+              <VolumeX className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             ) : volume < 0.5 ? (
-              <Volume1 className="w-5 h-5 text-gray-600" />
+              <Volume1 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             ) : (
-              <Volume2 className="w-5 h-5 text-gray-600" />
+              <Volume2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             )}
           </button>
           
@@ -128,7 +173,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             step="0.01"
             value={volume}
             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-agent-primary"
+            className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-agent-primary dark:[&::-webkit-slider-thumb]:bg-premium-accent"
             disabled={isMuted}
           />
         </div>
@@ -137,7 +182,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           variant="outline" 
           size="sm" 
           onClick={onSwitchToText}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 font-playfair dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
         >
           <MessageSquare className="w-4 h-4" />
           Type instead

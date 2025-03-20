@@ -20,6 +20,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", ...fontFamily.sans],
+        playfair: ["'Playfair Display'", "serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -32,6 +36,12 @@ const config = {
           primary: "hsl(240, 60%, 59%)",
           secondary: "hsl(240, 55%, 92%)",
           accent: "hsl(240, 55%, 92%)",
+        },
+        premium: {
+          accent: "#9b87f5",
+          secondary: "#7E69AB",
+          light: "#D6BCFA",
+          dark: "#1A1F2C",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -62,13 +72,14 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      backgroundImage: {
+        'gradient-premium-light': 'linear-gradient(135deg, #D6BCFA, #9b87f5, #7E69AB, #D6BCFA)',
+        'gradient-premium-dark': 'linear-gradient(135deg, #1A1F2C, #403E43, #6E59A5, #1A1F2C)',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      fontFamily: {
-        sans: ["Inter", ...fontFamily.sans],
       },
       keyframes: {
         "accordion-down": {
