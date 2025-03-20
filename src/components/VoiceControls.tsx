@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare, Moon, Sun } from 'lucide-react';
+import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import DarkModeToggle from './DarkModeToggle';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -15,6 +16,8 @@ type VoiceControlsProps = {
   onSwitchToText: () => void;
   isMicMuted: boolean;
   onMicMuteToggle: () => void;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 };
 
 const VoiceControls: React.FC<VoiceControlsProps> = ({
@@ -28,6 +31,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   onSwitchToText,
   isMicMuted,
   onMicMuteToggle,
+  isDarkMode,
+  toggleDarkMode,
 }) => {
   // Function to handle the tap-to-speak button click
   const handleTapToSpeakClick = () => {
@@ -43,53 +48,16 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       onListen();
     }
   };
-
-  // Handle dark mode toggle
-  const [isDarkMode, setIsDarkMode] = React.useState(() => {
-    // Check if user has a preference stored or prefers dark mode by default
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme === 'dark' || 
-      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
-
-  // Toggle dark mode and update localstorage
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-    
-    // Update document classes for dark mode
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
-  // Apply dark mode on component mount
-  React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
   
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
       {/* Dark mode toggle */}
-      <Button
-        onClick={toggleDarkMode}
-        className="self-end mb-4 rounded-full"
-        size="icon"
-        variant="outline"
-        aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {isDarkMode ? 
-          <Sun className="h-4 w-4 text-yellow-400" /> : 
-          <Moon className="h-4 w-4 text-slate-700" />
-        }
-      </Button>
+      <div className="self-end mb-4">
+        <DarkModeToggle
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      </div>
 
       <div className="relative w-64 h-64 flex items-center justify-center">
         {/* Animated gradient background - made perfectly circular and smoother animation */}
