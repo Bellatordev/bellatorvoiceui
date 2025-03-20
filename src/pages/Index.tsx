@@ -1,6 +1,7 @@
 
 import React from 'react';
 import VoiceAgent from '../components/VoiceAgent';
+import { Hero } from '@/components/ui/animated-hero';
 
 const Index = () => {
   return (
@@ -9,6 +10,8 @@ const Index = () => {
         <header className="mb-8">
           <h1 className="sr-only">Voice Assistant</h1>
         </header>
+        
+        <Hero />
         
         <main className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
           <VoiceAgent />
