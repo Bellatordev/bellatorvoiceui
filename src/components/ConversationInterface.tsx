@@ -34,6 +34,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.8);
   const [isLoading, setIsLoading] = useState(false);
+  const [shouldAutoListen, setShouldAutoListen] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -83,6 +84,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       generateSpeech(welcomeMessage.text);
     }
   }, []);
+
+  // Auto-listen after speech generation is complete
+  useEffect(() => {
+    if (shouldAutoListen && !isPlaying && !isGenerating) {
+      console.log('Auto-activating microphone after speech generation');
+      setShouldAutoListen(false);
+      if (!isMicMuted) {
+        setTimeout(() => {
+          setIsListening(true);
+        }, 500); // Small delay to ensure smooth transition
+      }
+    }
+  }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -157,6 +171,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       // Generate speech for the response if not muted
       if (!isMuted && volume > 0) {
         generateSpeech(responseText);
+        // Set flag to auto-listen after speech generation
+        setShouldAutoListen(true);
+      } else {
+        // If audio is muted, we should still auto-listen
+        setShouldAutoListen(true);
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
