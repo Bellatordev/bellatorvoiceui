@@ -2,20 +2,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import DarkModeToggle from './DarkModeToggle';
+
 interface LoginScreenProps {
   onLogin: (apiKey: string, agentId: string) => void;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
 }
+
 const LoginScreen: React.FC<LoginScreenProps> = ({
-  onLogin,
-  isDarkMode,
-  toggleDarkMode
+  onLogin
 }) => {
   const [apiKey, setApiKey] = useState('');
   const [agentId, setAgentId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiKey.trim() || !agentId.trim()) return;
@@ -26,11 +24,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       setIsLoading(false);
     }, 500);
   };
-  return <div className="max-w-md w-full mx-auto">
-      <div className="flex justify-end mb-4">
-        <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-      </div>
-      
+
+  return (
+    <div className="max-w-md w-full mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold font-playfair bg-gradient-to-r from-gray-800 to-gray-600 dark:from-premium-accent dark:to-premium-light bg-clip-text text-transparent mb-2">Bellator<span className="text-yellows-accent">.ai</span></h1>
         <p className="text-gray-600 dark:text-gray-400">Enter your credentials to start</p>
@@ -55,6 +51,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
           {isLoading ? 'Connecting...' : 'Start Session'}
         </Button>
       </form>
-    </div>;
+    </div>
+  );
 };
+
 export default LoginScreen;

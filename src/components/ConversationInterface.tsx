@@ -1,408 +1,265 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff } from 'lucide-react';
-import ConversationLog, { Message } from './ConversationLog';
-import useElevenLabs from '@/hooks/useElevenLabs';
-import { v4 as uuidv4 } from 'uuid';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Mic, Send, User, Bot } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import VoiceControls from './VoiceControls';
 
 interface ConversationInterfaceProps {
   apiKey: string;
   agentId: string;
-  onLogout?: () => void;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
+  onLogout: () => void;
 }
 
-const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ 
-  apiKey, 
+const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
+  apiKey,
   agentId,
   onLogout,
-  isDarkMode,
-  toggleDarkMode
 }) => {
-  const [isListening, setIsListening] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [transcript, setTranscript] = useState("");
-  const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
-  const [textInput, setTextInput] = useState("");
-  const [isMuted, setIsMuted] = useState(false);
-  const [isMicMuted, setIsMicMuted] = useState(false);
-  const [autoStartMic, setAutoStartMic] = useState(true);
-  
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const hasRequestedMicPermission = useRef(false);
-  const lastTranscriptRef = useRef<string>("");
-  
-  const { 
-    generateSpeech, 
-    isGenerating, 
-    isPlaying, 
-    error,
-    stopAudio,
-    setVolume,
-    volume 
-  } = useElevenLabs({
-    apiKey,
-    voiceId: agentId,
-  });
+  const [message, setMessage] = useState('');
+  const [conversation, setConversation] = useState<
+    { sender: 'user' | 'bot'; text: string }[]
+  >([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioURL, setAudioURL] = useState('');
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isGenerating || isPlaying) {
-      if (recognitionRef.current) {
-        console.log('Stopping microphone completely while audio is active');
-        recognitionRef.current.stop();
-        setIsListening(false);
-      }
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted) {
-      console.log('Auto-starting microphone after audio playback complete');
-      const timer = setTimeout(() => {
-        startListening();
-      }, 500);
-      
-      return () => clearTimeout(timer);
+    // Scroll to bottom on new message
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted]);
+  }, [conversation]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-        
-        recognition.onstart = () => {
-          console.log('Speech recognition started');
-          setIsListening(true);
+    // Initialize media recorder
+    const initializeMediaRecorder = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+
+        recorder.ondataavailable = (event) => {
+          const audioBlob = new Blob([event.data], { type: 'audio/webm' });
+          const url = URL.createObjectURL(audioBlob);
+          setAudioURL(url);
         };
-        
-        recognition.onend = () => {
-          console.log('Speech recognition ended');
-          setIsListening(false);
-          
-          // Check if we have a final transcript that hasn't been processed yet
-          if (lastTranscriptRef.current.trim()) {
-            console.log('Processing final transcript after recognition ended:', lastTranscriptRef.current);
-            processUserInput(lastTranscriptRef.current);
-            lastTranscriptRef.current = "";
-          }
-        };
-        
-        recognition.onresult = (event) => {
-          const last = event.results.length - 1;
-          const result = event.results[last];
-          const text = result[0].transcript;
-          setTranscript(text);
-          
-          // Store the latest transcript in case onend fires without a final result
-          lastTranscriptRef.current = text;
-          
-          if (result.isFinal) {
-            console.log('Final transcript received:', text);
-            processUserInput(text);
-            setTranscript("");
-            lastTranscriptRef.current = "";
-            
-            if (recognitionRef.current) {
-              recognitionRef.current.stop();
-            }
-          }
-        };
-        
-        recognition.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
-          setIsListening(false);
-          
-          // Don't show errors for "no-speech" as it's a common event
-          if (event.error !== 'no-speech') {
-            toast({
-              title: "Microphone Error",
-              description: `Error: ${event.error}. Please check your microphone permissions.`,
-              variant: "destructive"
-            });
-          }
-          
-          // If we have transcript, process it even on error
-          if (lastTranscriptRef.current.trim()) {
-            console.log('Processing transcript after error:', lastTranscriptRef.current);
-            processUserInput(lastTranscriptRef.current);
-            lastTranscriptRef.current = "";
-          }
-        };
-        
-        recognitionRef.current = recognition;
-      } else {
+
+        setMediaRecorder(recorder);
+      } catch (error) {
+        console.error("Error initializing media recorder:", error);
         toast({
-          title: "Browser Not Supported",
-          description: "Speech recognition is not supported in this browser. Please try Chrome, Edge, or Safari.",
-          variant: "destructive"
+          title: "Microphone Error",
+          description: "Please allow microphone access to use voice input.",
+          variant: "destructive",
         });
       }
-    }
-    
+    };
+
+    initializeMediaRecorder();
+
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
       }
     };
   }, []);
 
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Speech Generation Error",
-        description: error,
-        variant: "destructive"
-      });
-      
-      const errorMessage: Message = {
-        id: uuidv4(),
-        text: `I'm having trouble with my voice. Please check if the Voice ID is correct. Error: ${error}`,
-        sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-    }
-  }, [error]);
+  const sendMessage = async () => {
+    if (!message.trim()) return;
 
-  useEffect(() => {
-    const welcomeMessage: Message = {
-      id: uuidv4(),
-      text: "Hello! How can I help you today?",
-      sender: 'assistant',
-      timestamp: new Date(),
-    };
-    
-    setMessages([welcomeMessage]);
-    
-    if (!isMuted) {
-      generateSpeech(welcomeMessage.text);
-    }
-  }, []);
+    setIsLoading(true);
+    const userMessage = { sender: 'user', text: message };
+    setConversation((prevConversation) => [...prevConversation, userMessage]);
+    setMessage('');
 
-  const requestMicrophonePermission = async () => {
-    if (hasRequestedMicPermission.current) return true;
-    
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      hasRequestedMicPermission.current = true;
-      return true;
-    } catch (err) {
-      console.error('Microphone permission denied:', err);
-      toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to use voice features.",
-        variant: "destructive"
+      const response = await fetch('https://api.elevenlabs.io/v1/agents/' + agentId + '/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: message }],
+        }),
       });
-      return false;
-    }
-  };
 
-  const processUserInput = (text: string) => {
-    if (!text.trim()) return;
-    
-    console.log('Processing user input:', text);
-    
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-    }
-    
-    const userMessage: Message = {
-      id: uuidv4(),
-      text: text,
-      sender: 'user',
-      timestamp: new Date(),
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    
-    setTimeout(() => {
-      const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
-      const assistantMessage: Message = {
-        id: uuidv4(),
-        text: assistantResponse,
-        sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      if (!isMuted) {
-        if (recognitionRef.current && isListening) {
-          recognitionRef.current.stop();
-        }
-        console.log('Generating speech for response');
-        generateSpeech(assistantResponse);
-      } else if (autoStartMic) {
-        setTimeout(startListening, 500);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    }, 1000);
-  };
 
-  const startListening = async () => {
-    if (isPlaying || isGenerating || isMicMuted) {
-      console.log('Cannot start listening: audio is active or mic is muted');
-      return;
-    }
-    
-    if (isListening) return;
-    
-    if (!recognitionRef.current) {
-      toast({
-        title: "Speech Recognition Unavailable",
-        description: "Your browser doesn't support speech recognition.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) return;
-    
-    try {
-      recognitionRef.current.start();
-      console.log('Microphone activated');
-    } catch (error) {
-      console.error('Error starting speech recognition:', error);
+      const data = await response.json();
+      const botMessage = { sender: 'bot', text: data.choices[0].message.content };
+      setConversation((prevConversation) => [...prevConversation, botMessage]);
+    } catch (error: any) {
+      console.error("Error sending message:", error);
       toast({
         title: "Error",
-        description: "Failed to start voice recognition. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to send message.",
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const toggleListening = async () => {
-    if (isMicMuted) {
-      console.log('Microphone is muted, cannot toggle listening');
+  const startRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.start();
+      setIsRecording(true);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const sendAudioMessage = async () => {
+    if (!audioURL) {
+      toast({
+        title: "No audio recorded",
+        description: "Please record audio before sending.",
+        variant: "destructive",
+      });
       return;
     }
-    
-    if (isPlaying || isGenerating) {
-      stopAudio();
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    
-    if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+
+    setIsLoading(true);
+    const audioBlob = await fetch(audioURL).then(r => r.blob());
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
+
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/agents/' + agentId + '/transcribe', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': apiKey,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    } else {
-      await startListening();
-    }
-  };
 
-  const handleMicMuteToggle = () => {
-    const newMuteState = !isMicMuted;
-    setIsMicMuted(newMuteState);
-    
-    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
-      setTimeout(startListening, 300);
-    }
-    
-    if (newMuteState && isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-  };
+      const data = await response.json();
+      const transcribedMessage = data.text;
 
-  const handleTextSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (textInput.trim()) {
-      processUserInput(textInput);
-      setTextInput("");
-    }
-  };
+      // Add user's transcribed message to conversation
+      const userMessage = { sender: 'user', text: transcribedMessage };
+      setConversation((prevConversation) => [...prevConversation, userMessage]);
 
-  const handleMuteToggle = () => {
-    const newMuteState = !isMuted;
-    setIsMuted(newMuteState);
-    
-    if (newMuteState) {
-      setVolume(0);
-    } else {
-      setVolume(volume > 0 ? volume : 0.5);
-    }
-    
-    if (isPlaying) {
-      stopAudio();
-    }
-  };
+      // Send the transcribed message to the bot
+      const chatResponse = await fetch('https://api.elevenlabs.io/v1/agents/' + agentId + '/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: transcribedMessage }],
+        }),
+      });
 
-  const handleVolumeChange = (value: number) => {
-    setVolume(value);
-    
-    if (value === 0 && !isMuted) {
-      setIsMuted(true);
-    } else if (value > 0 && isMuted) {
-      setIsMuted(false);
+      if (!chatResponse.ok) {
+        throw new Error(`HTTP error! Status: ${chatResponse.status}`);
+      }
+
+      const chatData = await chatResponse.json();
+      const botMessage = { sender: 'bot', text: chatData.choices[0].message.content };
+      setConversation((prevConversation) => [...prevConversation, botMessage]);
+
+    } catch (error: any) {
+      console.error("Error sending audio message:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send audio message.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 agent-card mb-6 overflow-hidden">
-        <ConversationLog 
-          messages={messages} 
-          isGeneratingAudio={isGenerating} 
-          isPlayingAudio={isPlaying}
-          onToggleAudio={generateSpeech}
-          onLogout={onLogout}
-          className="h-full" 
-        />
+      <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Conversation</h2>
+        <Button variant="outline" size="sm" onClick={onLogout}>
+          Logout
+        </Button>
       </div>
-      
-      {transcript && !isMicMuted && (
-        <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
-          Listening: {transcript}
-        </div>
-      )}
-      
-      {inputMode === 'voice' ? (
-        <div className="flex justify-center py-4">
-          <VoiceControls 
-            isListening={isListening}
-            isMuted={isMuted}
-            volume={volume}
-            onListen={toggleListening}
-            onStopListening={toggleListening}
-            onMuteToggle={handleMuteToggle}
-            onVolumeChange={handleVolumeChange}
-            onSwitchToText={() => setInputMode('text')}
-            isMicMuted={isMicMuted}
-            onMicMuteToggle={handleMicMuteToggle}
-            isDarkMode={isDarkMode}
-            toggleDarkMode={toggleDarkMode}
-          />
-        </div>
-      ) : (
-        <form onSubmit={handleTextSubmit} className="flex items-center space-x-2 p-4">
-          <input
-            type="text"
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
+
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
+        {conversation.map((messageData, index) => (
+          <div
+            key={index}
+            className={`flex flex-col rounded-xl p-3 w-fit max-w-[80%] ${messageData.sender === 'user'
+              ? 'ml-auto bg-blue-100 dark:bg-blue-200'
+              : 'mr-auto bg-gray-100 dark:bg-gray-700'
+              }`}
+          >
+            <div className="text-sm text-gray-800 dark:text-gray-100">
+              {messageData.text}
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex items-center justify-center">
+            <div className="animate-pulse rounded-full bg-gray-300 dark:bg-gray-600 h-4 w-4 mr-2"></div>
+            <div className="animate-pulse rounded-full bg-gray-300 dark:bg-gray-600 h-4 w-4 mr-2"></div>
+            <div className="animate-pulse rounded-full bg-gray-300 dark:bg-gray-600 h-4 w-4"></div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 border-t dark:border-gray-700">
+        <div className="flex items-center space-x-2">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-agent-primary"
+            className="flex-1 resize-none border rounded-md py-2 px-3 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+            rows={1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
           />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-agent-primary text-white rounded-md hover:bg-agent-primary/90"
-          >
+          <Button onClick={sendMessage} disabled={isLoading}>
+            <Send className="w-4 h-4 mr-2" />
             Send
-          </button>
-          <button
-            type="button"
-            onClick={() => setInputMode('voice')}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
+          <Button
+            variant="secondary"
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isLoading}
           >
-            Use Voice
-          </button>
-        </form>
-      )}
+            {isRecording ? (
+              <>Stop Recording</>
+            ) : (
+              <>Record Audio</>
+            )}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={sendAudioMessage}
+            disabled={isLoading || !audioURL}
+          >
+            Send Audio
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,34 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import LoginScreen from './LoginScreen';
 import ConversationInterface from './ConversationInterface';
-import DarkModeToggle from './DarkModeToggle';
 import { toast } from '@/components/ui/use-toast';
 
 const VoiceAgent: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [agentId, setAgentId] = useState('');
-  
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme === 'dark' || 
-      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-  };
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
 
   const handleLogin = (key: string, id: string) => {
     if (!key.trim() || !id.trim()) {
@@ -65,17 +44,13 @@ const VoiceAgent: React.FC = () => {
     <div className="flex flex-col h-full">
       {!isLoggedIn ? (
         <LoginScreen 
-          onLogin={handleLogin} 
-          isDarkMode={isDarkMode}
-          toggleDarkMode={toggleDarkMode}
+          onLogin={handleLogin}
         />
       ) : (
         <ConversationInterface 
           apiKey={apiKey} 
           agentId={agentId} 
           onLogout={handleLogout}
-          isDarkMode={isDarkMode}
-          toggleDarkMode={toggleDarkMode}
         />
       )}
     </div>
