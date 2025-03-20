@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import ConversationLog, { Message } from './ConversationLog';
@@ -32,6 +33,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
+  const lastTranscriptRef = useRef<string>("");
   
   const { 
     generateSpeech, 
@@ -81,6 +83,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognition.onend = () => {
           console.log('Speech recognition ended');
           setIsListening(false);
+          
+          // Check if we have a final transcript that hasn't been processed yet
+          if (lastTranscriptRef.current.trim()) {
+            console.log('Processing final transcript after recognition ended:', lastTranscriptRef.current);
+            processUserInput(lastTranscriptRef.current);
+            lastTranscriptRef.current = "";
+          }
         };
         
         recognition.onresult = (event) => {
@@ -89,9 +98,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           const text = result[0].transcript;
           setTranscript(text);
           
+          // Store the latest transcript in case onend fires without a final result
+          lastTranscriptRef.current = text;
+          
           if (result.isFinal) {
+            console.log('Final transcript received:', text);
             processUserInput(text);
             setTranscript("");
+            lastTranscriptRef.current = "";
             
             if (recognitionRef.current) {
               recognitionRef.current.stop();
@@ -102,11 +116,22 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognition.onerror = (event) => {
           console.error('Speech recognition error', event.error);
           setIsListening(false);
-          toast({
-            title: "Microphone Error",
-            description: `Error: ${event.error}. Please check your microphone permissions.`,
-            variant: "destructive"
-          });
+          
+          // Don't show errors for "no-speech" as it's a common event
+          if (event.error !== 'no-speech') {
+            toast({
+              title: "Microphone Error",
+              description: `Error: ${event.error}. Please check your microphone permissions.`,
+              variant: "destructive"
+            });
+          }
+          
+          // If we have transcript, process it even on error
+          if (lastTranscriptRef.current.trim()) {
+            console.log('Processing transcript after error:', lastTranscriptRef.current);
+            processUserInput(lastTranscriptRef.current);
+            lastTranscriptRef.current = "";
+          }
         };
         
         recognitionRef.current = recognition;
@@ -181,6 +206,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const processUserInput = (text: string) => {
     if (!text.trim()) return;
     
+    console.log('Processing user input:', text);
+    
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
     }
@@ -209,6 +236,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         if (recognitionRef.current && isListening) {
           recognitionRef.current.stop();
         }
+        console.log('Generating speech for response');
         generateSpeech(assistantResponse);
       } else if (autoStartMic) {
         setTimeout(startListening, 500);
