@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ConversationProvider } from '@/contexts/ConversationContext';
 import ConversationContainer from './ConversationContainer';
 import CircularVoiceInterface from './CircularVoiceInterface';
+import DarkModeToggle from './DarkModeToggle';
+import { useConversation } from '@/contexts/ConversationContext';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -18,9 +20,24 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 }) => {
   return (
     <ConversationProvider apiKey={apiKey} agentId={agentId}>
-      <div className="flex flex-col h-full bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-gray-950 rounded-xl overflow-hidden shadow-lg border border-blue-100 dark:border-blue-900/30">
-        <div className="p-4 border-b border-blue-100 dark:border-blue-900/50 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Voice Assistant</h2>
+      <ConversationInterfaceContent onLogout={onLogout} />
+    </ConversationProvider>
+  );
+};
+
+// Separated inner component to access the context
+const ConversationInterfaceContent: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const { isDarkMode, toggleDarkMode } = useConversation();
+  
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-gray-950 rounded-xl overflow-hidden shadow-lg border border-blue-100 dark:border-blue-900/30">
+      <div className="p-4 border-b border-blue-100 dark:border-blue-900/50 flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Voice Assistant</h2>
+        <div className="flex items-center space-x-2">
+          <DarkModeToggle 
+            isDarkMode={isDarkMode} 
+            toggleDarkMode={toggleDarkMode} 
+          />
           <Button 
             variant="outline" 
             size="sm" 
@@ -30,18 +47,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             Logout
           </Button>
         </div>
+      </div>
 
-        <div className="flex-1 flex flex-col p-4 overflow-hidden">
-          <div className="flex-1 flex flex-col">
-            <ConversationContainer />
-            
-            <div className="mt-auto">
-              <CircularVoiceInterface />
-            </div>
+      <div className="flex-1 flex flex-col p-4 overflow-hidden">
+        <div className="flex-1 flex flex-col">
+          <ConversationContainer />
+          
+          <div className="mt-auto">
+            <CircularVoiceInterface />
           </div>
         </div>
       </div>
-    </ConversationProvider>
+    </div>
   );
 };
 

@@ -5,7 +5,6 @@ import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { AIVoiceInput } from './ui/ai-voice-input';
 import { useConversation } from '@/contexts/ConversationContext';
 import { cn } from '@/lib/utils';
-import DarkModeToggle from './DarkModeToggle';
 
 const CircularVoiceInterface: React.FC = () => {
   const { 
@@ -16,8 +15,6 @@ const CircularVoiceInterface: React.FC = () => {
     handleListenStop,
     toggleMic,
     toggleMute,
-    isDarkMode,
-    toggleDarkMode,
     isPlaying,
     isGenerating,
     currentTranscript
@@ -30,14 +27,6 @@ const CircularVoiceInterface: React.FC = () => {
 
   return (
     <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
-      {/* Dark mode toggle - moved to the absolutely positioned container */}
-      <div className="absolute top-0 right-0 z-30 -mt-12 -mr-12">
-        <DarkModeToggle
-          isDarkMode={isDarkMode}
-          toggleDarkMode={toggleDarkMode}
-        />
-      </div>
-
       {/* Circular blue gradient background */}
       <div className="absolute w-full h-full rounded-full overflow-hidden">
         <div 
