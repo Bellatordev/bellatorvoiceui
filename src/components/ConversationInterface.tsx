@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,15 +12,19 @@ interface ConversationInterfaceProps {
   onLogout: () => void;
 }
 
+// Explicitly define the Message type with a strict union type for sender
+type Message = {
+  sender: 'user' | 'bot';
+  text: string;
+};
+
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   apiKey,
   agentId,
   onLogout,
 }) => {
   const [message, setMessage] = useState('');
-  const [conversation, setConversation] = useState<
-    { sender: 'user' | 'bot'; text: string }[]
-  >([]);
+  const [conversation, setConversation] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -70,7 +75,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (!message.trim()) return;
 
     setIsLoading(true);
-    const userMessage = { sender: 'user', text: message };
+    const userMessage: Message = { sender: 'user', text: message };
     setConversation((prevConversation) => [...prevConversation, userMessage]);
     setMessage('');
 
@@ -91,7 +96,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
 
       const data = await response.json();
-      const botMessage = { sender: 'bot', text: data.choices[0].message.content };
+      const botMessage: Message = { sender: 'bot', text: data.choices[0].message.content };
       setConversation((prevConversation) => [...prevConversation, botMessage]);
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -151,7 +156,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       const transcribedMessage = data.text;
 
       // Add user's transcribed message to conversation
-      const userMessage = { sender: 'user', text: transcribedMessage };
+      const userMessage: Message = { sender: 'user', text: transcribedMessage };
       setConversation((prevConversation) => [...prevConversation, userMessage]);
 
       // Send the transcribed message to the bot
@@ -171,7 +176,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
 
       const chatData = await chatResponse.json();
-      const botMessage = { sender: 'bot', text: chatData.choices[0].message.content };
+      const botMessage: Message = { sender: 'bot', text: chatData.choices[0].message.content };
       setConversation((prevConversation) => [...prevConversation, botMessage]);
 
     } catch (error: any) {
