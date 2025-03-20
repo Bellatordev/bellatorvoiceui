@@ -25,8 +25,8 @@ const CircularVoiceInterface: React.FC = () => {
 
   // Log state changes for debugging
   useEffect(() => {
-    console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}`);
-  }, [isListening, isPlaying, isGenerating]);
+    console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}, isMicMuted: ${isMicMuted}`);
+  }, [isListening, isPlaying, isGenerating, isMicMuted]);
 
   return (
     <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
@@ -43,7 +43,7 @@ const CircularVoiceInterface: React.FC = () => {
         <div 
           className={cn(
             "absolute inset-0 rounded-full",
-            isListening ? "animate-pulse-slow" : ""
+            isListening && !isMicMuted ? "animate-pulse-slow" : ""
           )}
           style={{
             background: "radial-gradient(circle, #33C3F0 0%, #1EAEDB 50%, #0FA0CE 100%)",
@@ -55,7 +55,7 @@ const CircularVoiceInterface: React.FC = () => {
         <div 
           className={cn(
             "absolute inset-0 rounded-full",
-            isListening ? "animate-breathe" : ""
+            isListening && !isMicMuted ? "animate-breathe" : ""
           )}
           style={{
             background: "radial-gradient(circle, transparent 30%, rgba(255, 255, 255, 0.2) 70%)",
@@ -65,7 +65,7 @@ const CircularVoiceInterface: React.FC = () => {
       </div>
       
       {/* Live transcription display */}
-      {isListening && currentTranscript && (
+      {isListening && !isMicMuted && currentTranscript && (
         <div className="absolute -top-16 w-96 max-w-full p-3 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md z-20 text-center">
           <p className="text-sm text-gray-700 dark:text-gray-200 italic">
             {currentTranscript}
@@ -75,7 +75,7 @@ const CircularVoiceInterface: React.FC = () => {
       
       {/* Center listening button */}
       <button
-        onClick={handleListenStart}
+        onClick={isMicMuted ? toggleMic : handleListenStart}
         className={cn(
           "relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg",
           (isPlaying || isGenerating) ? "opacity-50 cursor-not-allowed" : "opacity-100"
@@ -83,7 +83,7 @@ const CircularVoiceInterface: React.FC = () => {
         disabled={isPlaying || isGenerating}
       >
         <span className="text-blue-800 font-medium">
-          {isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
+          {isMicMuted ? "Mic Off" : isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
         </span>
       </button>
 

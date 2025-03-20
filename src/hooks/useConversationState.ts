@@ -205,10 +205,14 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
   }, [togglePlayback]);
 
   const toggleMic = useCallback(() => {
-    setIsMicMuted(!isMicMuted);
-    if (isListening && !isMicMuted) {
-      // If we're turning the mic off and it's currently listening, stop listening
+    const newMutedState = !isMicMuted;
+    setIsMicMuted(newMutedState);
+    
+    // If we're turning the mic off and it's currently listening, stop listening
+    if (newMutedState && isListening) {
+      console.log('Stopping listening because mic was muted');
       setIsListening(false);
+      setCurrentTranscript('');
     }
   }, [isMicMuted, isListening]);
 

@@ -67,11 +67,13 @@ export const useSpeechRecognition = ({
     }
   }, [onTranscript, onFinalTranscript]);
 
-  // Start/stop recognition based on listening state
+  // Start/stop recognition based on listening state and mic mute state
   useEffect(() => {
     if (!recognition) return;
     
-    if (isListening && !isMicMuted) {
+    const shouldBeListening = isListening && !isMicMuted;
+    
+    if (shouldBeListening) {
       try {
         recognition.start();
         console.log('Speech recognition started');
@@ -79,7 +81,10 @@ export const useSpeechRecognition = ({
         // If it's already running, restart it
         recognition.stop();
         setTimeout(() => {
-          recognition.start();
+          if (isListening && !isMicMuted) { // Double-check state before restarting
+            recognition.start();
+            console.log('Speech recognition restarted');
+          }
         }, 100);
       }
     } else {
