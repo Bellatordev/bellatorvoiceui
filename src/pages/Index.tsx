@@ -1,4 +1,3 @@
-
 import React from 'react';
 import VoiceAgent from '../components/VoiceAgent';
 import { Hero } from '@/components/ui/animated-hero';
@@ -45,11 +44,11 @@ const Index = () => {
         </div>
         
         {/* Login section with lamp effect */}
-        <section className="flex-1 flex flex-col items-center justify-center py-12 relative">
-          <div className="absolute inset-0 w-full h-full -z-10 max-h-[600px] overflow-hidden">
+        <section className="flex-1 flex flex-col items-center justify-center py-12 relative overflow-hidden">
+          <div className="w-full h-full absolute inset-0 overflow-hidden">
             <LampDemo />
           </div>
-          <div className="max-w-2xl w-full mx-auto z-10 mt-48">
+          <div className="max-w-2xl w-full mx-auto z-10 mt-48 relative">
             <VoiceAgent />
           </div>
         </section>
