@@ -4,6 +4,7 @@ import VoiceAgent from '../components/VoiceAgent';
 import { Hero } from '@/components/ui/animated-hero';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { useEffect, useState } from 'react';
+import { LampDemo } from '@/components/ui/lamp-demo';
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -43,9 +44,12 @@ const Index = () => {
           <div className="w-24 h-px bg-gray-300 dark:bg-gray-700"></div>
         </div>
         
-        {/* Login section - centered with its own container */}
-        <section className="flex-1 flex flex-col items-center justify-center py-12">
-          <div className="max-w-2xl w-full mx-auto">
+        {/* Login section with lamp effect */}
+        <section className="flex-1 flex flex-col items-center justify-center py-12 relative">
+          <div className="absolute inset-0 w-full h-full -z-10 max-h-[600px] overflow-hidden">
+            <LampDemo />
+          </div>
+          <div className="max-w-2xl w-full mx-auto z-10 mt-48">
             <VoiceAgent />
           </div>
         </section>
