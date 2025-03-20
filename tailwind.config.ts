@@ -43,6 +43,12 @@ const config = {
           light: "#D6BCFA",
           dark: "#1A1F2C",
         },
+        yellows: {
+          soft: "#FEF7CD",
+          muted: "#F9E48B",
+          accent: "#F5CB5C",
+          deep: "#F0B429",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -75,6 +81,7 @@ const config = {
       backgroundImage: {
         'gradient-premium-light': 'linear-gradient(135deg, #D6BCFA, #9b87f5, #7E69AB, #D6BCFA)',
         'gradient-premium-dark': 'linear-gradient(135deg, #1A1F2C, #403E43, #6E59A5, #1A1F2C)',
+        'gradient-yellow': 'linear-gradient(135deg, #FEF7CD, #F9E48B, #F5CB5C, #F0B429)',
       },
       borderRadius: {
         lg: "var(--radius)",
