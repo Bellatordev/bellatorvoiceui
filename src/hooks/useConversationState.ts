@@ -124,7 +124,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
   }, []);
 
   // Common function to handle sending messages to the agent
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string): Promise<void> => {
     setIsLoading(true);
     
     // Add user message to conversation
@@ -168,7 +168,9 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
             setIsListening(true);
           }
         }, 1000);
-        return () => clearTimeout(timer);
+        
+        // Make sure we clear the timeout
+        clearTimeout(timer);
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
