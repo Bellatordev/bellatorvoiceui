@@ -13,6 +13,8 @@ const Index = () => {
         
         <Hero />
         
+        <div className="h-24 md:h-32"></div> {/* Added spacing between sections */}
+        
         <main className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
           <VoiceAgent />
         </main>
