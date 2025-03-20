@@ -33,7 +33,10 @@ const Index = () => {
     e.preventDefault();
     const lampSection = document.getElementById('lamp-section');
     if (lampSection) {
-      lampSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Calculate a position to show the lamp without overlapping with the form
+      const offset = isMobile ? -100 : -200;
+      const topPosition = lampSection.getBoundingClientRect().top + window.pageYOffset + offset;
+      window.scrollTo({ top: topPosition, behavior: 'smooth' });
     }
   };
 

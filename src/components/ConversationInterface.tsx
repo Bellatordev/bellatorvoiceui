@@ -192,10 +192,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-950/30 dark:bg-gray-900/30 backdrop-blur-sm border border-white/10 rounded-xl p-4">
       <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Conversation</h2>
-        <Button variant="outline" size="sm" onClick={onLogout}>
+        <h2 className="text-lg font-semibold text-white">Conversation</h2>
+        <Button variant="outline" size="sm" onClick={onLogout} className="text-white border-white/20 hover:bg-white/10">
           Logout
         </Button>
       </div>
@@ -205,20 +205,20 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           <div
             key={index}
             className={`flex flex-col rounded-xl p-3 w-fit max-w-[80%] ${messageData.sender === 'user'
-              ? 'ml-auto bg-blue-100 dark:bg-blue-200'
-              : 'mr-auto bg-gray-100 dark:bg-gray-700'
+              ? 'ml-auto bg-premium-accent/20 text-white'
+              : 'mr-auto bg-gray-800/50 text-white'
               }`}
           >
-            <div className="text-sm text-gray-800 dark:text-gray-100">
+            <div className="text-sm">
               {messageData.text}
             </div>
           </div>
         ))}
         {isLoading && (
           <div className="flex items-center justify-center">
-            <div className="animate-pulse rounded-full bg-gray-300 dark:bg-gray-600 h-4 w-4 mr-2"></div>
-            <div className="animate-pulse rounded-full bg-gray-300 dark:bg-gray-600 h-4 w-4 mr-2"></div>
-            <div className="animate-pulse rounded-full bg-gray-300 dark:bg-gray-600 h-4 w-4"></div>
+            <div className="animate-pulse rounded-full bg-premium-accent h-4 w-4 mr-2"></div>
+            <div className="animate-pulse rounded-full bg-premium-accent h-4 w-4 mr-2"></div>
+            <div className="animate-pulse rounded-full bg-premium-accent h-4 w-4"></div>
           </div>
         )}
       </div>
@@ -229,7 +229,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 resize-none border rounded-md py-2 px-3 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+            className="flex-1 resize-none border rounded-md py-2 px-3 bg-gray-800/50 border-gray-700 text-white"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -238,7 +238,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
               }
             }}
           />
-          <Button onClick={sendMessage} disabled={isLoading}>
+          <Button onClick={sendMessage} disabled={isLoading} className="bg-premium-accent hover:bg-premium-accent/90">
             <Send className="w-4 h-4 mr-2" />
             Send
           </Button>
@@ -249,6 +249,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             variant="secondary"
             onClick={isRecording ? stopRecording : startRecording}
             disabled={isLoading}
+            className="bg-gray-800/50 text-white border-gray-700 hover:bg-gray-700/50"
           >
             {isRecording ? (
               <>Stop Recording</>
@@ -260,6 +261,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             variant="secondary"
             onClick={sendAudioMessage}
             disabled={isLoading || !audioURL}
+            className="bg-gray-800/50 text-white border-gray-700 hover:bg-gray-700/50"
           >
             Send Audio
           </Button>
