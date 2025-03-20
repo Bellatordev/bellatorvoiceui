@@ -50,7 +50,13 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
     }
   };
 
+  // Improved volume slider handler with smoother interaction
   const handleVolumeSliderChange = (value: number[]) => {
+    // When user is dragging the slider, even if it was previously muted,
+    // we want to unmute and update the volume
+    if (isMuted && value[0] > 0) {
+      onMuteToggle(); // Unmute if we're changing volume from 0
+    }
     onVolumeChange(value[0]);
   };
   
@@ -141,16 +147,16 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           
           <div className="w-full">
             <Slider
-              disabled={isMuted}
               value={[isMuted ? 0 : volume]}
               min={0}
               max={1}
               step={0.01}
               onValueChange={handleVolumeSliderChange}
-              className={cn(
-                "w-full",
-                isMuted ? "opacity-50" : "opacity-100"
-              )}
+              className="w-full"
+              aria-label="Volume"
+              // Make the slider more responsive with more visual feedback
+              thumbClassName="h-4 w-4 bg-primary border-0 shadow-lg hover:scale-110 transition-transform"
+              trackClassName="h-2 bg-gray-200 dark:bg-gray-700"
             />
           </div>
         </div>

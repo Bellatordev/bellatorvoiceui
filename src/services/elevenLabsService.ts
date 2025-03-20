@@ -173,16 +173,19 @@ class ElevenLabsService {
   }
 
   public setVolume(volume: number): void {
+    // Ensure volume is within valid range
     if (volume < 0) volume = 0;
     if (volume > 1) volume = 1;
     
     console.log(`Setting audio volume to ${volume}`);
     
+    // Always update the state, even if volume is 0
+    this.updateState({ volume });
+    
+    // Update the audio element volume
     if (this.audioElement) {
       this.audioElement.volume = volume;
     }
-    
-    this.updateState({ volume });
   }
 
   public getState(): ElevenLabsState {
