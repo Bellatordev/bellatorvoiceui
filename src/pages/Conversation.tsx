@@ -32,7 +32,7 @@ const Conversation = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200 dark:from-premium-dark dark:to-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         <div className="max-w-2xl w-full mx-auto my-8">
           <ConversationInterface 

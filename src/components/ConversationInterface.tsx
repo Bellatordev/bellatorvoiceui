@@ -18,10 +18,15 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 }) => {
   return (
     <ConversationProvider apiKey={apiKey} agentId={agentId}>
-      <div className="flex flex-col h-full bg-white/5 dark:bg-gray-900/30 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-        <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Voice Assistant</h2>
-          <Button variant="outline" size="sm" onClick={onLogout} className="text-gray-700 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+      <div className="flex flex-col h-full bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-gray-950 rounded-xl overflow-hidden shadow-lg border border-blue-100 dark:border-blue-900/30">
+        <div className="p-4 border-b border-blue-100 dark:border-blue-900/50 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Voice Assistant</h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onLogout} 
+            className="text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50"
+          >
             Logout
           </Button>
         </div>

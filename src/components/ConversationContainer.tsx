@@ -15,7 +15,10 @@ const ConversationContainer: React.FC = () => {
   }, [messages]);
 
   return (
-    <div ref={chatContainerRef} className="flex-1 overflow-y-auto mb-4">
+    <div 
+      ref={chatContainerRef} 
+      className="flex-1 overflow-y-auto mb-4 rounded-lg border border-blue-100 dark:border-blue-900/30 bg-white/70 dark:bg-blue-950/20 backdrop-blur-sm p-2"
+    >
       <ConversationLog 
         messages={messages}
         isGeneratingAudio={isGenerating}

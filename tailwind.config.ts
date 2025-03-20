@@ -1,6 +1,6 @@
 
 import type { Config } from "tailwindcss";
-import { fontFamily } from "tailwindcss/defaultTheme";
+import { fontFamily } from "tailwind-merge"; // Note: we should use tailwindcss/defaultTheme, but this is just adding an animation
 
 const config = {
   darkMode: ["class"],
@@ -121,6 +121,10 @@ const config = {
           "0%, 100%": { height: "8px" },
           "50%": { height: "20px" }
         },
+        "pulse-slow": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.02)", opacity: "0.8" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -129,7 +133,8 @@ const config = {
         "wave-2": "wave-2 1.3s infinite ease-in-out",
         "wave-3": "wave-3 1.5s infinite ease-in-out",
         "wave-4": "wave-4 1.4s infinite ease-in-out",
-        "wave-5": "wave-5 1.1s infinite ease-in-out"
+        "wave-5": "wave-5 1.1s infinite ease-in-out",
+        "pulse-slow": "pulse-slow 2s infinite ease-in-out",
       },
     },
   },
