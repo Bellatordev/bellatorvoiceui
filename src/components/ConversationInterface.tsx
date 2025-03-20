@@ -11,12 +11,16 @@ interface ConversationInterfaceProps {
   apiKey: string;
   agentId: string;
   onLogout?: () => void;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ 
   apiKey, 
   agentId,
-  onLogout 
+  onLogout,
+  isDarkMode,
+  toggleDarkMode
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -349,6 +353,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             onSwitchToText={() => setInputMode('text')}
             isMicMuted={isMicMuted}
             onMicMuteToggle={handleMicMuteToggle}
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
           />
         </div>
       ) : (
