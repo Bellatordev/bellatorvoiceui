@@ -1,6 +1,6 @@
 
 import type { Config } from "tailwindcss";
-import { fontFamily } from "tailwind-merge"; // Note: we should use tailwindcss/defaultTheme, but this is just adding an animation
+import defaultTheme from "tailwindcss/defaultTheme";
 
 const config = {
   darkMode: ["class"],
@@ -21,7 +21,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", ...fontFamily.sans],
+        sans: ["Inter", ...defaultTheme.fontFamily.sans],
         playfair: ["'Playfair Display'", "serif"],
       },
       colors: {
