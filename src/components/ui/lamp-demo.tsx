@@ -3,8 +3,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { LampContainer } from "@/components/ui/lamp";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function LampDemo() {
+  const isMobile = useIsMobile();
+  
   return (
     <LampContainer>
       <motion.h1
@@ -15,7 +18,7 @@ export function LampDemo() {
           duration: 0.8,
           ease: "easeInOut",
         }}
-        className="mt-8 bg-gradient-to-br from-premium-light to-premium-accent py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl font-playfair"
+        className={`mt-8 bg-gradient-to-br from-premium-light to-premium-accent py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl font-playfair ${!isMobile ? '-translate-y-24' : ''}`}
       >
         Bellator<span className="text-yellows-accent">.</span><span className="text-yellows-accent font-normal">ai</span>
       </motion.h1>

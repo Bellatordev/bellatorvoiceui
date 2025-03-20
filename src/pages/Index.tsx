@@ -5,8 +5,10 @@ import { Hero } from '@/components/ui/animated-hero';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { useEffect, useState } from 'react';
 import { LampDemo } from '@/components/ui/lamp-demo';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
+  const isMobile = useIsMobile();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     return savedTheme === 'dark' || 
@@ -57,7 +59,7 @@ const Index = () => {
           <div className="w-full h-full absolute inset-0 overflow-hidden">
             <LampDemo />
           </div>
-          <div className="max-w-2xl w-full mx-auto z-10 mt-48 md:mt-64 relative">
+          <div className={`max-w-2xl w-full mx-auto z-10 relative ${isMobile ? 'mt-48 md:mt-64' : 'mt-64 md:mt-80'}`}>
             <VoiceAgent />
           </div>
         </section>
