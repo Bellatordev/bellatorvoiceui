@@ -33,13 +33,22 @@ const Index = () => {
           <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
         </header>
         
-        <Hero />
+        {/* Hero section */}
+        <section className="mb-16">
+          <Hero />
+        </section>
         
-        <div className="h-24 md:h-32"></div> {/* Added spacing between sections */}
+        {/* Increased spacing between sections with a visual separator */}
+        <div className="h-32 md:h-48 flex items-center justify-center">
+          <div className="w-24 h-px bg-gray-300 dark:bg-gray-700"></div>
+        </div>
         
-        <main className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
-          <VoiceAgent />
-        </main>
+        {/* Login section - centered with its own container */}
+        <section className="flex-1 flex flex-col items-center justify-center py-12">
+          <div className="max-w-2xl w-full mx-auto">
+            <VoiceAgent />
+          </div>
+        </section>
         
         <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
           {/* Footer content removed */}
