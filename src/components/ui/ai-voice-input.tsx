@@ -137,9 +137,7 @@ export function AIVoiceInput({
           ))}
         </div>
 
-        <p className="h-4 text-xs text-black/70 dark:text-white/70">
-          {submitted ? "Listening..." : "Click to speak"}
-        </p>
+        {/* Removed the "Click to speak" / "Listening..." paragraph */}
       </div>
     </div>
   );
