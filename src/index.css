@@ -38,12 +38,12 @@
     --gradient-center-color: #0EA5E9;
     --yellow-accent: #F5CB5C;
     
-    /* Rainbow Button Colors */
-    --color-1: 340 82% 52%;
-    --color-2: 262 83% 58%;
-    --color-3: 230 92% 65%;
-    --color-4: 178 73% 46%;
-    --color-5: 42 100% 55%;
+    /* Rainbow Button Colors - enhanced saturation */
+    --color-1: 340 95% 55%;
+    --color-2: 262 95% 62%;
+    --color-3: 230 95% 65%;
+    --color-4: 178 95% 46%;
+    --color-5: 42 100% 60%;
   }
 
   .dark {
@@ -77,12 +77,12 @@
     --gradient-center-color: #9b87f5;
     --yellow-accent: #F0B429;
     
-    /* Rainbow Button Colors */
-    --color-1: 340 82% 52%;
-    --color-2: 262 83% 58%;
-    --color-3: 230 92% 65%;
-    --color-4: 178 73% 46%;
-    --color-5: 42 100% 55%;
+    /* Rainbow Button Colors - enhanced saturation */
+    --color-1: 340 95% 55%;
+    --color-2: 262 95% 62%;
+    --color-3: 230 95% 65%;
+    --color-4: 178 95% 46%;
+    --color-5: 42 100% 60%;
   }
 
   * {
@@ -95,7 +95,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Custom utility classes */
   .glass {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm dark:bg-gray-900/30 dark:border-white/5;
   }
@@ -134,7 +133,6 @@
     @apply w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-yellows-accent focus:ring-1 focus:ring-yellows-accent focus-ring dark:bg-gray-800 dark:border-gray-700 dark:focus:border-yellows-deep dark:focus:ring-yellows-deep;
   }
   
-  /* Waveform animation helpers */
   .waveform-container {
     @apply flex items-end justify-center h-16 space-x-1;
   }
@@ -155,7 +153,6 @@
     @apply bg-yellows-accent rounded-full transition-all duration-300;
   }
 
-  /* Conversation bubbles */
   .agent-user {
     @apply bg-blue-100 dark:bg-blue-200;
   }
@@ -169,7 +166,6 @@
   }
 }
 
-/* Audio visualizer animations - improved with smoother transitions */
 @keyframes soundWave1 {
   0%, 100% { height: 8px; }
   50% { height: 12px; }
@@ -185,20 +181,17 @@
   50% { height: 28px; }
 }
 
-/* Improved breathing effect with smoother animation */
 @keyframes breathe {
   0%, 100% { opacity: 0.4; transform: scale(0.95); }
   50% { opacity: 0.1; transform: scale(1.05); }
 }
 
-/* Smoother gradient animation */
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* Smoother pulse animation */
 @keyframes pulse {
   0% { transform: scale(0.98); }
   50% { transform: scale(1.02); }
@@ -253,17 +246,20 @@
     filter: drop-shadow(0 0 5px rgba(245, 203, 92, 0.5));
   }
   
-  /* Rainbow button animation */
   @keyframes rainbow {
     0% {
-      background-position: 0%;
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
     }
     100% {
-      background-position: 200%;
+      background-position: 0% 50%;
     }
   }
 
   .animate-rainbow {
-    animation: rainbow 6s linear infinite;
+    animation: rainbow 4s linear infinite;
+    background-size: 200% 200%;
   }
 }
