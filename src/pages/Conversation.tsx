@@ -1,11 +1,24 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
 import { useLocation, Navigate } from 'react-router-dom';
 
 const Conversation = () => {
   const location = useLocation();
   const { apiKey, agentId } = location.state || {};
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark' || 
+      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+  
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
   
   // Redirect to login if no credentials provided
   if (!apiKey || !agentId) {
@@ -18,7 +31,7 @@ const Conversation = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-premium-dark to-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-100 to-gray-200 dark:from-premium-dark dark:to-gray-900">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         <div className="max-w-2xl w-full mx-auto my-8">
           <ConversationInterface 
