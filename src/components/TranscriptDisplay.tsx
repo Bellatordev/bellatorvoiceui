@@ -5,13 +5,24 @@ interface TranscriptDisplayProps {
   transcript: string;
   isMicMuted: boolean;
   isListening: boolean;
+  isGeneratingVoice?: boolean;
 }
 
 const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ 
   transcript, 
   isMicMuted, 
-  isListening 
+  isListening,
+  isGeneratingVoice = false
 }) => {
+  // Show voice generation message when applicable
+  if (isGeneratingVoice) {
+    return (
+      <div className="px-4 py-2 mb-4 bg-amber-100 rounded-lg text-gray-600 italic">
+        Voice generation in progress...
+      </div>
+    );
+  }
+  
   // Show a different message when mic is muted
   if (isMicMuted) {
     return (

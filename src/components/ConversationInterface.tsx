@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
@@ -51,7 +50,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     ttsError
   });
 
-  // Handle final transcript and send to chat
   const handleFinalTranscript = (finalText: string) => {
     console.log("Processing final transcript:", finalText);
     if (finalText.trim()) {
@@ -168,6 +166,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         transcript={transcript}
         isMicMuted={isMicMuted}
         isListening={isListening}
+        isGeneratingVoice={isGenerating || isPlaying}
       />
       
       {inputMode === 'voice' ? (
