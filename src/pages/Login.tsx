@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowRight, Info } from 'lucide-react';
-import { RainbowButton } from '@/components/ui/rainbow-button';
+import { AnimatedHero } from '@/components/ui/animated-hero';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -42,43 +42,12 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1a1a24] text-white">
-      {/* Hero Section */}
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 relative">
-        <div className="absolute top-6 right-6">
-          <ThemeToggle />
-        </div>
-        
-        <div className="max-w-3xl text-center">
-          <h1 className="text-7xl font-serif mb-8 text-[#a8a0f0] leading-tight">
-            Meet your Agentic AI
-            <br />
-            <span className="text-white">that is</span>
-            <br />
-            <span className="text-white">smart</span>
-          </h1>
-          
-          <p className="text-xl font-sans text-gray-400 mb-12 max-w-2xl mx-auto">
-            I'm here to help you with your tasks, answer your questions, and assist you
-            in making your workflow more efficient. Just ask me anything, and I'll do
-            my best to provide helpful and relevant information.
-          </p>
-          
-          <div className="flex gap-4 justify-center">
-            <button 
-              className="px-6 py-3 rounded-full bg-[#2b2a3d] text-white font-medium flex items-center gap-2 hover:bg-[#3a3952] transition-colors"
-            >
-              About Us <Info size={18} />
-            </button>
-            
-            <RainbowButton 
-              onClick={scrollToLogin}
-              className="h-12 rounded-full font-medium flex items-center gap-2"
-            >
-              Get Started <ArrowRight size={18} />
-            </RainbowButton>
-          </div>
-        </div>
+      {/* Hero Section with Animated Text */}
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
       </div>
+      
+      <AnimatedHero onScrollToLogin={scrollToLogin} />
       
       {/* Login Section */}
       <div ref={loginSectionRef} className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#1a1a24]">
