@@ -9,7 +9,7 @@ export const isSpeechRecognitionSupported = (): boolean => {
 };
 
 // Get the appropriate SpeechRecognition constructor
-export const getSpeechRecognitionConstructor = (): typeof SpeechRecognition | null => {
+export const getSpeechRecognitionConstructor = (): any => {
   if (!isSpeechRecognitionSupported()) {
     return null;
   }
@@ -18,15 +18,15 @@ export const getSpeechRecognitionConstructor = (): typeof SpeechRecognition | nu
 
 // Initialize a speech recognition instance with default settings
 export const createSpeechRecognitionInstance = (): SpeechRecognition | null => {
-  const SpeechRecognition = getSpeechRecognitionConstructor();
+  const SpeechRecognitionConstructor = getSpeechRecognitionConstructor();
   
-  if (!SpeechRecognition) {
+  if (!SpeechRecognitionConstructor) {
     console.error('Speech recognition not available');
     return null;
   }
 
   try {
-    const recognitionInstance = new SpeechRecognition();
+    const recognitionInstance = new SpeechRecognitionConstructor();
     recognitionInstance.continuous = true;
     recognitionInstance.interimResults = true;
     recognitionInstance.lang = 'en-US';
