@@ -32,32 +32,20 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   onMicMuteToggle,
 }) => {
   const [isMicAvailable, setIsMicAvailable] = useState<boolean | null>(null);
+  const [isCheckingMic, setIsCheckingMic] = useState(true);
 
   // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
       try {
+        setIsCheckingMic(true);
         const hasAccess = await requestMicrophoneAccess();
         setIsMicAvailable(hasAccess);
-        
-        if (!hasAccess) {
-          toast({
-            title: "Microphone Unavailable",
-            description: "Your microphone appears to be unavailable or permission was denied. Try switching to text input mode.",
-            variant: "destructive"
-          });
-        }
-        
-        if (!isSpeechRecognitionSupported()) {
-          toast({
-            title: "Speech Recognition Unsupported",
-            description: "Your browser doesn't support speech recognition. Try using Chrome, Edge or Safari.",
-            variant: "destructive"
-          });
-        }
+        setIsCheckingMic(false);
       } catch (error) {
         console.error('Error checking microphone:', error);
         setIsMicAvailable(false);
+        setIsCheckingMic(false);
       }
     };
     
@@ -65,21 +53,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   }, []);
   
   // Function to handle the tap-to-speak button click
-  const handleTapToSpeakClick = async () => {
-    // If microphone isn't available, prompt user to switch to text mode
-    if (isMicAvailable === false) {
-      toast({
-        title: "Microphone Unavailable",
-        description: "Please switch to text input mode as your microphone is unavailable.",
-        action: (
-          <Button variant="outline" size="sm" onClick={onSwitchToText}>
-            Switch to Text
-          </Button>
-        )
-      });
-      return;
-    }
-    
+  const handleTapToSpeakClick = () => {
     // If microphone is muted, unmute it first
     if (isMicMuted) {
       onMicMuteToggle();
@@ -91,6 +65,13 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
     } else {
       onListen();
     }
+  };
+  
+  const getStatusText = () => {
+    if (isListening) return "Listening";
+    if (isCheckingMic) return "Checking mic...";
+    if (isMicAvailable === false) return "Mic unavailable";
+    return "Tap to speak";
   };
   
   return (
@@ -131,14 +112,12 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         <div 
           className={cn(
             "relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg",
-            (isMicAvailable === false) ? "opacity-60 cursor-not-allowed" : ""
+            (isMicAvailable === false && !isCheckingMic) ? "opacity-60" : ""
           )}
           onClick={handleTapToSpeakClick}
         >
           <span className="text-gray-800 font-medium">
-            {isListening ? "Listening" : 
-             isMicAvailable === false ? "Mic Unavailable" : 
-             "Tap to speak"}
+            {getStatusText()}
           </span>
         </div>
 
@@ -154,7 +133,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           variant="ghost"
           size="icon"
           aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
-          disabled={isMicAvailable === false}
         >
           {isMicMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
         </Button>

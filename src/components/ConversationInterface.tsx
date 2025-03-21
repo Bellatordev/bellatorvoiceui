@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import ConversationLog, { Message } from './ConversationLog';
@@ -29,6 +28,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [volume, setVolume] = useState(0.8);
   const [autoStartMic, setAutoStartMic] = useState(true);
   const [isMicAvailable, setIsMicAvailable] = useState<boolean | null>(null);
+  const [ttsError, setTtsError] = useState<string | null>(null);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
@@ -70,26 +70,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       const micAvailable = await requestMicrophoneAccess();
       setIsMicAvailable(micAvailable);
       
-      if (!micAvailable) {
-        console.log('Microphone not available, switching to text input mode');
-        setInputMode('text');
+      if (!micAvailable && inputMode === 'voice') {
+        console.log('Microphone not available, but keep voice input mode active');
+        // We'll keep voice mode but show appropriate UI to indicate mic issues
         toast({
-          title: "Microphone Unavailable",
-          description: "We couldn't access your microphone. Switching to text input mode.",
-          variant: "destructive"
+          title: "Microphone Note",
+          description: "Microphone may not be available. You can still switch to text input if needed.",
+          variant: "default"
         });
-        return;
       }
       
-      if (!isSpeechRecognitionSupported()) {
-        console.log('Speech recognition not supported, switching to text input mode');
-        setInputMode('text');
+      if (!isSpeechRecognitionSupported() && inputMode === 'voice') {
+        console.log('Speech recognition not supported, but keeping voice UI available');
         toast({
-          title: "Speech Recognition Unsupported",
-          description: "Your browser doesn't support speech recognition. Switching to text input mode.",
-          variant: "destructive"
+          title: "Speech Recognition Note",
+          description: "Your browser may not fully support speech recognition. Text input is available if needed.",
+          variant: "default"
         });
-        return;
       }
       
       // Initialize SpeechRecognition if available
@@ -134,15 +131,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           setIsListening(false);
           
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            setIsMicAvailable(false);
-            setInputMode('text');
+            toast({
+              title: "Microphone Permission Denied",
+              description: "Please allow microphone access to use voice features.",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Speech Recognition Error",
+              description: `Error: ${event.error}. You can switch to text input if needed.`,
+              variant: "default"
+            });
           }
-          
-          toast({
-            title: "Microphone Error",
-            description: `Error: ${event.error}. Please check your microphone permissions.`,
-            variant: "destructive"
-          });
         };
         
         recognitionRef.current = recognition;
@@ -156,21 +156,28 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognitionRef.current.abort();
       }
     };
-  }, []);
+  }, [inputMode]);
 
   // Handle TTS errors
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Speech Generation Error",
-        description: error,
-        variant: "destructive"
-      });
+      setTtsError(error);
+      
+      // Only show toast for non-quota errors to avoid annoying the user
+      if (!error.includes("quota")) {
+        toast({
+          title: "Speech Generation Note",
+          description: error,
+          variant: "default"
+        });
+      } else {
+        console.log("TTS quota exceeded, continuing without voice output");
+      }
       
       // Add a system message about the error
       const errorMessage: Message = {
         id: uuidv4(),
-        text: `I'm having trouble with my voice. Please check if the Voice ID is correct. Error: ${error}`,
+        text: `I'm having trouble with my voice output. ${error.includes("quota") ? "The API quota has been exceeded." : "Please check if the Voice ID is correct."}`,
         sender: 'assistant',
         timestamp: new Date(),
       };
@@ -192,7 +199,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     // Generate speech for welcome message only if not muted
     if (!isMuted) {
-      generateSpeech(welcomeMessage.text);
+      try {
+        generateSpeech(welcomeMessage.text);
+      } catch (err) {
+        console.error("Failed to generate speech for welcome message:", err);
+        // We continue with the app even if TTS fails
+      }
     }
   }, []);
 
@@ -206,11 +218,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       return hasAccess;
     } catch (err) {
       console.error('Microphone permission denied:', err);
-      setIsMicAvailable(false);
       toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to use voice features.",
-        variant: "destructive"
+        title: "Microphone Access Note",
+        description: "Microphone might not be available. You can still use text input.",
+        variant: "default"
       });
       return false;
     }
@@ -246,13 +257,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Generate speech for assistant response if not muted
-      if (!isMuted) {
+      // Generate speech for assistant response if not muted and no TTS error
+      if (!isMuted && !ttsError) {
         // When we're about to generate speech, ensure mic is off
         if (recognitionRef.current && isListening) {
           recognitionRef.current.stop();
         }
-        generateSpeech(assistantResponse);
+        try {
+          generateSpeech(assistantResponse);
+        } catch (err) {
+          console.error("Failed to generate speech:", err);
+          // Continue without TTS
+        }
       } else if (autoStartMic && isMicAvailable) {
         // If muted but auto-start is on, start listening after a delay
         setTimeout(startListening, 500);
@@ -261,47 +277,37 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const startListening = async () => {
-    // Don't start if audio is playing or being generated or microphone is muted or unavailable
-    if (isPlaying || isGenerating || isMicMuted || !isMicAvailable) {
-      console.log('Cannot start listening: audio is active, mic is muted, or mic is unavailable');
+    // Don't start if audio is playing or being generated or microphone is muted
+    if (isPlaying || isGenerating || isMicMuted) {
+      console.log('Cannot start listening: audio is active or mic is muted');
       return;
     }
     
     if (isListening) return;
     
     if (!recognitionRef.current) {
-      toast({
-        title: "Speech Recognition Unavailable",
-        description: "Your browser doesn't support speech recognition.",
-        variant: "destructive"
-      });
+      console.log('Speech recognition not available, but allowing voice UI');
       return;
     }
     
-    const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) {
-      setInputMode('text');
-      return;
-    }
+    await requestMicrophonePermission();
     
     try {
       recognitionRef.current.start();
       console.log('Microphone activated');
     } catch (error) {
       console.error('Error starting speech recognition:', error);
-      setIsMicAvailable(false);
       toast({
-        title: "Error",
-        description: "Failed to start voice recognition. Switching to text input.",
-        variant: "destructive"
+        title: "Speech Recognition Note",
+        description: "There was an issue with the speech recognition. You can still use all features.",
+        variant: "default"
       });
-      setInputMode('text');
     }
   };
 
   const toggleListening = async () => {
-    if (isMicMuted || !isMicAvailable) {
-      console.log('Microphone is muted or unavailable, cannot toggle listening');
+    if (isMicMuted) {
+      console.log('Microphone is muted, cannot toggle listening');
       return;
     }
     
@@ -321,15 +327,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleMicMuteToggle = () => {
-    if (!isMicAvailable) {
-      toast({
-        title: "Microphone Unavailable",
-        description: "Your microphone appears to be unavailable or permission was denied.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     const newMuteState = !isMicMuted;
     setIsMicMuted(newMuteState);
     
@@ -414,15 +411,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           >
             Send
           </button>
-          {isMicAvailable && (
-            <button
-              type="button"
-              onClick={() => setInputMode('voice')}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-            >
-              Use Voice
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setInputMode('voice')}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+          >
+            Use Voice
+          </button>
         </form>
       )}
     </div>

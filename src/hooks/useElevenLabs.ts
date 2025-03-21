@@ -47,18 +47,22 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       await service.generateSpeech({ text, voiceId, apiKey, modelId });
     } catch (error) {
       console.error('Error generating speech:', error);
-      toast({
-        title: "Speech Generation Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive"
-      });
+      
+      // Don't show toast for quota errors to avoid annoying the user
+      if (error instanceof Error && !error.message.includes('quota')) {
+        toast({
+          title: "Speech Generation Note",
+          description: error instanceof Error ? error.message : "An issue occurred with speech generation",
+          variant: "default"
+        });
+      }
       
       // Set error state
       setState(prev => ({ 
         ...prev, 
         error: error instanceof Error 
           ? error.message 
-          : "Failed to generate speech" 
+          : "Issue with speech generation" 
       }));
     }
   };

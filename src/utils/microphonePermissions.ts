@@ -33,6 +33,17 @@ export const requestMicrophoneAccess = async (): Promise<boolean> => {
     console.log('Microphone permission granted');
     return true;
   } catch (error) {
+    // Handle specific errors
+    if (error instanceof DOMException) {
+      if (error.name === 'NotFoundError') {
+        console.error('No microphone found on this device, but we can still proceed');
+        // We return true here to allow the user to still use voice features if a device becomes available
+        return true;
+      } else if (error.name === 'NotAllowedError') {
+        console.error('Microphone permission denied by user');
+      }
+    }
+    
     console.error('Failed to get microphone permission:', error);
     return false;
   }
