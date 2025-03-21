@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
@@ -56,11 +55,9 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
     if (isListening) {
       onStopListening();
     } else {
-      // Only try to start listening if the mic is not muted
       if (!isMicMuted) {
         onListen();
       } else {
-        // Inform user that mic is muted
         toast({
           title: "Microphone is muted",
           description: "Unmute the microphone to use voice input",
@@ -71,13 +68,11 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   };
   
   const handleMicMuteToggle = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the parent div's click handler
+    e.stopPropagation();
     onMicMuteToggle();
   };
   
   const getStatusText = () => {
-    if (isMicMuted) return "Mic muted";
-    if (isListening) return "Listening";
     if (isCheckingMic) return "Checking mic...";
     return "Tap to speak";
   };
