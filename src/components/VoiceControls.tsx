@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from './ui/use-toast';
-import { requestMicrophoneAccess, isSpeechRecognitionSupported } from '@/utils/microphonePermissions';
+import { requestMicrophoneAccess, isSpeechRecognitionSupported, checkMicrophoneDevices } from '@/utils/microphonePermissions';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -31,20 +30,18 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   isMicMuted,
   onMicMuteToggle,
 }) => {
-  const [isMicAvailable, setIsMicAvailable] = useState<boolean | null>(null);
-  const [isCheckingMic, setIsCheckingMic] = useState(true);
+  const [isMicAvailable, setIsMicAvailable] = useState<boolean>(true);
+  const [isCheckingMic, setIsCheckingMic] = useState(false);
 
-  // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
       try {
         setIsCheckingMic(true);
-        const hasAccess = await requestMicrophoneAccess();
-        setIsMicAvailable(hasAccess);
+        await checkMicrophoneDevices();
+        await requestMicrophoneAccess();
         setIsCheckingMic(false);
       } catch (error) {
         console.error('Error checking microphone:', error);
-        setIsMicAvailable(false);
         setIsCheckingMic(false);
       }
     };
@@ -52,14 +49,11 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
     checkMicrophoneAccess();
   }, []);
   
-  // Function to handle the tap-to-speak button click
   const handleTapToSpeakClick = () => {
-    // If microphone is muted, unmute it first
     if (isMicMuted) {
       onMicMuteToggle();
     }
     
-    // Then toggle listening state
     if (isListening) {
       onStopListening();
     } else {
@@ -70,14 +64,12 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   const getStatusText = () => {
     if (isListening) return "Listening";
     if (isCheckingMic) return "Checking mic...";
-    if (isMicAvailable === false) return "Mic unavailable";
     return "Tap to speak";
   };
   
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
       <div className="relative w-64 h-64 flex items-center justify-center">
-        {/* Animated gradient background - made perfectly circular and smoother animation */}
         <div 
           className={cn(
             "absolute w-full h-full rounded-full overflow-hidden",
@@ -95,7 +87,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             }}
           />
           
-          {/* Inner animated pulse effect */}
           <div 
             className={cn(
               "absolute inset-0 rounded-full",
@@ -108,12 +99,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           />
         </div>
         
-        {/* Center white pill with status text */}
         <div 
-          className={cn(
-            "relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg",
-            (isMicAvailable === false && !isCheckingMic) ? "opacity-60" : ""
-          )}
+          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
           onClick={handleTapToSpeakClick}
         >
           <span className="text-gray-800 font-medium">
@@ -121,7 +108,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           </span>
         </div>
 
-        {/* Circular button for toggling microphone mute */}
         <Button
           onClick={onMicMuteToggle}
           className={cn(

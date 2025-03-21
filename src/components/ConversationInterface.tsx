@@ -5,7 +5,11 @@ import useElevenLabs from '@/hooks/useElevenLabs';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import VoiceControls from './VoiceControls';
-import { requestMicrophoneAccess, isSpeechRecognitionSupported } from '@/utils/microphonePermissions';
+import { 
+  requestMicrophoneAccess,
+  isSpeechRecognitionSupported, 
+  checkMicrophoneDevices 
+} from '@/utils/microphonePermissions';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -32,6 +36,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
+  const hasAttemptedSpeechRecognition = useRef(false);
   
   const { 
     generateSpeech, 
@@ -44,7 +49,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     voiceId: agentId,
   });
 
-  // Completely stop microphone when audio is playing or generating
   useEffect(() => {
     if (isGenerating || isPlaying) {
       if (recognitionRef.current) {
@@ -52,100 +56,114 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognitionRef.current.stop();
         setIsListening(false);
       }
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && isMicAvailable) {
-      // Only auto-start mic if audio is not playing, we're not already listening, mic is not muted, and mic is available
+    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted) {
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
         startListening();
-      }, 500); // Add a small delay to ensure audio is fully stopped
+      }, 500);
       
       return () => clearTimeout(timer);
     }
-  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, isMicAvailable]);
+  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted]);
 
-  // Initialize speech recognition
   useEffect(() => {
     const checkMicrophoneAndInitialize = async () => {
-      console.log('Explicitly requesting microphone access...');
-      const micAvailable = await requestMicrophoneAccess();
-      setIsMicAvailable(micAvailable);
+      console.log('Checking microphone and initializing speech recognition...');
       
-      if (!micAvailable && inputMode === 'voice') {
-        console.log('Microphone not available, but keep voice input mode active');
-        // We'll keep voice mode but show appropriate UI to indicate mic issues
-        toast({
-          title: "Microphone Note",
-          description: "Microphone may not be available. You can still switch to text input if needed.",
-          variant: "default"
-        });
+      setIsMicAvailable(true);
+      
+      try {
+        const hasMicDevices = await checkMicrophoneDevices();
+        console.log('Device has microphones:', hasMicDevices);
+      } catch (err) {
+        console.error('Error checking for microphone devices:', err);
       }
       
-      if (!isSpeechRecognitionSupported() && inputMode === 'voice') {
-        console.log('Speech recognition not supported, but keeping voice UI available');
-        toast({
-          title: "Speech Recognition Note",
-          description: "Your browser may not fully support speech recognition. Text input is available if needed.",
-          variant: "default"
-        });
+      try {
+        const micAccess = await requestMicrophoneAccess();
+        console.log('Microphone access granted:', micAccess);
+      } catch (err) {
+        console.error('Error requesting microphone access:', err);
       }
       
-      // Initialize SpeechRecognition if available
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       
       if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-        
-        recognition.onstart = () => {
-          console.log('Speech recognition started');
-          setIsListening(true);
-        };
-        
-        recognition.onend = () => {
-          console.log('Speech recognition stopped');
-          setIsListening(false);
-        };
-        
-        recognition.onresult = (event) => {
-          const last = event.results.length - 1;
-          const result = event.results[last];
-          const text = result[0].transcript;
-          setTranscript(text);
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = 'en-US';
           
-          // If this is a final result, process it
-          if (result.isFinal) {
-            processUserInput(text);
-            setTranscript("");
+          recognition.onstart = () => {
+            console.log('Speech recognition started');
+            setIsListening(true);
+          };
+          
+          recognition.onend = () => {
+            console.log('Speech recognition stopped');
+            setIsListening(false);
             
-            // Important: Stop listening after processing input to prevent feedback
-            if (recognitionRef.current) {
-              recognitionRef.current.stop();
+            if (inputMode === 'voice' && autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current) {
+              hasAttemptedSpeechRecognition.current = true;
+              setTimeout(() => {
+                if (!isPlaying && !isGenerating) {
+                  console.log('Attempting to restart speech recognition');
+                  try {
+                    recognition.start();
+                  } catch (e) {
+                    console.error('Failed to restart speech recognition:', e);
+                  }
+                  setTimeout(() => {
+                    hasAttemptedSpeechRecognition.current = false;
+                  }, 5000);
+                }
+              }, 1000);
             }
-          }
-        };
-        
-        recognition.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
-          setIsListening(false);
+          };
           
-          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            toast({
-              title: "Microphone Permission Denied",
-              description: "Please allow microphone access to use voice features.",
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "Speech Recognition Error",
-              description: `Error: ${event.error}. You can switch to text input if needed.`,
-              variant: "default"
-            });
-          }
-        };
-        
-        recognitionRef.current = recognition;
+          recognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const result = event.results[last];
+            const text = result[0].transcript;
+            setTranscript(text);
+            
+            if (result.isFinal) {
+              processUserInput(text);
+              setTranscript("");
+              
+              if (recognitionRef.current) {
+                recognitionRef.current.stop();
+              }
+            }
+          };
+          
+          recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            setIsListening(false);
+            
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+              toast({
+                title: "Microphone Note",
+                description: "Microphone access is needed for voice input. You can also use text input.",
+                variant: "default"
+              });
+            } else {
+              console.log(`Speech recognition error: ${event.error}`);
+            }
+          };
+          
+          recognitionRef.current = recognition;
+        } catch (error) {
+          console.error('Error setting up speech recognition:', error);
+        }
+      } else {
+        console.log('SpeechRecognition not available in this browser');
+        toast({
+          title: "Browser Support Note",
+          description: "Your browser may not fully support speech recognition. Text input is available.",
+          variant: "default"
+        });
       }
     };
     
@@ -156,14 +174,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognitionRef.current.abort();
       }
     };
-  }, [inputMode]);
+  }, [inputMode, autoStartMic, isMicMuted, isPlaying, isGenerating]);
 
-  // Handle TTS errors
   useEffect(() => {
     if (error) {
       setTtsError(error);
       
-      // Only show toast for non-quota errors to avoid annoying the user
       if (!error.includes("quota")) {
         toast({
           title: "Speech Generation Note",
@@ -174,7 +190,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         console.log("TTS quota exceeded, continuing without voice output");
       }
       
-      // Add a system message about the error
       const errorMessage: Message = {
         id: uuidv4(),
         text: `I'm having trouble with my voice output. ${error.includes("quota") ? "The API quota has been exceeded." : "Please check if the Voice ID is correct."}`,
@@ -186,7 +201,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }
   }, [error]);
 
-  // Welcome message
   useEffect(() => {
     const welcomeMessage: Message = {
       id: uuidv4(),
@@ -197,45 +211,35 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     setMessages([welcomeMessage]);
     
-    // Generate speech for welcome message only if not muted
     if (!isMuted) {
       try {
         generateSpeech(welcomeMessage.text);
       } catch (err) {
         console.error("Failed to generate speech for welcome message:", err);
-        // We continue with the app even if TTS fails
       }
     }
   }, []);
 
   const requestMicrophonePermission = async () => {
-    if (hasRequestedMicPermission.current) return isMicAvailable;
+    if (hasRequestedMicPermission.current) return true;
     
     try {
-      const hasAccess = await requestMicrophoneAccess();
       hasRequestedMicPermission.current = true;
-      setIsMicAvailable(hasAccess);
-      return hasAccess;
+      await requestMicrophoneAccess();
+      return true;
     } catch (err) {
-      console.error('Microphone permission denied:', err);
-      toast({
-        title: "Microphone Access Note",
-        description: "Microphone might not be available. You can still use text input.",
-        variant: "default"
-      });
-      return false;
+      console.error('Microphone permission error:', err);
+      return true;
     }
   };
 
   const processUserInput = (text: string) => {
     if (!text.trim()) return;
     
-    // Stop listening immediately to avoid picking up the AI's response
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
     }
     
-    // Add user message
     const userMessage: Message = {
       id: uuidv4(),
       text: text,
@@ -245,7 +249,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     setMessages(prev => [...prev, userMessage]);
     
-    // Simulate assistant response - in a real app, this would call your AI backend
     setTimeout(() => {
       const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
       const assistantMessage: Message = {
@@ -257,9 +260,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Generate speech for assistant response if not muted and no TTS error
       if (!isMuted && !ttsError) {
-        // When we're about to generate speech, ensure mic is off
         if (recognitionRef.current && isListening) {
           recognitionRef.current.stop();
         }
@@ -267,17 +268,14 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           generateSpeech(assistantResponse);
         } catch (err) {
           console.error("Failed to generate speech:", err);
-          // Continue without TTS
         }
-      } else if (autoStartMic && isMicAvailable) {
-        // If muted but auto-start is on, start listening after a delay
-        setTimeout(startListening, 500);
+      } else if (autoStartMic && !isPlaying && !isGenerating) {
+        setTimeout(startListening, 300);
       }
     }, 1000);
   };
 
   const startListening = async () => {
-    // Don't start if audio is playing or being generated or microphone is muted
     if (isPlaying || isGenerating || isMicMuted) {
       console.log('Cannot start listening: audio is active or mic is muted');
       return;
@@ -297,11 +295,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       console.log('Microphone activated');
     } catch (error) {
       console.error('Error starting speech recognition:', error);
-      toast({
-        title: "Speech Recognition Note",
-        description: "There was an issue with the speech recognition. You can still use all features.",
-        variant: "default"
-      });
     }
   };
 
@@ -311,10 +304,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       return;
     }
     
-    // If audio is playing or generating, stop it first
     if (isPlaying || isGenerating) {
       stopAudio();
-      await new Promise(resolve => setTimeout(resolve, 300)); // Short delay to ensure audio is stopped
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
     
     if (isListening) {
@@ -330,12 +322,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     const newMuteState = !isMicMuted;
     setIsMicMuted(newMuteState);
     
-    // If we're unmuting and auto-start is enabled, try to start listening
     if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
       setTimeout(startListening, 300);
     }
     
-    // If we're muting and currently listening, stop listening
     if (newMuteState && isListening && recognitionRef.current) {
       recognitionRef.current.stop();
     }
@@ -359,7 +349,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const handleVolumeChange = (value: number) => {
     console.log('Setting audio volume to', value);
     setVolume(value);
-    // In a real app, you'd also adjust audio volume
   };
 
   return (

@@ -17,11 +17,38 @@ export const isAudioSupported = (): boolean => {
     typeof navigator.mediaDevices.getUserMedia === 'function';
 };
 
+// Function to enumerate available media devices and check for microphones
+export const checkMicrophoneDevices = async (): Promise<boolean> => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+    console.log('enumerateDevices() not supported');
+    return false;
+  }
+
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const hasMicrophone = devices.some(device => device.kind === 'audioinput');
+    console.log('Microphone devices detected:', hasMicrophone);
+    return hasMicrophone;
+  } catch (err) {
+    console.error('Error enumerating devices:', err);
+    return false;
+  }
+};
+
 // Request microphone access and return a promise
 export const requestMicrophoneAccess = async (): Promise<boolean> => {
   if (!isAudioSupported()) {
     console.error('Audio input is not supported on this browser');
     return false;
+  }
+
+  // First check if any microphone devices exist
+  const hasMicDevices = await checkMicrophoneDevices();
+  if (!hasMicDevices) {
+    console.log('No microphone devices detected on this system');
+    // Return true to not block the UI from showing microphone options
+    // since devices could be connected later
+    return true;
   }
 
   try {
@@ -36,16 +63,19 @@ export const requestMicrophoneAccess = async (): Promise<boolean> => {
     // Handle specific errors
     if (error instanceof DOMException) {
       if (error.name === 'NotFoundError') {
-        console.error('No microphone found on this device, but we can still proceed');
+        console.log('No microphone found on this device, but we can still proceed');
         // We return true here to allow the user to still use voice features if a device becomes available
         return true;
       } else if (error.name === 'NotAllowedError') {
-        console.error('Microphone permission denied by user');
+        console.log('Microphone permission denied by user');
+        // Return true to still show the UI - user can manually enable later if they change their mind
+        return true;
       }
     }
     
     console.error('Failed to get microphone permission:', error);
-    return false;
+    // Return true anyway to not block the UI
+    return true;
   }
 };
 

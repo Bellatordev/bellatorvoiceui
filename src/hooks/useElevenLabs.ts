@@ -48,13 +48,15 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     } catch (error) {
       console.error('Error generating speech:', error);
       
-      // Don't show toast for quota errors to avoid annoying the user
+      // Don't show toast for quota errors 
       if (error instanceof Error && !error.message.includes('quota')) {
         toast({
           title: "Speech Generation Note",
           description: error instanceof Error ? error.message : "An issue occurred with speech generation",
           variant: "default"
         });
+      } else if (error instanceof Error && error.message.includes('quota')) {
+        console.log('TTS quota exceeded, continuing without voice output');
       }
       
       // Set error state
