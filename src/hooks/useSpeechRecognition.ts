@@ -39,32 +39,31 @@ export const useSpeechRecognition = ({
     }
   }, []);
 
-  // Check for microphone permissions - but only do this check once
+  // Check for microphone permissions - but only do this check when needed
   useEffect(() => {
-    // Skip if we've already determined permission status
-    if (hasMicrophonePermission !== null) return;
-
-    // Only check permissions if we're in a browser environment with mediaDevices API
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+    // Only check if we're trying to listen and don't already know we have permission
+    if (isListening && hasMicrophonePermission === null) {
       console.log('Checking microphone permission...');
       
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-          console.log('Microphone permission granted');
-          setHasMicrophonePermission(true);
-        })
-        .catch((error) => {
-          console.error('Microphone permission denied:', error);
-          setHasMicrophonePermission(false);
-          
-          toast({
-            title: "Microphone Access Denied",
-            description: "Please enable microphone access in your browser settings to use voice features.",
-            variant: "destructive",
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(() => {
+            console.log('Microphone permission granted');
+            setHasMicrophonePermission(true);
+          })
+          .catch((error) => {
+            console.error('Microphone permission denied:', error);
+            setHasMicrophonePermission(false);
+            
+            toast({
+              title: "Microphone Access Denied",
+              description: "Please enable microphone access in your browser settings to use voice features.",
+              variant: "destructive",
+            });
           });
-        });
+      }
     }
-  }, [hasMicrophonePermission]);
+  }, [isListening, hasMicrophonePermission]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -171,15 +170,22 @@ export const useSpeechRecognition = ({
     // Store current listening state in ref for the onend handler
     isListeningRef.current = isListening;
     
-    // Don't proceed if recognition not supported or no mic permission
+    // Don't proceed if recognition not supported
     if (!recognitionRef.current || !isRecognitionSupported) {
       console.log('Cannot update speech recognition - not initialized or not supported');
       return;
     }
     
+    // We should be listening if isListening is true and the mic is not muted
     const shouldBeListening = isListening && !isMicMuted;
     
     if (shouldBeListening) {
+      // Don't try to start if we know we don't have permission
+      if (hasMicrophonePermission === false) {
+        console.log('Not starting speech recognition - no microphone permission');
+        return;
+      }
+      
       try {
         console.log('Starting speech recognition');
         recognitionRef.current.start();
