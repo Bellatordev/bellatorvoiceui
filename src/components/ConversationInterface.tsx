@@ -6,6 +6,7 @@ import useElevenLabs from '@/hooks/useElevenLabs';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import VoiceControls from './VoiceControls';
+import { requestMicrophoneAccess, isSpeechRecognitionSupported } from '@/utils/microphonePermissions';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -27,6 +28,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [volume, setVolume] = useState(0.8);
   const [autoStartMic, setAutoStartMic] = useState(true);
+  const [isMicAvailable, setIsMicAvailable] = useState<boolean | null>(null);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
@@ -50,8 +52,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognitionRef.current.stop();
         setIsListening(false);
       }
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted) {
-      // Only auto-start mic if audio is not playing, we're not already listening, and mic is not muted
+    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && isMicAvailable) {
+      // Only auto-start mic if audio is not playing, we're not already listening, mic is not muted, and mic is available
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
         startListening();
@@ -59,11 +61,38 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted]);
+  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, isMicAvailable]);
 
   // Initialize speech recognition
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const checkMicrophoneAndInitialize = async () => {
+      console.log('Explicitly requesting microphone access...');
+      const micAvailable = await requestMicrophoneAccess();
+      setIsMicAvailable(micAvailable);
+      
+      if (!micAvailable) {
+        console.log('Microphone not available, switching to text input mode');
+        setInputMode('text');
+        toast({
+          title: "Microphone Unavailable",
+          description: "We couldn't access your microphone. Switching to text input mode.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!isSpeechRecognitionSupported()) {
+        console.log('Speech recognition not supported, switching to text input mode');
+        setInputMode('text');
+        toast({
+          title: "Speech Recognition Unsupported",
+          description: "Your browser doesn't support speech recognition. Switching to text input mode.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Initialize SpeechRecognition if available
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       
       if (SpeechRecognition) {
@@ -78,7 +107,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         };
         
         recognition.onend = () => {
-          console.log('Speech recognition ended');
+          console.log('Speech recognition stopped');
           setIsListening(false);
         };
         
@@ -103,6 +132,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         recognition.onerror = (event) => {
           console.error('Speech recognition error', event.error);
           setIsListening(false);
+          
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            setIsMicAvailable(false);
+            setInputMode('text');
+          }
+          
           toast({
             title: "Microphone Error",
             description: `Error: ${event.error}. Please check your microphone permissions.`,
@@ -111,14 +146,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         };
         
         recognitionRef.current = recognition;
-      } else {
-        toast({
-          title: "Browser Not Supported",
-          description: "Speech recognition is not supported in this browser. Please try Chrome, Edge, or Safari.",
-          variant: "destructive"
-        });
       }
-    }
+    };
+    
+    checkMicrophoneAndInitialize();
     
     return () => {
       if (recognitionRef.current) {
@@ -166,14 +197,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   }, []);
 
   const requestMicrophonePermission = async () => {
-    if (hasRequestedMicPermission.current) return true;
+    if (hasRequestedMicPermission.current) return isMicAvailable;
     
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const hasAccess = await requestMicrophoneAccess();
       hasRequestedMicPermission.current = true;
-      return true;
+      setIsMicAvailable(hasAccess);
+      return hasAccess;
     } catch (err) {
       console.error('Microphone permission denied:', err);
+      setIsMicAvailable(false);
       toast({
         title: "Microphone Access Denied",
         description: "Please allow microphone access to use voice features.",
@@ -220,7 +253,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           recognitionRef.current.stop();
         }
         generateSpeech(assistantResponse);
-      } else if (autoStartMic) {
+      } else if (autoStartMic && isMicAvailable) {
         // If muted but auto-start is on, start listening after a delay
         setTimeout(startListening, 500);
       }
@@ -228,9 +261,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const startListening = async () => {
-    // Don't start if audio is playing or being generated or microphone is muted
-    if (isPlaying || isGenerating || isMicMuted) {
-      console.log('Cannot start listening: audio is active or mic is muted');
+    // Don't start if audio is playing or being generated or microphone is muted or unavailable
+    if (isPlaying || isGenerating || isMicMuted || !isMicAvailable) {
+      console.log('Cannot start listening: audio is active, mic is muted, or mic is unavailable');
       return;
     }
     
@@ -246,24 +279,29 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     }
     
     const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) return;
+    if (!hasPermission) {
+      setInputMode('text');
+      return;
+    }
     
     try {
       recognitionRef.current.start();
       console.log('Microphone activated');
     } catch (error) {
       console.error('Error starting speech recognition:', error);
+      setIsMicAvailable(false);
       toast({
         title: "Error",
-        description: "Failed to start voice recognition. Please try again.",
+        description: "Failed to start voice recognition. Switching to text input.",
         variant: "destructive"
       });
+      setInputMode('text');
     }
   };
 
   const toggleListening = async () => {
-    if (isMicMuted) {
-      console.log('Microphone is muted, cannot toggle listening');
+    if (isMicMuted || !isMicAvailable) {
+      console.log('Microphone is muted or unavailable, cannot toggle listening');
       return;
     }
     
@@ -283,6 +321,15 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleMicMuteToggle = () => {
+    if (!isMicAvailable) {
+      toast({
+        title: "Microphone Unavailable",
+        description: "Your microphone appears to be unavailable or permission was denied.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newMuteState = !isMicMuted;
     setIsMicMuted(newMuteState);
     
@@ -313,6 +360,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleVolumeChange = (value: number) => {
+    console.log('Setting audio volume to', value);
     setVolume(value);
     // In a real app, you'd also adjust audio volume
   };
@@ -330,7 +378,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         />
       </div>
       
-      {transcript && !isMicMuted && (
+      {transcript && !isMicMuted && isListening && (
         <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
           Listening: {transcript}
         </div>
@@ -366,13 +414,15 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           >
             Send
           </button>
-          <button
-            type="button"
-            onClick={() => setInputMode('voice')}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-          >
-            Use Voice
-          </button>
+          {isMicAvailable && (
+            <button
+              type="button"
+              onClick={() => setInputMode('voice')}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+            >
+              Use Voice
+            </button>
+          )}
         </form>
       )}
     </div>
