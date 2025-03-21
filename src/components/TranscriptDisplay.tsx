@@ -5,57 +5,38 @@ interface TranscriptDisplayProps {
   transcript: string;
   isMicMuted: boolean;
   isListening: boolean;
-  isGeneratingVoice?: boolean;
+  isGeneratingVoice: boolean;
+  inputMode?: 'voice' | 'text';
 }
 
-const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ 
-  transcript, 
-  isMicMuted, 
+const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
+  transcript,
+  isMicMuted,
   isListening,
-  isGeneratingVoice = false
+  isGeneratingVoice,
+  inputMode = 'voice'
 }) => {
-  // Show voice generation message when applicable
-  if (isGeneratingVoice) {
-    return (
-      <div className="px-4 py-2 mb-4 bg-amber-100 rounded-lg text-gray-600 italic">
-        Voice generation in progress...
-      </div>
-    );
-  }
+  let displayMessage = '';
   
-  // Show a different message when mic is muted
-  if (isMicMuted) {
-    return (
-      <div className="px-4 py-2 mb-4 bg-red-100 rounded-lg text-gray-600 italic">
-        Tap to speak
-      </div>
-    );
+  if (inputMode === 'text') {
+    displayMessage = 'Type below';
+  } else if (isGeneratingVoice) {
+    displayMessage = 'Voice generation in progress...';
+  } else if (isMicMuted) {
+    displayMessage = 'Microphone is muted';
+  } else if (isListening && transcript) {
+    displayMessage = transcript;
+  } else if (isListening) {
+    displayMessage = 'Listening...';
+  } else {
+    displayMessage = 'Tap to speak';
   }
-  
-  // Show active listening status when applicable
-  if (!transcript && isListening) {
-    return (
-      <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
-        Listening... (waiting for speech)
-      </div>
-    );
-  }
-  
-  // Show transcript when available
-  if (transcript && isListening) {
-    return (
-      <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
-        <div className="flex items-center">
-          <span className="flex-1">Listening: {transcript}</span>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse ml-2" 
-               title="Recording in progress"></div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Don't show anything when not listening and no transcript
-  return null;
+
+  return (
+    <div className="py-2 px-4 text-gray-600 italic border-t border-gray-200 text-center">
+      {displayMessage}
+    </div>
+  );
 };
 
 export default TranscriptDisplay;

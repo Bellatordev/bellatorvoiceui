@@ -185,6 +185,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         isMicMuted={isMicMuted}
         isListening={isListening}
         isGeneratingVoice={isGenerating || isPlaying}
+        inputMode={inputMode}
       />
       
       {inputMode === 'voice' ? (
