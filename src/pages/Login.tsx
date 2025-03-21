@@ -56,7 +56,7 @@ const Login = () => {
             <span className="text-white">smart</span>
           </h1>
           
-          <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+          <p className="text-xl font-sans text-gray-400 mb-12 max-w-2xl mx-auto">
             I'm here to help you with your tasks, answer your questions, and assist you
             in making your workflow more efficient. Just ask me anything, and I'll do
             my best to provide helpful and relevant information.

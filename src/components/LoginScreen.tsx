@@ -26,11 +26,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   return (
     <div>
-      <h3 className="text-xl text-center text-gray-200 mb-8">Enter your credentials to start</h3>
+      <h3 className="text-xl text-center font-serif text-gray-200 mb-8">Enter your credentials to start</h3>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="apiKey" className="block text-gray-300 text-sm font-medium">
+          <label htmlFor="apiKey" className="block text-gray-300 text-sm font-medium font-sans">
             Eleven Labs API Key
           </label>
           <Input
@@ -39,13 +39,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="Enter your Eleven Labs API Key"
-            className="bg-[#282838] border-gray-700 text-white placeholder:text-gray-500 rounded-md"
+            className="bg-[#282838] border-gray-700 text-white font-sans placeholder:text-gray-500 rounded-md"
             required
           />
         </div>
         
         <div className="space-y-2">
-          <label htmlFor="agentId" className="block text-gray-300 text-sm font-medium">
+          <label htmlFor="agentId" className="block text-gray-300 text-sm font-medium font-sans">
             Voice Agent ID
           </label>
           <Input
@@ -54,14 +54,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
             placeholder="Enter your Voice Agent ID"
-            className="bg-[#282838] border-gray-700 text-white placeholder:text-gray-500 rounded-md"
+            className="bg-[#282838] border-gray-700 text-white font-sans placeholder:text-gray-500 rounded-md"
             required
           />
         </div>
         
         <Button 
           type="submit" 
-          className="w-full py-6 rounded-md bg-[#9583f4] hover:bg-[#8070e6] text-white font-medium text-lg"
+          className="w-full py-6 rounded-md bg-[#9583f4] hover:bg-[#8070e6] text-white font-medium font-sans text-lg"
           disabled={isLoading}
         >
           {isLoading ? 'Connecting...' : 'Start Session'}
