@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/contexts/ConversationTypes';
 import useElevenLabs from './useElevenLabs';
@@ -57,7 +56,6 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     }
   });
 
-  // Show toast if speech recognition is not supported
   useEffect(() => {
     if (!isRecognitionSupported) {
       toast({
@@ -150,7 +148,6 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     if (microphonePermission !== 'denied') {
       setIsListening(true);
     } else {
-      // Prompt the user for microphone permission
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(() => {
           setIsListening(true);
@@ -195,6 +192,9 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
         const errorData = await response.json();
         if (errorData?.detail?.status === 'quota_exceeded') {
           throw new Error(`ElevenLabs API quota exceeded: ${errorData.detail.message}`);
+        }
+        if (response.status === 404) {
+          throw new Error(`ElevenLabs agent not found: The agent ID "${agentId}" does not exist or is incorrect.`);
         }
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
