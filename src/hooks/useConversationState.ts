@@ -32,7 +32,8 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     togglePlayback, 
     setVolume: setTtsVolume,
     isGenerating, 
-    isPlaying 
+    isPlaying,
+    error 
   } = useElevenLabs({ 
     apiKey, 
     voiceId: 'EXAVITQu4vr4xnSDxMaL', // Using 'Sarah' voice by default
@@ -245,6 +246,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     isGenerating,
     isPlaying,
     currentTranscript,
+    error,
     sendMessage,
     handleToggleAudio,
     handleListenStart,

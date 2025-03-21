@@ -25,6 +25,7 @@ export interface ConversationContextType {
   isGenerating: boolean;
   isPlaying: boolean;
   currentTranscript: string;
+  error: string | null;
   sendMessage: (text: string) => Promise<void>;
   handleToggleAudio: (text: string) => void;
   handleListenStart: () => void;
