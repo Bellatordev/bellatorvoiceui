@@ -1,6 +1,6 @@
 
 import type { Config } from "tailwindcss";
-import defaultTheme from "tailwindcss/defaultTheme";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 const config = {
   darkMode: ["class"],
@@ -20,10 +20,6 @@ const config = {
       },
     },
     extend: {
-      fontFamily: {
-        sans: ["Inter", ...defaultTheme.fontFamily.sans],
-        playfair: ["'Playfair Display'", "serif"],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -36,18 +32,6 @@ const config = {
           primary: "hsl(240, 60%, 59%)",
           secondary: "hsl(240, 55%, 92%)",
           accent: "hsl(240, 55%, 92%)",
-        },
-        premium: {
-          accent: "#9b87f5",
-          secondary: "#7E69AB",
-          light: "#D6BCFA",
-          dark: "#1A1F2C",
-        },
-        yellows: {
-          soft: "#FEF7CD",
-          muted: "#F9E48B",
-          accent: "#F5CB5C",
-          deep: "#F0B429",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -78,15 +62,13 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
-      backgroundImage: {
-        'gradient-premium-light': 'linear-gradient(135deg, #D6BCFA, #9b87f5, #7E69AB, #D6BCFA)',
-        'gradient-premium-dark': 'linear-gradient(135deg, #1A1F2C, #403E43, #6E59A5, #1A1F2C)',
-        'gradient-yellow': 'linear-gradient(135deg, #FEF7CD, #F9E48B, #F5CB5C, #F0B429)',
-      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["Inter", ...fontFamily.sans],
       },
       keyframes: {
         "accordion-down": {
@@ -121,10 +103,6 @@ const config = {
           "0%, 100%": { height: "8px" },
           "50%": { height: "20px" }
         },
-        "pulse-slow": {
-          "0%, 100%": { transform: "scale(1)", opacity: "1" },
-          "50%": { transform: "scale(1.02)", opacity: "0.8" }
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -133,8 +111,7 @@ const config = {
         "wave-2": "wave-2 1.3s infinite ease-in-out",
         "wave-3": "wave-3 1.5s infinite ease-in-out",
         "wave-4": "wave-4 1.4s infinite ease-in-out",
-        "wave-5": "wave-5 1.1s infinite ease-in-out",
-        "pulse-slow": "pulse-slow 2s infinite ease-in-out",
+        "wave-5": "wave-5 1.1s infinite ease-in-out"
       },
     },
   },

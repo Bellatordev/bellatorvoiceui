@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -35,54 +36,6 @@
     --ring: 240 60% 59%;
 
     --radius: 0.75rem;
-    --gradient-center-color: #0EA5E9;
-    --yellow-accent: #F5CB5C;
-    
-    /* Rainbow Button Colors - enhanced saturation */
-    --color-1: 340 95% 55%;
-    --color-2: 262 95% 62%;
-    --color-3: 230 95% 65%;
-    --color-4: 178 95% 46%;
-    --color-5: 42 100% 60%;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --gradient-center-color: #9b87f5;
-    --yellow-accent: #F0B429;
-    
-    /* Rainbow Button Colors - enhanced saturation */
-    --color-1: 340 95% 55%;
-    --color-2: 262 95% 62%;
-    --color-3: 230 95% 65%;
-    --color-4: 178 95% 46%;
-    --color-5: 42 100% 60%;
   }
 
   * {
@@ -90,55 +43,45 @@
   }
 
   body {
-    @apply bg-agent-background text-agent-foreground font-sans dark:bg-premium-dark dark:text-white;
+    @apply bg-agent-background text-agent-foreground font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Custom utility classes */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm dark:bg-gray-900/30 dark:border-white/5;
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
   }
 
   .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-agent-primary dark:focus-visible:ring-premium-accent focus-visible:ring-offset-2;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-agent-primary focus-visible:ring-offset-2;
   }
 }
 
 @layer components {
   .agent-button {
-    @apply flex items-center justify-center rounded-full bg-agent-primary text-white px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-primary/90 active:scale-95 focus-ring dark:bg-premium-accent dark:hover:bg-premium-accent/90;
+    @apply flex items-center justify-center rounded-full bg-agent-primary text-white px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-primary/90 active:scale-95 focus-ring;
   }
   
   .agent-button-secondary {
-    @apply flex items-center justify-center rounded-full bg-agent-secondary/10 text-agent-primary px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-secondary/20 active:scale-95 focus-ring dark:bg-premium-secondary/20 dark:text-premium-light dark:hover:bg-premium-secondary/30;
-  }
-
-  .agent-button-yellow {
-    @apply flex items-center justify-center rounded-full bg-yellows-accent text-black px-4 py-2 font-medium transition-all duration-200 hover:bg-yellows-deep hover:text-white active:scale-95 focus-ring;
+    @apply flex items-center justify-center rounded-full bg-agent-secondary/10 text-agent-primary px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-secondary/20 active:scale-95 focus-ring;
   }
   
   .agent-card {
     @apply glass rounded-2xl p-6 transition-all duration-300;
   }
-
-  .agent-card-yellow {
-    @apply glass rounded-2xl p-6 transition-all duration-300 border-yellows-muted border-2;
-  }
   
   .agent-input {
-    @apply w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-agent-primary focus:ring-1 focus:ring-agent-primary focus-ring dark:bg-gray-800 dark:border-gray-700 dark:focus:border-premium-accent dark:focus:ring-premium-accent;
-  }
-
-  .agent-input-yellow {
-    @apply w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-yellows-accent focus:ring-1 focus:ring-yellows-accent focus-ring dark:bg-gray-800 dark:border-gray-700 dark:focus:border-yellows-deep dark:focus:ring-yellows-deep;
+    @apply w-full px-4 py-2 rounded-full bg-white border border-gray-200 focus:border-agent-primary focus:ring-1 focus:ring-agent-primary focus-ring;
   }
   
+  /* Waveform animation helpers */
   .waveform-container {
     @apply flex items-end justify-center h-16 space-x-1;
   }
   
   .waveform-bar {
-    @apply bg-agent-primary rounded-full transition-all duration-300 dark:bg-premium-accent;
+    @apply bg-agent-primary rounded-full transition-all duration-300;
   }
   
   .waveform-bar-active {
@@ -148,24 +91,9 @@
   .waveform-bar-inactive {
     @apply opacity-30 h-2;
   }
-
-  .waveform-bar-yellow {
-    @apply bg-yellows-accent rounded-full transition-all duration-300;
-  }
-
-  .agent-user {
-    @apply bg-blue-100 dark:bg-blue-200;
-  }
-  
-  .agent-assistant {
-    @apply bg-gray-100 dark:bg-gray-700;
-  }
-
-  .agent-user-yellow {
-    @apply bg-yellows-soft;
-  }
 }
 
+/* Audio visualizer animations - improved with smoother transitions */
 @keyframes soundWave1 {
   0%, 100% { height: 8px; }
   50% { height: 12px; }
@@ -181,31 +109,24 @@
   50% { height: 28px; }
 }
 
+/* Improved breathing effect with smoother animation */
 @keyframes breathe {
   0%, 100% { opacity: 0.4; transform: scale(0.95); }
   50% { opacity: 0.1; transform: scale(1.05); }
 }
 
+/* Smoother gradient animation */
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
+/* Smoother pulse animation */
 @keyframes pulse {
   0% { transform: scale(0.98); }
   50% { transform: scale(1.02); }
   100% { transform: scale(0.98); }
-}
-
-@keyframes glow {
-  0%, 100% { filter: drop-shadow(0 0 5px rgba(155, 135, 245, 0.3)); }
-  50% { filter: drop-shadow(0 0 15px rgba(155, 135, 245, 0.6)); }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 @layer utilities {
@@ -237,14 +158,6 @@
     animation: slideUp 0.2s ease-out forwards;
   }
   
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite;
-  }
-  
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-  }
-  
   @keyframes slideUp {
     from {
       opacity: 0;
@@ -254,30 +167,5 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  .yellow-accent {
-    @apply border-yellows-accent text-yellows-deep;
-  }
-  
-  .yellow-glow {
-    filter: drop-shadow(0 0 5px rgba(245, 203, 92, 0.5));
-  }
-  
-  @keyframes rainbow {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  .animate-rainbow {
-    animation: rainbow 4s linear infinite;
-    background-size: 200% 200%;
   }
 }

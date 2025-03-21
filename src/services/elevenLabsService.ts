@@ -12,7 +12,6 @@ interface ElevenLabsState {
   isGenerating: boolean;
   isPlaying: boolean;
   error: string | null;
-  volume: number;
 }
 
 class ElevenLabsService {
@@ -21,8 +20,7 @@ class ElevenLabsService {
   private state: ElevenLabsState = {
     isGenerating: false,
     isPlaying: false,
-    error: null,
-    volume: 0.8
+    error: null
   };
   private stateListeners: ((state: ElevenLabsState) => void)[] = [];
 
@@ -47,16 +45,6 @@ class ElevenLabsService {
         isPlaying: false, 
         error: 'Error playing audio' 
       });
-    });
-    
-    // Set initial volume
-    if (this.audioElement) {
-      this.audioElement.volume = this.state.volume;
-    }
-    
-    // Add canplaythrough event to ensure audio is fully loaded before playing
-    this.audioElement.addEventListener('canplaythrough', () => {
-      console.log('Audio can play through without buffering');
     });
   }
 
@@ -94,8 +82,7 @@ class ElevenLabsService {
 
     try {
       this.updateState({ isGenerating: true, error: null });
-      console.log(`Attempting to generate speech with voice ID: ${voiceId}, model: ${modelId}`);
-      console.log(`Text to generate: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+      console.log(`Attempting to generate speech with voice ID: ${voiceId}`);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
@@ -119,14 +106,8 @@ class ElevenLabsService {
         
         try {
           const errorData = await response.json();
+          errorMessage += errorData.detail?.message || JSON.stringify(errorData);
           console.error('Response error data:', errorData);
-          
-          // Check for quota exceeded error
-          if (errorData?.detail?.status === 'quota_exceeded') {
-            errorMessage = `ElevenLabs API quota exceeded: ${errorData.detail.message}`;
-          } else {
-            errorMessage += errorData.detail?.message || JSON.stringify(errorData);
-          }
         } catch (parseError) {
           errorMessage += await response.text() || 'Unknown error';
         }
@@ -142,33 +123,11 @@ class ElevenLabsService {
         this.audioElement.pause();
         this.audioElement.currentTime = 0;
         
-        // Set up audio element
         this.audioElement.src = audioUrl;
-        
-        // Try to play the audio with retries
-        let retries = 3;
-        const attemptPlay = async () => {
-          try {
-            console.log('Attempting to play audio...');
-            await this.audioElement?.play();
-            console.log('Audio playing successfully');
-          } catch (error) {
-            console.error('Error playing audio:', error);
-            if (retries > 0) {
-              retries--;
-              console.log(`Retrying playback, ${retries} attempts left`);
-              setTimeout(attemptPlay, 300);
-            } else {
-              this.updateState({ 
-                isGenerating: false,
-                error: 'Failed to play audio after multiple attempts'
-              });
-            }
-          }
-        };
-        
-        // Start playback attempt
-        attemptPlay();
+        this.audioElement.play().catch(error => {
+          console.error('Error playing audio:', error);
+          this.updateState({ error: 'Failed to play audio' });
+        });
       }
       
       this.updateState({ isGenerating: false });
@@ -203,22 +162,6 @@ class ElevenLabsService {
     } else {
       console.log('Pausing audio playback');
       this.audioElement.pause();
-    }
-  }
-
-  public setVolume(volume: number): void {
-    // Ensure volume is within valid range
-    if (volume < 0) volume = 0;
-    if (volume > 1) volume = 1;
-    
-    console.log(`Setting audio volume to ${volume}`);
-    
-    // Always update the state, even if volume is 0
-    this.updateState({ volume });
-    
-    // Update the audio element volume
-    if (this.audioElement) {
-      this.audioElement.volume = volume;
     }
   }
 

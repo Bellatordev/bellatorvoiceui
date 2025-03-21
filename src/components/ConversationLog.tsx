@@ -76,13 +76,13 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   return (
     <div className={`flex flex-col ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Conversation</h2>
+        <h2 className="text-lg font-semibold text-gray-800">Conversation</h2>
         
         <div className="flex space-x-2">
           {onLogout && (
             <button 
               onClick={onLogout}
-              className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
+              className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 transition-colors focus-ring"
               aria-label="Log out"
             >
               <LogOut className="w-4 h-4" />
@@ -90,7 +90,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
           )}
           <button 
             onClick={downloadConversation}
-            className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
+            className="p-2 text-gray-500 hover:text-agent-primary rounded-full hover:bg-gray-100 transition-colors focus-ring"
             aria-label="Download conversation"
           >
             <DownloadIcon className="w-4 h-4" />
@@ -112,14 +112,14 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.sender === 'user'
-                    ? 'bg-agent-user text-gray-800 dark:bg-gray-200 dark:text-gray-800'
-                    : 'bg-agent-assistant text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                    ? 'bg-agent-user text-gray-800 rounded-tr-none'
+                    : 'bg-agent-assistant text-gray-800 rounded-tl-none'
                 }`}
               >
                 <div className="flex flex-col">
                   <span className="text-sm">{message.text}</span>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {formatTimestamp(message.timestamp)}
                     </span>
                     

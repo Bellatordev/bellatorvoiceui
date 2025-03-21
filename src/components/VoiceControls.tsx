@@ -3,8 +3,6 @@ import React from 'react';
 import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
-import DarkModeToggle from './DarkModeToggle';
-import { Slider } from '@/components/ui/slider';
 
 type VoiceControlsProps = {
   isListening: boolean;
@@ -17,8 +15,6 @@ type VoiceControlsProps = {
   onSwitchToText: () => void;
   isMicMuted: boolean;
   onMicMuteToggle: () => void;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
 };
 
 const VoiceControls: React.FC<VoiceControlsProps> = ({
@@ -32,8 +28,6 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   onSwitchToText,
   isMicMuted,
   onMicMuteToggle,
-  isDarkMode,
-  toggleDarkMode,
 }) => {
   // Function to handle the tap-to-speak button click
   const handleTapToSpeakClick = () => {
@@ -49,27 +43,9 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       onListen();
     }
   };
-
-  // Improved volume slider handler with smoother interaction
-  const handleVolumeSliderChange = (value: number[]) => {
-    // When user is dragging the slider, even if it was previously muted,
-    // we want to unmute and update the volume
-    if (isMuted && value[0] > 0) {
-      onMuteToggle(); // Unmute if we're changing volume from 0
-    }
-    onVolumeChange(value[0]);
-  };
   
   return (
     <div className="flex flex-col items-center space-y-8 w-full max-w-md mx-auto">
-      {/* Dark mode toggle */}
-      <div className="self-end mb-4">
-        <DarkModeToggle
-          isDarkMode={isDarkMode}
-          toggleDarkMode={toggleDarkMode}
-        />
-      </div>
-
       <div className="relative w-64 h-64 flex items-center justify-center">
         {/* Animated gradient background - made perfectly circular and smoother animation */}
         <div 
@@ -81,10 +57,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           <div 
             className={cn(
               "absolute inset-0 rounded-full",
-              isListening ? "animate-gradient-shift" : "",
-              "dark:bg-gradient-premium-dark bg-gradient-premium-light"
+              isListening ? "animate-gradient-shift" : ""
             )}
             style={{
+              background: "linear-gradient(135deg, #0EA5E9, #33C3F0, #0FA0CE, #D3E4FD)",
               backgroundSize: "300% 300%",
             }}
           />
@@ -96,7 +72,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               isListening ? "animate-breathe" : ""
             )}
             style={{
-              background: "radial-gradient(circle, transparent 30%, var(--gradient-center-color) 70%)",
+              background: "radial-gradient(circle, transparent 30%, #0EA5E9 70%)",
               mixBlendMode: "overlay"
             }}
           />
@@ -104,10 +80,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         
         {/* Center white pill with status text */}
         <div 
-          className="relative z-10 px-6 py-3 bg-white/90 dark:bg-gray-900/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 dark:hover:bg-gray-900/100 hover:shadow-lg font-playfair"
+          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
           onClick={handleTapToSpeakClick}
         >
-          <span className="text-gray-800 dark:text-gray-100 font-medium">
+          <span className="text-gray-800 font-medium">
             {isListening ? "Listening" : "Tap to speak"}
           </span>
         </div>
@@ -118,8 +94,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           className={cn(
             "absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300",
             isMicMuted 
-              ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700" 
-              : "bg-white/80 text-gray-800 hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90 border border-gray-200 dark:border-gray-700"
+              ? "bg-red-500 text-white hover:bg-red-600" 
+              : "bg-white/80 text-gray-800 hover:bg-white/90 border border-gray-200"
           )}
           variant="ghost"
           size="icon"
@@ -130,39 +106,38 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       </div>
       
       <div className="flex flex-col items-center space-y-4 w-full">
-        <div className="flex items-center space-x-4 w-full max-w-xs">
+        <div className="flex items-center space-x-4">
           <button
             onClick={onMuteToggle}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors focus-ring"
             aria-label={isMuted ? "Unmute speaker" : "Mute speaker"}
           >
             {isMuted ? (
-              <VolumeX className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <VolumeX className="w-5 h-5 text-gray-400" />
             ) : volume < 0.5 ? (
-              <Volume1 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <Volume1 className="w-5 h-5 text-gray-600" />
             ) : (
-              <Volume2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <Volume2 className="w-5 h-5 text-gray-600" />
             )}
           </button>
           
-          <div className="w-full">
-            <Slider
-              value={[isMuted ? 0 : volume]}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={handleVolumeSliderChange}
-              className="w-full"
-              aria-label="Volume"
-            />
-          </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+            className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-agent-primary"
+            disabled={isMuted}
+          />
         </div>
         
         <Button 
           variant="outline" 
           size="sm" 
           onClick={onSwitchToText}
-          className="flex items-center gap-2 font-playfair dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+          className="flex items-center gap-2"
         >
           <MessageSquare className="w-4 h-4" />
           Type instead

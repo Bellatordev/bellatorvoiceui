@@ -1,73 +1,20 @@
 
 import React from 'react';
 import VoiceAgent from '../components/VoiceAgent';
-import { Hero } from '@/components/ui/animated-hero';
-import DarkModeToggle from '@/components/DarkModeToggle';
-import { useEffect, useState } from 'react';
-import { LampDemo } from '@/components/ui/lamp-demo';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
-  const isMobile = useIsMobile();
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme === 'dark' || 
-      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-  };
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
-
-  const scrollToForm = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const lampSection = document.getElementById('lamp-section');
-    if (lampSection) {
-      // Calculate a position to show the lamp without overlapping with the form
-      const offset = isMobile ? -100 : -200;
-      const topPosition = lampSection.getBoundingClientRect().top + window.pageYOffset + offset;
-      window.scrollTo({ top: topPosition, behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-gray-200 dark:from-premium-dark dark:to-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-agent-accent/10">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
-        <header className="mb-8 flex justify-end">
-          <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+        <header className="mb-8">
+          <h1 className="sr-only">Voice Assistant</h1>
         </header>
         
-        {/* Hero section */}
-        <section className="mb-16">
-          <Hero scrollHandler={scrollToForm} />
-        </section>
+        <main className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
+          <VoiceAgent />
+        </main>
         
-        {/* Increased spacing between sections with a visual separator */}
-        <div className="h-32 md:h-48 flex items-center justify-center">
-          <div className="w-24 h-px bg-gray-300 dark:bg-gray-700"></div>
-        </div>
-        
-        {/* Login section with lamp effect */}
-        <section id="lamp-section" className="flex-1 flex flex-col items-center justify-center py-12 relative overflow-hidden bg-gray-950 rounded-3xl shadow-xl">
-          <div className="w-full h-full absolute inset-0 overflow-hidden">
-            <LampDemo />
-          </div>
-          <div className={`max-w-2xl w-full mx-auto z-10 relative ${isMobile ? 'mt-56 md:mt-72' : 'mt-72 md:mt-96'}`}>
-            <VoiceAgent />
-          </div>
-        </section>
-        
-        <footer className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        <footer className="mt-8 text-center text-sm text-gray-500">
           {/* Footer content removed */}
         </footer>
       </div>
