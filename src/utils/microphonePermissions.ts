@@ -6,7 +6,7 @@
 // Check if the user's browser supports the required APIs
 export const isSpeechRecognitionSupported = (): boolean => {
   return typeof window !== 'undefined' && 
-    (window.SpeechRecognition || window.webkitSpeechRecognition);
+    !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 };
 
 // Check if the user's browser supports audio APIs
