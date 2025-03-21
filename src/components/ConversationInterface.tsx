@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
@@ -78,7 +79,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   useEffect(() => {
     if (isGenerating || isPlaying) {
       stopListening();
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted) {
+    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice') {
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
         startListening();
@@ -86,7 +87,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted]);
+  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, inputMode]);
 
   useEffect(() => {
     if (error) {
@@ -149,6 +150,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setVolume(value);
   };
 
+  const handleSwitchToTextMode = () => {
+    // Stop listening and mute the microphone when switching to text mode
+    stopListening();
+    setIsMicMuted(true);
+    setInputMode('text');
+  };
+
+  const handleSwitchToVoiceMode = () => {
+    // Unmute the microphone when switching to voice mode
+    setIsMicMuted(false);
+    setInputMode('voice');
+    // Start listening if auto-start is enabled
+    if (autoStartMic && !isPlaying && !isGenerating) {
+      setTimeout(startListening, 300);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 agent-card mb-6 overflow-hidden">
@@ -179,7 +197,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             onStopListening={handleToggleListening}
             onMuteToggle={handleMuteToggle}
             onVolumeChange={handleVolumeChange}
-            onSwitchToText={() => setInputMode('text')}
+            onSwitchToText={handleSwitchToTextMode}
             isMicMuted={isMicMuted}
             onMicMuteToggle={handleMicMuteToggle}
           />
@@ -187,7 +205,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       ) : (
         <TextInputMode 
           onSendMessage={handleTextInputSubmit}
-          onSwitchToVoice={() => setInputMode('voice')}
+          onSwitchToVoice={handleSwitchToVoiceMode}
         />
       )}
     </div>
