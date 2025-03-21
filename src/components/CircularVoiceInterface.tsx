@@ -5,6 +5,7 @@ import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { AIVoiceInput } from './ui/ai-voice-input';
 import { useConversation } from '@/contexts/ConversationContext';
 import { cn } from '@/lib/utils';
+import { Slider } from '@/components/ui/slider';
 
 const CircularVoiceInterface: React.FC = () => {
   const { 
@@ -17,7 +18,9 @@ const CircularVoiceInterface: React.FC = () => {
     toggleMute,
     isPlaying,
     isGenerating,
-    currentTranscript
+    currentTranscript,
+    volume,
+    setVolume
   } = useConversation();
 
   // Log state changes for debugging
@@ -25,8 +28,17 @@ const CircularVoiceInterface: React.FC = () => {
     console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}, isMicMuted: ${isMicMuted}`);
   }, [isListening, isPlaying, isGenerating, isMicMuted]);
 
+  // Handle volume slider change
+  const handleVolumeChange = (value: number[]) => {
+    // If it was muted and we're changing volume, unmute
+    if (isMuted && value[0] > 0) {
+      toggleMute();
+    }
+    setVolume(value[0]);
+  };
+
   return (
-    <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+    <div className="relative w-64 h-64 mx-auto flex flex-col items-center justify-center">
       {/* Circular blue gradient background */}
       <div className="absolute w-full h-full rounded-full overflow-hidden">
         <div 
@@ -92,20 +104,22 @@ const CircularVoiceInterface: React.FC = () => {
         {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </Button>
       
-      <Button
-        onClick={toggleMute}
-        className={cn(
-          "absolute bottom-2 left-2 z-20 rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-300",
-          isMuted 
-            ? "bg-red-500 text-white hover:bg-red-600" 
-            : "bg-white/80 text-blue-800 hover:bg-white/90 border border-blue-200"
+      {/* Volume slider (positioned below the circle) */}
+      <div className="mt-20 flex items-center space-x-2 w-48">
+        <Volume2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+        <Slider
+          value={[isMuted ? 0 : volume]}
+          min={0}
+          max={1}
+          step={0.01}
+          onValueChange={handleVolumeChange}
+          className="w-full"
+          aria-label="Volume"
+        />
+        {isMuted && (
+          <VolumeX className="w-4 h-4 text-red-500" />
         )}
-        variant="ghost"
-        size="icon"
-        aria-label={isMuted ? "Unmute speaker" : "Mute speaker"}
-      >
-        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-      </Button>
+      </div>
     </div>
   );
 };
