@@ -42,15 +42,19 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1a1a24] text-white">
-      {/* Hero Section with Animated Text */}
-      <div className="absolute top-6 right-6">
+      {/* Theme Toggle in top right */}
+      <div className="absolute top-6 right-6 z-10">
         <ThemeToggle />
       </div>
       
+      {/* Hero Section with Animated Text */}
       <AnimatedHero onScrollToLogin={scrollToLogin} />
       
-      {/* Login Section */}
-      <div ref={loginSectionRef} className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#1a1a24]">
+      {/* Login Section with increased spacing from the hero section */}
+      <div 
+        ref={loginSectionRef} 
+        className="min-h-screen flex flex-col items-center justify-center px-4 py-20 bg-[#1a1a24]"
+      >
         <div className="mb-16">
           <h2 className="text-6xl font-serif mb-2">
             <span className="text-[#a8a0f0]">Bellator</span>

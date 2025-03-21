@@ -25,12 +25,15 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative">
       <div className="max-w-3xl text-center">
-        <h1 className="text-7xl font-serif mb-8 text-[#a8a0f0] leading-tight">
+        <h1 className="text-6xl md:text-7xl font-serif mb-8 text-[#a8a0f0] leading-tight">
           Meet your Agentic AI
           <br />
           <span className="text-white">that is</span>
-          <br />
-          <span className="relative flex w-full justify-center overflow-hidden text-white md:pb-4 md:pt-1">
+        </h1>
+        
+        {/* Animated words section with increased spacing */}
+        <div className="h-20 md:h-24 mb-8 relative flex justify-center">
+          <span className="relative flex w-full justify-center overflow-visible text-white text-6xl md:text-7xl font-serif">
             {titles.map((title, index) => (
               <motion.span
                 key={index}
@@ -53,7 +56,7 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
               </motion.span>
             ))}
           </span>
-        </h1>
+        </div>
         
         <p className="text-xl font-sans text-gray-400 mb-12 max-w-2xl mx-auto">
           I'm here to help you with your tasks, answer your questions, and assist you
