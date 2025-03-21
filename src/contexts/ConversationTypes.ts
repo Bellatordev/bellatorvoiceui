@@ -26,6 +26,7 @@ export interface ConversationContextType {
   isPlaying: boolean;
   currentTranscript: string;
   error: string | null;
+  microphonePermission: PermissionState | null;
   sendMessage: (text: string) => Promise<void>;
   handleToggleAudio: (text: string) => void;
   handleListenStart: () => void;

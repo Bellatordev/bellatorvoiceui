@@ -1,12 +1,11 @@
 
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
-import { AIVoiceInput } from './ui/ai-voice-input';
+import { Mic, MicOff, Volume2, VolumeX, AlertCircle } from 'lucide-react';
 import { useConversation } from '@/contexts/ConversationContext';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
-import { RainbowButton } from './ui/rainbow-button';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CircularVoiceInterface: React.FC = () => {
   const { 
@@ -21,13 +20,14 @@ const CircularVoiceInterface: React.FC = () => {
     isGenerating,
     currentTranscript,
     volume,
-    setVolume
+    setVolume,
+    microphonePermission
   } = useConversation();
 
   // Log state changes for debugging
   useEffect(() => {
-    console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}, isMicMuted: ${isMicMuted}`);
-  }, [isListening, isPlaying, isGenerating, isMicMuted]);
+    console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}, isMicMuted: ${isMicMuted}, micPermission: ${microphonePermission}`);
+  }, [isListening, isPlaying, isGenerating, isMicMuted, microphonePermission]);
 
   // Handle volume slider change
   const handleVolumeChange = (value: number[]) => {
@@ -40,6 +40,17 @@ const CircularVoiceInterface: React.FC = () => {
 
   return (
     <div className="relative flex flex-col items-center justify-center">
+      {/* Microphone permission alert */}
+      {microphonePermission === 'denied' && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Microphone Access Denied</AlertTitle>
+          <AlertDescription>
+            Please enable microphone access in your browser settings to use voice features.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Voice circle interface */}
       <div className="relative w-64 h-64 mx-auto flex flex-col items-center justify-center">
         {/* Enhanced circular gradient background with improved colors for dark mode */}
@@ -106,7 +117,11 @@ const CircularVoiceInterface: React.FC = () => {
         
         {/* Center listening button with enhanced styling */}
         <button
-          onClick={isMicMuted ? toggleMic : handleListenStart}
+          onClick={
+            microphonePermission === 'denied' 
+              ? () => navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => console.error(err))
+              : isMicMuted ? toggleMic : handleListenStart
+          }
           className={cn(
             "relative z-10 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 dark:border-white/5 rounded-full shadow-lg cursor-pointer transition-all duration-300 hover:bg-white/20 hover:shadow-xl",
             (isPlaying || isGenerating) ? "opacity-50 cursor-not-allowed" : "opacity-100",
@@ -115,7 +130,17 @@ const CircularVoiceInterface: React.FC = () => {
           disabled={isPlaying || isGenerating}
         >
           <span className="text-blue-800 dark:text-premium-light font-medium">
-            {isMicMuted ? "Unmute" : isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
+            {microphonePermission === 'denied' 
+              ? "Enable Microphone" 
+              : isMicMuted 
+                ? "Unmute" 
+                : isListening 
+                  ? "Listening" 
+                  : isPlaying 
+                    ? "Playing..." 
+                    : isGenerating 
+                      ? "Generating..." 
+                      : "Tap to speak"}
           </span>
         </button>
 

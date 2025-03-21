@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/contexts/ConversationTypes';
 import useElevenLabs from './useElevenLabs';
@@ -40,7 +41,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     modelId: 'eleven_multilingual_v2'
   });
 
-  const { transcript } = useSpeechRecognition({
+  const { transcript, isRecognitionSupported, permissionState: microphonePermission } = useSpeechRecognition({
     isListening,
     isMicMuted,
     onTranscript: (text) => {
@@ -55,6 +56,17 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       setCurrentTranscript('');
     }
   });
+
+  // Show toast if speech recognition is not supported
+  useEffect(() => {
+    if (!isRecognitionSupported) {
+      toast({
+        title: "Speech Recognition Unavailable",
+        description: "Your browser doesn't support speech recognition. Try Chrome, Edge, or Safari.",
+        variant: "destructive",
+      });
+    }
+  }, [isRecognitionSupported]);
 
   const updateTtsVolume = useCallback(() => {
     setTtsVolume(isMuted ? 0 : volume);
@@ -97,20 +109,20 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       setShouldAutoListen(false);
       
       const timer = setTimeout(() => {
-        if (!isMicMuted) {
+        if (!isMicMuted && microphonePermission !== 'denied') {
           console.log('Setting isListening to true after voice generation');
           setIsListening(true);
         } else {
-          console.log('Not auto-activating mic because it is muted');
+          console.log('Not auto-activating mic because it is muted or permission is denied');
         }
       }, 750);
       
       return () => clearTimeout(timer);
     }
-  }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted]);
+  }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted, microphonePermission]);
 
   useEffect(() => {
-    if (!isPlaying && !isGenerating && !isListening && !isMicMuted) {
+    if (!isPlaying && !isGenerating && !isListening && !isMicMuted && microphonePermission !== 'denied') {
       const timer = setTimeout(() => {
         if (!isListening && !isMicMuted) {
           console.log('Auto-activating microphone after playback ended');
@@ -120,7 +132,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       
       return () => clearTimeout(timer);
     }
-  }, [isPlaying, isGenerating, isListening, isMicMuted]);
+  }, [isPlaying, isGenerating, isListening, isMicMuted, microphonePermission]);
 
   const toggleDarkMode = useCallback(() => {
     const newMode = !isDarkMode;
@@ -135,8 +147,24 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
   }, [isDarkMode]);
 
   const handleListenStart = useCallback(() => {
-    setIsListening(true);
-  }, []);
+    if (microphonePermission !== 'denied') {
+      setIsListening(true);
+    } else {
+      // Prompt the user for microphone permission
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          setIsListening(true);
+        })
+        .catch(err => {
+          console.error('Failed to get microphone permission:', err);
+          toast({
+            title: "Microphone Access Required",
+            description: "Please enable microphone access in your browser settings.",
+            variant: "destructive",
+          });
+        });
+    }
+  }, [microphonePermission]);
 
   const handleListenStop = useCallback(async (duration: number) => {
     setIsListening(false);
@@ -184,7 +212,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       } else {
         console.log('Audio is muted, not generating speech');
         setTimeout(() => {
-          if (!isMicMuted) {
+          if (!isMicMuted && microphonePermission !== 'denied') {
             console.log('Setting isListening to true when audio is muted');
             setIsListening(true);
           }
@@ -199,7 +227,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       });
       
       setTimeout(() => {
-        if (!isMicMuted) {
+        if (!isMicMuted && microphonePermission !== 'denied') {
           console.log('Setting isListening to true after error');
           setIsListening(true);
         }
@@ -207,7 +235,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, agentId, generateSpeech, isMuted, volume, isMicMuted]);
+  }, [apiKey, agentId, generateSpeech, isMuted, volume, isMicMuted, microphonePermission]);
 
   const handleToggleAudio = useCallback((text: string) => {
     togglePlayback();
@@ -247,6 +275,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     isPlaying,
     currentTranscript,
     error,
+    microphonePermission,
     sendMessage,
     handleToggleAudio,
     handleListenStart,
