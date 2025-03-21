@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowRight, Info } from 'lucide-react';
+import { RainbowButton } from '@/components/ui/rainbow-button';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -69,12 +70,12 @@ const Login = () => {
               About Us <Info size={18} />
             </button>
             
-            <button 
+            <RainbowButton 
               onClick={scrollToLogin}
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-orange-400 to-purple-500 text-white font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
+              className="h-12 rounded-full font-medium flex items-center gap-2"
             >
               Get Started <ArrowRight size={18} />
-            </button>
+            </RainbowButton>
           </div>
         </div>
       </div>

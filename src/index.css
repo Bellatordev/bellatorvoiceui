@@ -43,6 +43,13 @@
     --agent-secondary: 262 70% 92%;
     --agent-accent: 262 70% 92%;
     --agent-yellow: 45 100% 60%;
+
+    /* Rainbow button colors */
+    --color-1: 280 60% 55%;
+    --color-2: 325 70% 60%;
+    --color-3: 25 90% 55%;
+    --color-4: 210 75% 55%;
+    --color-5: 262 80% 65%;
   }
 
   .dark {
@@ -80,6 +87,13 @@
     --agent-secondary: 240 6% 20%;
     --agent-accent: 262 60% 60%;
     --agent-yellow: 45 100% 65%;
+
+    /* Rainbow button colors */
+    --color-1: 280 60% 65%;
+    --color-2: 325 70% 70%;
+    --color-3: 25 90% 65%;
+    --color-4: 210 75% 65%;
+    --color-5: 262 80% 75%;
   }
 
   * {
@@ -140,6 +154,17 @@
   .theme-toggle {
     @apply p-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 transition-colors focus-ring dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700;
   }
+}
+
+/* Rainbow button animation */
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-rainbow {
+  animation: rainbow 8s linear infinite;
 }
 
 /* Audio visualizer animations - improved with smoother transitions */
