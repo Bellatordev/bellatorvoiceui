@@ -1,14 +1,14 @@
+
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { AIVoiceInput } from './ui/ai-voice-input';
 import { useConversation } from '@/contexts/ConversationContext';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
-import { useToast } from '@/components/ui/use-toast';
+import { RainbowButton } from './ui/rainbow-button';
 
 const CircularVoiceInterface: React.FC = () => {
-  const { toast } = useToast();
-  
   const { 
     isListening,
     isMicMuted,
@@ -21,14 +21,13 @@ const CircularVoiceInterface: React.FC = () => {
     isGenerating,
     currentTranscript,
     volume,
-    setVolume,
-    hasMicrophonePermission
+    setVolume
   } = useConversation();
 
   // Log state changes for debugging
   useEffect(() => {
-    console.log(`CircularVoiceInterface - States: isListening: ${isListening}, isMicMuted: ${isMicMuted}, hasMic: ${hasMicrophonePermission}`);
-  }, [isListening, isMicMuted, hasMicrophonePermission]);
+    console.log(`CircularVoiceInterface - isListening: ${isListening}, isPlaying: ${isPlaying}, isGenerating: ${isGenerating}, isMicMuted: ${isMicMuted}`);
+  }, [isListening, isPlaying, isGenerating, isMicMuted]);
 
   // Handle volume slider change
   const handleVolumeChange = (value: number[]) => {
@@ -39,36 +38,11 @@ const CircularVoiceInterface: React.FC = () => {
     setVolume(value[0]);
   };
 
-  // Handle the tap-to-speak button click
-  const handleTapToSpeakClick = () => {
-    console.log("Tap to speak clicked, isMicMuted:", isMicMuted);
-    
-    // If we're already listening, stop listening
-    if (isListening) {
-      handleListenStop(0);
-      return;
-    }
-    
-    // If microphone is muted, unmute it first
-    if (isMicMuted) {
-      toggleMic(); // This will unmute the mic
-      
-      // Small delay before starting listening to allow toggle to take effect
-      setTimeout(() => {
-        console.log("Starting listening after unmuting");
-        handleListenStart();
-      }, 100);
-    } else {
-      // Otherwise just start listening
-      handleListenStart();
-    }
-  };
-
   return (
     <div className="relative flex flex-col items-center justify-center">
       {/* Voice circle interface */}
       <div className="relative w-64 h-64 mx-auto flex flex-col items-center justify-center">
-        {/* Gradient background */}
+        {/* Enhanced circular gradient background with improved colors for dark mode */}
         <div className="absolute w-full h-full rounded-full overflow-hidden">
           <div 
             className={cn(
@@ -78,50 +52,81 @@ const CircularVoiceInterface: React.FC = () => {
             style={{
               background: "radial-gradient(circle, var(--gradient-center-color) 0%, #6E59A5 50%, #403E43 100%)",
               backgroundSize: "300% 300%",
+              animation: isListening && !isMicMuted ? "gradient-shift 5s ease-in-out infinite, pulse 3s ease-in-out infinite" : "none"
             }}
           />
+          
+          {/* Enhanced animated pulse effect with better blending */}
+          <div 
+            className={cn(
+              "absolute inset-0 rounded-full",
+              isListening && !isMicMuted ? "animate-breathe" : ""
+            )}
+            style={{
+              background: "radial-gradient(circle, rgba(155, 135, 245, 0.2) 30%, rgba(155, 135, 245, 0.4) 70%)",
+              mixBlendMode: "overlay"
+            }}
+          />
+          
+          {/* Additional animated rings for enhanced visual effect */}
+          {isListening && !isMicMuted && (
+            <>
+              <div 
+                className="absolute inset-0 rounded-full animate-breathe"
+                style={{
+                  borderWidth: "2px",
+                  borderStyle: "solid",
+                  borderColor: "rgba(155, 135, 245, 0.3)",
+                  animationDelay: "0.5s",
+                  scale: "0.8",
+                }}
+              />
+              <div 
+                className="absolute inset-0 rounded-full animate-breathe"
+                style={{
+                  borderWidth: "2px",
+                  borderStyle: "solid",
+                  borderColor: "rgba(214, 188, 250, 0.2)",
+                  animationDelay: "1s",
+                  scale: "0.9",
+                }}
+              />
+            </>
+          )}
         </div>
         
         {/* Live transcription display */}
-        {isListening && !isMicMuted && currentTranscript && (
-          <div className="absolute -top-16 w-96 max-w-full p-3 bg-white/10 dark:bg-gray-800/80 backdrop-blur-md rounded-lg shadow-lg border border-white/10 dark:border-gray-700/30 z-20 text-center">
+        {isListening && !isMicMuted && (
+          <div className="absolute -top-16 w-96 max-w-full p-3 bg-white/10 dark:bg-gray-800/80 backdrop-blur-md rounded-lg shadow-lg border border-white/10 dark:border-gray-700/30 z-20 text-center transition-all animate-fade-in">
             <p className="text-sm text-gray-700 dark:text-gray-200 italic">
               {currentTranscript ? currentTranscript : "Listening..."}
             </p>
           </div>
         )}
         
-        {/* Center listening button */}
+        {/* Center listening button with enhanced styling */}
         <button
-          onClick={handleTapToSpeakClick}
+          onClick={isMicMuted ? toggleMic : handleListenStart}
           className={cn(
             "relative z-10 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 dark:border-white/5 rounded-full shadow-lg cursor-pointer transition-all duration-300 hover:bg-white/20 hover:shadow-xl",
             (isPlaying || isGenerating) ? "opacity-50 cursor-not-allowed" : "opacity-100",
-            isListening && !isMicMuted ? "ring-2 ring-purple-400 dark:ring-purple-500" : ""
+            isListening && !isMicMuted ? "ring-2 ring-purple-400 dark:ring-premium-accent" : ""
           )}
           disabled={isPlaying || isGenerating}
         >
-          <span className="text-blue-800 dark:text-blue-300 font-medium">
-            {isMicMuted 
-              ? "Tap to unmute" 
-              : isListening 
-                ? "Listening" 
-                : isPlaying 
-                  ? "Playing..." 
-                  : isGenerating 
-                    ? "Generating..." 
-                    : "Tap to speak"}
+          <span className="text-blue-800 dark:text-premium-light font-medium">
+            {isMicMuted ? "Unmute" : isListening ? "Listening" : isPlaying ? "Playing..." : isGenerating ? "Generating..." : "Tap to speak"}
           </span>
         </button>
 
-        {/* Mic control button */}
+        {/* Mic control button with enhanced styling */}
         <Button
           onClick={toggleMic}
           className={cn(
             "absolute bottom-2 right-2 z-20 rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-md",
             isMicMuted 
-              ? "bg-red-500 text-white hover:bg-red-600" 
-              : "bg-white/10 backdrop-blur-md text-blue-300 hover:bg-white/20 border border-white/10"
+              ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:bg-red-600 animate-rainbow" 
+              : "bg-white/10 backdrop-blur-md text-blue-300 hover:bg-white/20 border border-white/10 dark:border-white/5"
           )}
           variant="ghost"
           size="icon"
@@ -131,19 +136,9 @@ const CircularVoiceInterface: React.FC = () => {
         </Button>
       </div>
       
-      {/* Volume slider */}
+      {/* Volume slider - moved outside the circle and positioned below it */}
       <div className="mt-8 flex items-center space-x-2 w-48 bg-white/5 backdrop-blur-sm p-2 rounded-full border border-white/10 dark:border-gray-800/30">
-        <Button
-          onClick={toggleMute}
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 p-0"
-        >
-          {isMuted 
-            ? <VolumeX className="w-4 h-4 text-red-500" /> 
-            : <Volume2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          }
-        </Button>
+        <Volume2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
         <Slider
           value={[isMuted ? 0 : volume]}
           min={0}
@@ -153,6 +148,9 @@ const CircularVoiceInterface: React.FC = () => {
           className="w-full"
           aria-label="Volume"
         />
+        {isMuted && (
+          <VolumeX className="w-4 h-4 text-red-500" />
+        )}
       </div>
     </div>
   );
