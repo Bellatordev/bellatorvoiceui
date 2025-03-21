@@ -1,58 +1,21 @@
 
-import React, { useState } from 'react';
-import LoginScreen from './LoginScreen';
+import React from 'react';
 import ConversationInterface from './ConversationInterface';
-import { toast } from '@/components/ui/use-toast';
 
-const VoiceAgent: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [agentId, setAgentId] = useState('');
+interface VoiceAgentProps {
+  apiKey: string;
+  agentId: string;
+  onLogout?: () => void;
+}
 
-  const handleLogin = (key: string, id: string) => {
-    // Basic validation before proceeding
-    if (!key.trim() || !id.trim()) {
-      toast({
-        title: "Invalid credentials",
-        description: "Both API key and Voice ID are required",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setApiKey(key);
-    setAgentId(id);
-    setIsLoggedIn(true);
-    
-    // Show a welcome toast to indicate successful login
-    toast({
-      title: "Welcome",
-      description: "Voice agent is ready to assist you",
-    });
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setApiKey('');
-    setAgentId('');
-    
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out",
-    });
-  };
-
+const VoiceAgent: React.FC<VoiceAgentProps> = ({ apiKey, agentId, onLogout }) => {
   return (
     <div className="flex flex-col h-full">
-      {!isLoggedIn ? (
-        <LoginScreen onLogin={handleLogin} />
-      ) : (
-        <ConversationInterface 
-          apiKey={apiKey} 
-          agentId={agentId} 
-          onLogout={handleLogout}
-        />
-      )}
+      <ConversationInterface 
+        apiKey={apiKey} 
+        agentId={agentId} 
+        onLogout={onLogout}
+      />
     </div>
   );
 };
