@@ -25,15 +25,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Voice Assistant</h1>
-        <p className="text-gray-600">Enter your credentials to start</p>
-      </div>
-      
+    <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="apiKey" className="block text-sm font-medium">
             Eleven Labs API Key
           </label>
           <Input
@@ -42,13 +37,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="Enter your Eleven Labs API Key"
+            className="agent-input"
             required
           />
         </div>
         
         <div className="space-y-2">
-          <label htmlFor="agentId" className="block text-sm font-medium text-gray-700">
-            Voice Agent ID
+          <label htmlFor="agentId" className="block text-sm font-medium">
+            Voice <span className="text-agent-yellow">Agent ID</span>
           </label>
           <Input
             id="agentId"
@@ -56,13 +52,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
             placeholder="Enter your Voice Agent ID"
+            className="agent-input"
             required
           />
         </div>
         
         <Button 
           type="submit" 
-          className="w-full" 
+          className="w-full bg-agent-primary hover:bg-agent-primary/90 text-white font-medium rounded-full"
           disabled={isLoading}
         >
           {isLoading ? 'Connecting...' : 'Start Session'}

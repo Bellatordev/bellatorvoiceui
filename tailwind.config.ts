@@ -27,11 +27,12 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         agent: {
-          background: "white",
-          foreground: "hsl(240, 6%, 10%)",
-          primary: "hsl(240, 60%, 59%)",
-          secondary: "hsl(240, 55%, 92%)",
-          accent: "hsl(240, 55%, 92%)",
+          background: "hsl(var(--agent-background))",
+          foreground: "hsl(var(--agent-foreground))",
+          primary: "hsl(var(--agent-primary))",
+          secondary: "hsl(var(--agent-secondary))",
+          accent: "hsl(var(--agent-accent))",
+          yellow: "hsl(var(--agent-yellow))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -68,7 +69,8 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", ...fontFamily.sans],
+        sans: ["Poppins", ...fontFamily.sans],
+        serif: ["Playfair Display", ...fontFamily.serif],
       },
       keyframes: {
         "accordion-down": {

@@ -3,6 +3,7 @@ import React from 'react';
 import LoginScreen from '../components/LoginScreen';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -33,18 +34,27 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-agent-accent/10">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-agent-background via-agent-background to-agent-secondary/30 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
-        <header className="mb-8">
-          <h1 className="sr-only">Voice Assistant Login</h1>
+        <header className="mb-8 flex justify-end">
+          <ThemeToggle />
         </header>
         
-        <main className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
-          <LoginScreen onLogin={handleLogin} />
+        <main className="max-w-md w-full mx-auto flex-1 flex flex-col">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-serif font-bold mb-4 text-agent-primary">
+              Voice <span className="text-agent-yellow">Assistant</span>
+            </h1>
+            <p className="text-agent-foreground/80">Your AI voice companion</p>
+          </div>
+          
+          <div className="agent-card mb-8">
+            <LoginScreen onLogin={handleLogin} />
+          </div>
         </main>
         
-        <footer className="mt-8 text-center text-sm text-gray-500">
-          {/* Footer content removed */}
+        <footer className="mt-8 text-center text-sm text-agent-foreground/60">
+          <p>© {new Date().getFullYear()} Voice Assistant</p>
         </footer>
       </div>
     </div>
