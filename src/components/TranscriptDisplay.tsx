@@ -16,7 +16,7 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   if (isMicMuted) {
     return (
       <div className="px-4 py-2 mb-4 bg-red-100 rounded-lg text-gray-600 italic">
-        Microphone is muted. Unmute to speak.
+        Tap to speak
       </div>
     );
   }
