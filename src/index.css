@@ -208,11 +208,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 @layer utilities {
   .animate-sound-wave-1 {
     animation: soundWave1 1.2s ease-in-out infinite;

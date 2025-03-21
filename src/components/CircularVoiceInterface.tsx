@@ -42,7 +42,7 @@ const CircularVoiceInterface: React.FC = () => {
     <div className="relative flex flex-col items-center justify-center">
       {/* Voice circle interface */}
       <div className="relative w-64 h-64 mx-auto flex flex-col items-center justify-center">
-        {/* Enhanced colorful gradient background */}
+        {/* Enhanced circular gradient background with improved colors for dark mode */}
         <div className="absolute w-full h-full rounded-full overflow-hidden">
           <div 
             className={cn(
@@ -50,32 +50,20 @@ const CircularVoiceInterface: React.FC = () => {
               isListening && !isMicMuted ? "animate-pulse-slow" : ""
             )}
             style={{
-              background: "radial-gradient(circle at center, #D6BCFA 0%, #9b87f5 30%, #8B5CF6 60%, #6E59A5 80%, #403E43 100%)",
+              background: "radial-gradient(circle, var(--gradient-center-color) 0%, #6E59A5 50%, #403E43 100%)",
               backgroundSize: "300% 300%",
-              animation: isListening && !isMicMuted 
-                ? "gradient-shift 5s ease-in-out infinite, pulse 3s ease-in-out infinite" 
-                : "gradient-shift 8s ease-in-out infinite"
+              animation: isListening && !isMicMuted ? "gradient-shift 5s ease-in-out infinite, pulse 3s ease-in-out infinite" : "none"
             }}
           />
           
-          {/* Colorful animated pulse effect */}
+          {/* Enhanced animated pulse effect with better blending */}
           <div 
             className={cn(
               "absolute inset-0 rounded-full",
               isListening && !isMicMuted ? "animate-breathe" : ""
             )}
             style={{
-              background: "radial-gradient(circle, rgba(214, 188, 250, 0.3) 30%, rgba(155, 135, 245, 0.4) 70%)",
-              mixBlendMode: "overlay"
-            }}
-          />
-          
-          {/* Colorful spinning light effect */}
-          <div 
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: "conic-gradient(from 0deg, #D946EF20, #8B5CF640, #0EA5E920, #F9731620, #D946EF20)",
-              animation: "spin 8s linear infinite",
+              background: "radial-gradient(circle, rgba(155, 135, 245, 0.2) 30%, rgba(155, 135, 245, 0.4) 70%)",
               mixBlendMode: "overlay"
             }}
           />
@@ -105,35 +93,6 @@ const CircularVoiceInterface: React.FC = () => {
               />
             </>
           )}
-          
-          {/* Shimmering dots effect */}
-          <div className="absolute inset-0 rounded-full overflow-hidden">
-            <div className="w-full h-full relative">
-              {Array.from({ length: 20 }).map((_, i) => (
-                <div 
-                  key={i}
-                  className="absolute rounded-full animate-pulse"
-                  style={{
-                    width: `${Math.random() * 6 + 2}px`,
-                    height: `${Math.random() * 6 + 2}px`,
-                    backgroundColor: `rgba(214, 188, 250, ${Math.random() * 0.5 + 0.2})`,
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 100}%`,
-                    animationDuration: `${Math.random() * 3 + 2}s`,
-                    animationDelay: `${Math.random() * 2}s`
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-          
-          {/* Subtle glow effect */}
-          <div 
-            className="absolute inset-0 rounded-full animate-glow"
-            style={{
-              boxShadow: "0 0 15px 2px rgba(155, 135, 245, 0.3)",
-            }}
-          />
         </div>
         
         {/* Live transcription display */}
