@@ -1,12 +1,14 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import LoginScreen from '../components/LoginScreen';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
+import { ArrowRight, Info } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
+  const loginSectionRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = (apiKey: string, agentId: string) => {
     // Basic validation before proceeding
@@ -33,29 +35,62 @@ const Login = () => {
     navigate('/conversation');
   };
 
+  const scrollToLogin = () => {
+    loginSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-agent-background via-agent-background to-agent-secondary/30 transition-colors duration-300 dark:from-gray-900 dark:via-gray-900 dark:to-agent-secondary/10">
-      <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
-        <header className="mb-8 flex justify-end">
+    <div className="min-h-screen flex flex-col bg-[#1a1a24] text-white">
+      {/* Hero Section */}
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 relative">
+        <div className="absolute top-6 right-6">
           <ThemeToggle />
-        </header>
+        </div>
         
-        <main className="max-w-md w-full mx-auto flex-1 flex flex-col">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-serif font-bold mb-4 text-gradient">
-              Voice <span className="text-gradient-yellow">Assistant</span>
-            </h1>
-            <p className="text-agent-foreground/80 dark:text-agent-foreground/90">Your AI voice companion</p>
-          </div>
+        <div className="max-w-3xl text-center">
+          <h1 className="text-7xl font-serif mb-8 text-[#a8a0f0] leading-tight">
+            Meet your Agentic AI
+            <br />
+            <span className="text-white">that is</span>
+            <br />
+            <span className="text-white">smart</span>
+          </h1>
           
-          <div className="agent-card mb-8 shadow-glow-sm dark:shadow-glow">
-            <LoginScreen onLogin={handleLogin} />
+          <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+            I'm here to help you with your tasks, answer your questions, and assist you
+            in making your workflow more efficient. Just ask me anything, and I'll do
+            my best to provide helpful and relevant information.
+          </p>
+          
+          <div className="flex gap-4 justify-center">
+            <button 
+              className="px-6 py-3 rounded-full bg-[#2b2a3d] text-white font-medium flex items-center gap-2 hover:bg-[#3a3952] transition-colors"
+            >
+              About Us <Info size={18} />
+            </button>
+            
+            <button 
+              onClick={scrollToLogin}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-orange-400 to-purple-500 text-white font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              Get Started <ArrowRight size={18} />
+            </button>
           </div>
-        </main>
+        </div>
+      </div>
+      
+      {/* Login Section */}
+      <div ref={loginSectionRef} className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#1a1a24]">
+        <div className="mb-16">
+          <h2 className="text-6xl font-serif mb-2">
+            <span className="text-[#a8a0f0]">Bellator</span>
+            <span className="text-yellow-400">.ai</span>
+          </h2>
+        </div>
         
-        <footer className="mt-8 text-center text-sm text-agent-foreground/60">
-          <p>© {new Date().getFullYear()} Voice Assistant</p>
-        </footer>
+        <div className="w-full max-w-md bg-[#1b1b2e] rounded-xl p-8 border border-gray-800 shadow-xl">
+          <LoginScreen onLogin={handleLogin} />
+        </div>
       </div>
     </div>
   );

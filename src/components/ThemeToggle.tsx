@@ -3,36 +3,35 @@ import { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark'); // Default to dark for this design
 
   useEffect(() => {
     // Check if user has a theme preference in localStorage
     const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     
-    // Check if user has system preference for dark mode
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Set theme based on stored preference or system preference
+    // Set theme based on stored preference, default to dark for this design
     if (storedTheme) {
       setTheme(storedTheme);
       document.documentElement.classList.toggle('dark', storedTheme === 'dark');
-    } else if (systemPrefersDark) {
+    } else {
+      // Default to dark mode for this design
       setTheme('dark');
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     }
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    document.documentElement.classList.toggle('dark');
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
     localStorage.setItem('theme', newTheme);
   };
 
   return (
     <button 
       onClick={toggleTheme} 
-      className="p-2 rounded-full bg-agent-secondary hover:bg-agent-secondary/80 text-agent-primary transition-colors duration-200 shadow-sm dark:bg-gray-800/60 dark:text-agent-yellow dark:hover:bg-gray-700/80 backdrop-blur-sm"
+      className="p-2 rounded-full bg-[#2b2a3d] hover:bg-[#3a3952] text-gray-300 transition-colors duration-200"
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
