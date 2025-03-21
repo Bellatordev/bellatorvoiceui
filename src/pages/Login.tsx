@@ -6,6 +6,7 @@ import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowRight, Info } from 'lucide-react';
 import { AnimatedHero } from '@/components/ui/animated-hero';
+import { LampDemo } from '@/components/ui/lamp-demo';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -50,18 +51,16 @@ const Login = () => {
       {/* Hero Section with Animated Text */}
       <AnimatedHero onScrollToLogin={scrollToLogin} />
       
+      {/* Lamp Component */}
+      <div className="w-full">
+        <LampDemo />
+      </div>
+      
       {/* Login Section with increased spacing from the hero section */}
       <div 
         ref={loginSectionRef} 
         className="min-h-screen flex flex-col items-center justify-center px-4 py-20 bg-[#1a1a24]"
       >
-        <div className="mb-16">
-          <h2 className="text-6xl font-serif mb-2">
-            <span className="text-[#a8a0f0]">Bellator</span>
-            <span className="text-yellow-400">.ai</span>
-          </h2>
-        </div>
-        
         <div className="w-full max-w-md bg-[#1b1b2e] rounded-xl p-8 border border-gray-800 shadow-xl">
           <LoginScreen onLogin={handleLogin} />
         </div>
