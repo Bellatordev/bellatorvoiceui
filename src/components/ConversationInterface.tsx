@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
-import VoiceControls from './VoiceControls';
-import useSpeechRecognition from '@/hooks/useSpeechRecognition';
-import useConversation from '@/hooks/useConversation';
-import TextInputMode from './TextInputMode';
 import TranscriptDisplay from './TranscriptDisplay';
+import SpeechHandler from './SpeechHandler';
+import ConversationHandler from './ConversationHandler';
+import ErrorHandler from './ErrorHandler';
+import AudioSettings from './AudioSettings';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -37,107 +37,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     voiceId: agentId,
   });
 
-  const {
-    messages,
-    setMessages,
-    processUserInput,
-    initializeConversation
-  } = useConversation({
-    generateSpeech,
-    isMuted,
-    autoStartMic,
-    isPlaying,
-    isGenerating,
-    ttsError
-  });
-
-  const handleFinalTranscript = (finalText: string) => {
-    console.log("Processing final transcript:", finalText);
-    if (finalText.trim()) {
-      processUserInput(finalText);
-    }
-  };
-
-  const {
-    isListening,
-    transcript,
-    startListening,
-    stopListening,
-    toggleListening
-  } = useSpeechRecognition({
-    autoStartMic,
-    isMicMuted,
-    isPlaying,
-    isGenerating,
-    onFinalTranscript: handleFinalTranscript
-  });
-
-  useEffect(() => {
-    initializeConversation();
-  }, []);
-
-  useEffect(() => {
-    if (isGenerating || isPlaying) {
-      stopListening();
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice') {
-      console.log('Auto-starting microphone after audio playback complete');
-      const timer = setTimeout(() => {
-        startListening();
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, inputMode]);
-
-  useEffect(() => {
-    if (error) {
-      setTtsError(error);
-      
-      if (!error.includes("quota")) {
-        // This is handled in the useElevenLabs hook now
-      } else {
-        console.log("TTS quota exceeded, continuing without voice output");
-      }
-      
-      if (!messages.some(msg => msg.text.includes("I'm having trouble with my voice output"))) {
-        const errorMessage = {
-          id: crypto.randomUUID(),
-          text: `I'm having trouble with my voice output. ${error.includes("quota") ? "The API quota has been exceeded." : "Please check if the Voice ID is correct."}`,
-          sender: 'assistant' as const,
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    }
-  }, [error, messages]);
-
-  const handleTextInputSubmit = (text: string) => {
-    processUserInput(text);
-  };
-
-  const handleToggleListening = async () => {
-    if (isPlaying || isGenerating) {
-      stopAudio();
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    
-    await toggleListening();
-  };
-
-  const handleMicMuteToggle = () => {
-    const newMuteState = !isMicMuted;
-    setIsMicMuted(newMuteState);
-    
-    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
-      setTimeout(startListening, 300);
-    }
-    
-    if (newMuteState && isListening) {
-      stopListening();
-    }
-  };
-
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
     if (isPlaying) {
@@ -152,7 +51,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleSwitchToTextMode = () => {
     // Stop listening and mute the microphone when switching to text mode
-    stopListening();
     setIsMicMuted(true);
     setInputMode('text');
   };
@@ -161,54 +59,84 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     // Unmute the microphone when switching to voice mode
     setIsMicMuted(false);
     setInputMode('voice');
-    // Start listening if auto-start is enabled
-    if (autoStartMic && !isPlaying && !isGenerating) {
-      setTimeout(startListening, 300);
-    }
   };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 agent-card mb-6 overflow-hidden">
-        <ConversationLog 
-          messages={messages} 
-          isGeneratingAudio={isGenerating} 
-          isPlayingAudio={isPlaying}
-          onToggleAudio={generateSpeech}
-          onLogout={onLogout}
-          className="h-full" 
-        />
-      </div>
-      
-      <TranscriptDisplay 
-        transcript={transcript}
-        isMicMuted={isMicMuted}
-        isListening={isListening}
-        isGeneratingVoice={isGenerating || isPlaying}
-        inputMode={inputMode}
-      />
-      
-      {inputMode === 'voice' ? (
-        <div className="flex justify-center py-4">
-          <VoiceControls 
-            isListening={isListening}
-            isMuted={isMuted}
-            volume={volume}
-            onListen={handleToggleListening}
-            onStopListening={handleToggleListening}
-            onMuteToggle={handleMuteToggle}
-            onVolumeChange={handleVolumeChange}
-            onSwitchToText={handleSwitchToTextMode}
+      <ConversationHandler
+        generateSpeech={generateSpeech}
+        isMuted={isMuted}
+        autoStartMic={autoStartMic}
+        isPlaying={isPlaying}
+        isGenerating={isGenerating}
+        ttsError={ttsError}
+      >
+        {({ messages, setMessages, processUserInput }) => (
+          <SpeechHandler
+            autoStartMic={autoStartMic}
             isMicMuted={isMicMuted}
-            onMicMuteToggle={handleMicMuteToggle}
-          />
-        </div>
-      ) : (
-        <TextInputMode 
-          onSendMessage={handleTextInputSubmit}
-          onSwitchToVoice={handleSwitchToVoiceMode}
-        />
-      )}
+            isPlaying={isPlaying}
+            isGenerating={isGenerating}
+            inputMode={inputMode}
+            onFinalTranscript={processUserInput}
+          >
+            {({ isListening, transcript, toggleListening }) => (
+              <ErrorHandler
+                error={error}
+                messages={messages}
+                setMessages={setMessages}
+              >
+                <div className="flex-1 agent-card mb-6 overflow-hidden">
+                  <ConversationLog 
+                    messages={messages} 
+                    isGeneratingAudio={isGenerating} 
+                    isPlayingAudio={isPlaying}
+                    onToggleAudio={generateSpeech}
+                    onLogout={onLogout}
+                    className="h-full" 
+                  />
+                </div>
+                
+                <TranscriptDisplay 
+                  transcript={transcript}
+                  isMicMuted={isMicMuted}
+                  isListening={isListening}
+                  isGeneratingVoice={isGenerating || isPlaying}
+                  inputMode={inputMode}
+                />
+                
+                <AudioSettings
+                  inputMode={inputMode}
+                  isListening={isListening}
+                  isMuted={isMuted}
+                  isMicMuted={isMicMuted}
+                  volume={volume}
+                  onToggleListening={async () => {
+                    if (isPlaying || isGenerating) {
+                      stopAudio();
+                      await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                    await toggleListening();
+                  }}
+                  onMuteToggle={handleMuteToggle}
+                  onMicMuteToggle={() => {
+                    const newMuteState = !isMicMuted;
+                    setIsMicMuted(newMuteState);
+                    
+                    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
+                      setTimeout(() => toggleListening(), 300);
+                    }
+                  }}
+                  onVolumeChange={handleVolumeChange}
+                  onSwitchToTextMode={handleSwitchToTextMode}
+                  onSwitchToVoiceMode={handleSwitchToVoiceMode}
+                  onTextInputSubmit={processUserInput}
+                />
+              </ErrorHandler>
+            )}
+          </SpeechHandler>
+        )}
+      </ConversationHandler>
     </div>
   );
 };
