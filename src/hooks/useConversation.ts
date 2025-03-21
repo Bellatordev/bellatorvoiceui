@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
 
@@ -25,7 +25,7 @@ export const useConversation = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const processUserInput = (text: string) => {
+  const processUserInput = useCallback((text: string) => {
     if (!text.trim() || isProcessing) return;
     
     setIsProcessing(true);
@@ -64,10 +64,10 @@ export const useConversation = ({
       
       setIsProcessing(false);
     }, 1000);
-  };
+  }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing]);
 
-  // Initialize with welcome message
-  const initializeConversation = () => {
+  // Initialize with welcome message - now a memoized function
+  const initializeConversation = useCallback(() => {
     const welcomeMessage: Message = {
       id: uuidv4(),
       text: "Hello! How can I help you today?",
@@ -84,7 +84,7 @@ export const useConversation = ({
         console.error("Failed to generate speech for welcome message:", err);
       }
     }
-  };
+  }, [generateSpeech, isMuted]);
 
   return {
     messages,
