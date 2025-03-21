@@ -68,15 +68,29 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     updateTtsVolume();
   }, [updateTtsVolume]);
 
-  // Add initial greeting message when component mounts
+  // Add initial greeting message when component mounts and play audio
   useEffect(() => {
     const welcomeMessage = createWelcomeMessage();
     setMessages([welcomeMessage]);
     
-    // Generate speech for welcome message
-    if (!isMuted && volume > 0) {
-      generateSpeech(welcomeMessage.text);
-    }
+    // Generate speech for welcome message - fixed to ensure it actually plays
+    const playWelcomeMessage = async () => {
+      console.log('Attempting to play welcome message');
+      if (!isMuted && volume > 0) {
+        try {
+          // Small delay to ensure audio context is ready
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await generateSpeech(welcomeMessage.text);
+          console.log('Welcome message speech generated successfully');
+          // Set flag to auto-listen after the welcome message
+          setShouldAutoListen(true);
+        } catch (error) {
+          console.error('Failed to generate welcome message speech:', error);
+        }
+      }
+    };
+    
+    playWelcomeMessage();
   }, []);
 
   // Enhanced auto-listen effect - improved to more reliably activate microphone after speech
@@ -176,10 +190,12 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       
       // Generate speech for the response if not muted
       if (!isMuted && volume > 0) {
+        console.log('Generating speech for response:', responseText);
         await generateSpeech(responseText);
         // Set flag to auto-listen after speech generation
         setShouldAutoListen(true);
       } else {
+        console.log('Audio is muted, not generating speech');
         // Even if audio is muted, we should still auto-listen after a delay
         setTimeout(() => {
           if (!isMicMuted) {

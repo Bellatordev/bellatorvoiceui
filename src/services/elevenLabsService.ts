@@ -53,6 +53,11 @@ class ElevenLabsService {
     if (this.audioElement) {
       this.audioElement.volume = this.state.volume;
     }
+    
+    // Add canplaythrough event to ensure audio is fully loaded before playing
+    this.audioElement.addEventListener('canplaythrough', () => {
+      console.log('Audio can play through without buffering');
+    });
   }
 
   public static getInstance(): ElevenLabsService {
@@ -89,7 +94,8 @@ class ElevenLabsService {
 
     try {
       this.updateState({ isGenerating: true, error: null });
-      console.log(`Attempting to generate speech with voice ID: ${voiceId}`);
+      console.log(`Attempting to generate speech with voice ID: ${voiceId}, model: ${modelId}`);
+      console.log(`Text to generate: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
@@ -130,11 +136,33 @@ class ElevenLabsService {
         this.audioElement.pause();
         this.audioElement.currentTime = 0;
         
+        // Set up audio element
         this.audioElement.src = audioUrl;
-        this.audioElement.play().catch(error => {
-          console.error('Error playing audio:', error);
-          this.updateState({ error: 'Failed to play audio' });
-        });
+        
+        // Try to play the audio with retries
+        let retries = 3;
+        const attemptPlay = async () => {
+          try {
+            console.log('Attempting to play audio...');
+            await this.audioElement?.play();
+            console.log('Audio playing successfully');
+          } catch (error) {
+            console.error('Error playing audio:', error);
+            if (retries > 0) {
+              retries--;
+              console.log(`Retrying playback, ${retries} attempts left`);
+              setTimeout(attemptPlay, 300);
+            } else {
+              this.updateState({ 
+                isGenerating: false,
+                error: 'Failed to play audio after multiple attempts'
+              });
+            }
+          }
+        };
+        
+        // Start playback attempt
+        attemptPlay();
       }
       
       this.updateState({ isGenerating: false });
