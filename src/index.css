@@ -55,31 +55,31 @@
     --popover: 240 10% 8%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 262 80% 70%;
+    --primary: 262 80% 65%;
     --primary-foreground: 0 0% 8%;
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 240 6% 18%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
+    --muted: 240 6% 15%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 240 3.7% 15.9%;
+    --accent: 262 60% 60%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 262 80% 70%;
+    --border: 240 6% 20%;
+    --input: 240 6% 20%;
+    --ring: 262 80% 65%;
 
     --agent-background: 240 10% 8%;
     --agent-foreground: 0 0% 98%;
-    --agent-primary: 262 80% 70%;
-    --agent-secondary: 240 3.7% 15.9%;
-    --agent-accent: 262 40% 60%;
-    --agent-yellow: 45 100% 60%;
+    --agent-primary: 262 80% 72%;
+    --agent-secondary: 240 6% 20%;
+    --agent-accent: 262 60% 60%;
+    --agent-yellow: 45 100% 65%;
   }
 
   * {
@@ -94,7 +94,7 @@
 
   /* Custom utility classes */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm dark:bg-black/30 dark:border-white/10;
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm dark:bg-black/40 dark:border-white/10;
   }
 
   .focus-ring {
@@ -104,15 +104,15 @@
 
 @layer components {
   .agent-button {
-    @apply flex items-center justify-center rounded-full bg-agent-primary text-white px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-primary/90 active:scale-95 focus-ring;
+    @apply flex items-center justify-center rounded-full bg-agent-primary text-white px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-primary/90 active:scale-95 focus-ring shadow-md;
   }
   
   .agent-button-secondary {
-    @apply flex items-center justify-center rounded-full bg-agent-secondary/10 text-agent-primary px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-secondary/20 active:scale-95 focus-ring;
+    @apply flex items-center justify-center rounded-full bg-agent-secondary/20 text-agent-primary px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-secondary/30 active:scale-95 focus-ring dark:bg-agent-secondary/30 dark:text-agent-primary dark:hover:bg-agent-secondary/40;
   }
   
   .agent-card {
-    @apply glass rounded-2xl p-6 transition-all duration-300;
+    @apply glass rounded-2xl p-6 transition-all duration-300 shadow-lg dark:shadow-agent-primary/5;
   }
   
   .agent-input {
@@ -227,6 +227,18 @@
   }
 
   .highlight {
-    @apply text-agent-yellow dark:text-agent-yellow;
+    @apply text-agent-yellow dark:text-agent-yellow font-medium;
+  }
+
+  .neo-blur {
+    @apply backdrop-blur-lg bg-black/20 dark:bg-black/40 border border-white/10;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-br from-agent-primary via-agent-primary/90 to-agent-primary/70 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-yellow {
+    @apply bg-gradient-to-r from-agent-yellow via-agent-yellow/90 to-agent-yellow/70 bg-clip-text text-transparent;
   }
 }

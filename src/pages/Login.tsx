@@ -34,7 +34,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-agent-background via-agent-background to-agent-secondary/30 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-agent-background via-agent-background to-agent-secondary/30 transition-colors duration-300 dark:from-gray-900 dark:via-gray-900 dark:to-agent-secondary/10">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         <header className="mb-8 flex justify-end">
           <ThemeToggle />
@@ -42,13 +42,13 @@ const Login = () => {
         
         <main className="max-w-md w-full mx-auto flex-1 flex flex-col">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-serif font-bold mb-4 text-agent-primary">
-              Voice <span className="text-agent-yellow">Assistant</span>
+            <h1 className="text-4xl font-serif font-bold mb-4 text-gradient">
+              Voice <span className="text-gradient-yellow">Assistant</span>
             </h1>
-            <p className="text-agent-foreground/80">Your AI voice companion</p>
+            <p className="text-agent-foreground/80 dark:text-agent-foreground/90">Your AI voice companion</p>
           </div>
           
-          <div className="agent-card mb-8">
+          <div className="agent-card mb-8 shadow-glow-sm dark:shadow-glow">
             <LoginScreen onLogin={handleLogin} />
           </div>
         </main>

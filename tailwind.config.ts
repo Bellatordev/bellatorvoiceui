@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -114,6 +113,15 @@ const config = {
         "wave-3": "wave-3 1.5s infinite ease-in-out",
         "wave-4": "wave-4 1.4s infinite ease-in-out",
         "wave-5": "wave-5 1.1s infinite ease-in-out"
+      },
+      boxShadow: {
+        'glow': '0 0 15px 2px rgba(139, 92, 246, 0.3)',
+        'glow-sm': '0 0 10px 1px rgba(139, 92, 246, 0.2)',
+        'glow-yellow': '0 0 15px 2px rgba(250, 204, 21, 0.3)',
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
     },
   },
