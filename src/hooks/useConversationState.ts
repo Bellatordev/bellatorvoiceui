@@ -292,7 +292,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     currentTranscript,
     error,
     microphonePermission,
-    requestMicrophoneAccess,
+    requestMicrophoneAccess, // Make sure this is included in the returned object
     sendMessage,
     handleToggleAudio,
     handleListenStart,

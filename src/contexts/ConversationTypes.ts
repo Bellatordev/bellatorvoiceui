@@ -27,6 +27,7 @@ export interface ConversationContextType {
   currentTranscript: string;
   error: string | null;
   microphonePermission: PermissionState | null;
+  requestMicrophoneAccess: () => Promise<boolean>; // Adding the missing property here
   sendMessage: (text: string) => Promise<void>;
   handleToggleAudio: (text: string) => void;
   handleListenStart: () => void;
