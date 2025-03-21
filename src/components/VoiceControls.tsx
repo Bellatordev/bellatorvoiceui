@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Mic, MicOff, Volume2, Volume1, VolumeX, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
@@ -39,9 +40,11 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         setIsCheckingMic(true);
         await checkMicrophoneDevices();
         await requestMicrophoneAccess();
+        setIsMicAvailable(true);
         setIsCheckingMic(false);
       } catch (error) {
         console.error('Error checking microphone:', error);
+        setIsMicAvailable(false);
         setIsCheckingMic(false);
       }
     };
@@ -50,18 +53,30 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   }, []);
   
   const handleTapToSpeakClick = () => {
-    if (isMicMuted) {
-      onMicMuteToggle();
-    }
-    
     if (isListening) {
       onStopListening();
     } else {
-      onListen();
+      // Only try to start listening if the mic is not muted
+      if (!isMicMuted) {
+        onListen();
+      } else {
+        // Inform user that mic is muted
+        toast({
+          title: "Microphone is muted",
+          description: "Unmute the microphone to use voice input",
+          variant: "default"
+        });
+      }
     }
   };
   
+  const handleMicMuteToggle = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the parent div's click handler
+    onMicMuteToggle();
+  };
+  
   const getStatusText = () => {
+    if (isMicMuted) return "Mic muted";
     if (isListening) return "Listening";
     if (isCheckingMic) return "Checking mic...";
     return "Tap to speak";
@@ -73,13 +88,13 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         <div 
           className={cn(
             "absolute w-full h-full rounded-full overflow-hidden",
-            isListening ? "animate-pulse" : ""
+            isListening && !isMicMuted ? "animate-pulse" : ""
           )}
         >
           <div 
             className={cn(
               "absolute inset-0 rounded-full",
-              isListening ? "animate-gradient-shift" : ""
+              isListening && !isMicMuted ? "animate-gradient-shift" : ""
             )}
             style={{
               background: "linear-gradient(135deg, #0EA5E9, #33C3F0, #0FA0CE, #D3E4FD)",
@@ -90,7 +105,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           <div 
             className={cn(
               "absolute inset-0 rounded-full",
-              isListening ? "animate-breathe" : ""
+              isListening && !isMicMuted ? "animate-breathe" : ""
             )}
             style={{
               background: "radial-gradient(circle, transparent 30%, #0EA5E9 70%)",
@@ -100,7 +115,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         </div>
         
         <div 
-          className="relative z-10 px-6 py-3 bg-white/90 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:bg-white/100 hover:shadow-lg"
+          className={cn(
+            "relative z-10 px-6 py-3 rounded-full shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg",
+            isMicMuted ? "bg-red-100 hover:bg-red-200" : "bg-white/90 hover:bg-white/100"
+          )}
           onClick={handleTapToSpeakClick}
         >
           <span className="text-gray-800 font-medium">
@@ -109,7 +127,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         </div>
 
         <Button
-          onClick={onMicMuteToggle}
+          onClick={handleMicMuteToggle}
           className={cn(
             "absolute bottom-0 right-0 z-20 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-300",
             isMicMuted 

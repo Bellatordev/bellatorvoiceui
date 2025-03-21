@@ -12,15 +12,35 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   isMicMuted, 
   isListening 
 }) => {
-  if (!transcript || isMicMuted || !isListening) {
-    return null;
+  // Show a different message when mic is muted
+  if (isMicMuted) {
+    return (
+      <div className="px-4 py-2 mb-4 bg-red-100 rounded-lg text-gray-600 italic">
+        Microphone is muted. Unmute to speak.
+      </div>
+    );
   }
-
-  return (
-    <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
-      Listening: {transcript}
-    </div>
-  );
+  
+  // Show active listening status when applicable
+  if (!transcript && isListening) {
+    return (
+      <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
+        Listening... (waiting for speech)
+      </div>
+    );
+  }
+  
+  // Show transcript when available
+  if (transcript && isListening) {
+    return (
+      <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
+        Listening: {transcript}
+      </div>
+    );
+  }
+  
+  // Don't show anything when not listening and no transcript
+  return null;
 };
 
 export default TranscriptDisplay;
