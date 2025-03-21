@@ -1,11 +1,102 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { ConversationProvider } from '@/contexts/ConversationContext';
-import ConversationContainer from './ConversationContainer';
+import ConversationLog from './ConversationLog';
+import { Button } from './ui/button';
+import { Input } from '@/components/ui/input';
+import { LogOut } from 'lucide-react';
 import CircularVoiceInterface from './CircularVoiceInterface';
-import DarkModeToggle from './DarkModeToggle';
 import { useConversation } from '@/contexts/ConversationContext';
+import { Message } from '@/contexts/ConversationTypes';
+import ApiQuotaAlert from './ApiQuotaAlert';
+
+interface ConversationWrapperProps {
+  onLogout: () => void;
+}
+
+const ConversationWrapper: React.FC<ConversationWrapperProps> = ({ onLogout }) => {
+  const [inputText, setInputText] = useState('');
+  const [isTextMode, setIsTextMode] = useState(false);
+  
+  const { 
+    messages, 
+    sendMessage, 
+    isGenerating, 
+    isPlaying,
+    handleToggleAudio,
+    error
+  } = useConversation();
+
+  const handleTextSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputText.trim()) {
+      sendMessage(inputText);
+      setInputText('');
+    }
+  };
+
+  const toggleInputMode = () => {
+    setIsTextMode(!isTextMode);
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      {/* Display API Quota Alert if there's an error */}
+      <ApiQuotaAlert error={error} />
+      
+      <div className="mb-6">
+        <ConversationLog 
+          messages={messages} 
+          isGeneratingAudio={isGenerating}
+          isPlayingAudio={isPlaying}
+          onToggleAudio={handleToggleAudio}
+          onLogout={onLogout}
+        />
+      </div>
+
+      <div className="mt-auto">
+        {isTextMode ? (
+          <form onSubmit={handleTextSend} className="flex gap-2">
+            <Input
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1"
+              disabled={isGenerating}
+            />
+            <Button 
+              type="submit" 
+              disabled={!inputText.trim() || isGenerating}
+              className="bg-premium-accent hover:bg-premium-accent/90"
+            >
+              Send
+            </Button>
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={toggleInputMode}
+            >
+              Voice Mode
+            </Button>
+          </form>
+        ) : (
+          <div>
+            <CircularVoiceInterface />
+            <div className="flex justify-center mt-4">
+              <Button 
+                variant="outline"
+                onClick={toggleInputMode}
+                className="mx-auto"
+              >
+                Text Mode
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -13,52 +104,15 @@ interface ConversationInterfaceProps {
   onLogout: () => void;
 }
 
-const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
-  apiKey,
+const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ 
+  apiKey, 
   agentId,
-  onLogout
+  onLogout 
 }) => {
   return (
     <ConversationProvider apiKey={apiKey} agentId={agentId}>
-      <ConversationInterfaceContent onLogout={onLogout} />
+      <ConversationWrapper onLogout={onLogout} />
     </ConversationProvider>
-  );
-};
-
-// Separated inner component to access the context
-const ConversationInterfaceContent: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const { isDarkMode, toggleDarkMode } = useConversation();
-  
-  return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-gray-950 rounded-xl overflow-hidden shadow-lg border border-blue-100 dark:border-blue-900/30">
-      <div className="p-4 border-b border-blue-100 dark:border-blue-900/50 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Voice Assistant</h2>
-        <div className="flex items-center space-x-2">
-          <DarkModeToggle 
-            isDarkMode={isDarkMode} 
-            toggleDarkMode={toggleDarkMode} 
-          />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onLogout} 
-            className="text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50"
-          >
-            Logout
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col p-4 overflow-hidden">
-        <div className="flex-1 flex flex-col">
-          <ConversationContainer />
-          
-          <div className="mt-auto">
-            <CircularVoiceInterface />
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 

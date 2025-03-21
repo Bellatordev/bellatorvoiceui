@@ -119,8 +119,14 @@ class ElevenLabsService {
         
         try {
           const errorData = await response.json();
-          errorMessage += errorData.detail?.message || JSON.stringify(errorData);
           console.error('Response error data:', errorData);
+          
+          // Check for quota exceeded error
+          if (errorData?.detail?.status === 'quota_exceeded') {
+            errorMessage = `ElevenLabs API quota exceeded: ${errorData.detail.message}`;
+          } else {
+            errorMessage += errorData.detail?.message || JSON.stringify(errorData);
+          }
         } catch (parseError) {
           errorMessage += await response.text() || 'Unknown error';
         }

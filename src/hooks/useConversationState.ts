@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/contexts/ConversationTypes';
 import useElevenLabs from './useElevenLabs';
@@ -27,7 +26,6 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
 
-  // ElevenLabs voice integration
   const { 
     generateSpeech, 
     stopAudio, 
@@ -41,7 +39,6 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     modelId: 'eleven_multilingual_v2'
   });
 
-  // Speech recognition integration
   const { transcript } = useSpeechRecognition({
     isListening,
     isMicMuted,
@@ -58,34 +55,34 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     }
   });
 
-  // Memoize the volume setting function to prevent infinite loops
   const updateTtsVolume = useCallback(() => {
     setTtsVolume(isMuted ? 0 : volume);
   }, [volume, isMuted, setTtsVolume]);
 
   useEffect(() => {
-    // Set volume for TTS
     updateTtsVolume();
   }, [updateTtsVolume]);
 
-  // Add initial greeting message when component mounts and play audio
   useEffect(() => {
     const welcomeMessage = createWelcomeMessage();
     setMessages([welcomeMessage]);
     
-    // Generate speech for welcome message - fixed to ensure it actually plays
     const playWelcomeMessage = async () => {
       console.log('Attempting to play welcome message');
       if (!isMuted && volume > 0) {
         try {
-          // Small delay to ensure audio context is ready
           await new Promise(resolve => setTimeout(resolve, 500));
           await generateSpeech(welcomeMessage.text);
           console.log('Welcome message speech generated successfully');
-          // Set flag to auto-listen after the welcome message
           setShouldAutoListen(true);
         } catch (error) {
           console.error('Failed to generate welcome message speech:', error);
+          
+          if (!isMicMuted) {
+            setTimeout(() => {
+              setIsListening(true);
+            }, 1000);
+          }
         }
       }
     };
@@ -93,13 +90,11 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     playWelcomeMessage();
   }, []);
 
-  // Enhanced auto-listen effect - improved to more reliably activate microphone after speech
   useEffect(() => {
     if (shouldAutoListen && !isPlaying && !isGenerating) {
       console.log('Auto-activating microphone after speech generation');
       setShouldAutoListen(false);
       
-      // Wait a short time before activating the microphone
       const timer = setTimeout(() => {
         if (!isMicMuted) {
           console.log('Setting isListening to true after voice generation');
@@ -107,15 +102,13 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
         } else {
           console.log('Not auto-activating mic because it is muted');
         }
-      }, 750); // Slightly longer delay for more reliable activation
+      }, 750);
       
       return () => clearTimeout(timer);
     }
   }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted]);
 
-  // Add an effect to handle ending of speech playback
   useEffect(() => {
-    // When speech stops playing, consider auto-activating the mic
     if (!isPlaying && !isGenerating && !isListening && !isMicMuted) {
       const timer = setTimeout(() => {
         if (!isListening && !isMicMuted) {
@@ -140,32 +133,24 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     }
   }, [isDarkMode]);
 
-  // Handle voice input start
   const handleListenStart = useCallback(() => {
     setIsListening(true);
   }, []);
 
-  // Handle voice input stop
   const handleListenStop = useCallback(async (duration: number) => {
     setIsListening(false);
-    if (duration < 1) return; // Ignore very short recordings
-    
-    // Voice transcription is now handled by speech recognition
-    // This function is kept for backward compatibility
+    if (duration < 1) return;
   }, []);
 
-  // Common function to handle sending messages to the agent
   const sendMessage = useCallback(async (text: string): Promise<void> => {
     if (!text.trim()) return;
     
     setIsLoading(true);
     
-    // Add user message to conversation
     const userMessage = createUserMessage(text);
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // Call ElevenLabs API
       const response = await fetch(`https://api.elevenlabs.io/v1/agents/${agentId}/chat`, {
         method: 'POST',
         headers: {
@@ -178,25 +163,25 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData?.detail?.status === 'quota_exceeded') {
+          throw new Error(`ElevenLabs API quota exceeded: ${errorData.detail.message}`);
+        }
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const data = await response.json();
       const responseText = data.choices[0].message.content;
       
-      // Add agent response to conversation
       const assistantMessage = createAssistantMessage(responseText);
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Generate speech for the response if not muted
       if (!isMuted && volume > 0) {
         console.log('Generating speech for response:', responseText);
         await generateSpeech(responseText);
-        // Set flag to auto-listen after speech generation
         setShouldAutoListen(true);
       } else {
         console.log('Audio is muted, not generating speech');
-        // Even if audio is muted, we should still auto-listen after a delay
         setTimeout(() => {
           if (!isMicMuted) {
             console.log('Setting isListening to true when audio is muted');
@@ -211,6 +196,13 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
         description: error.message || "Failed to send message",
         variant: "destructive",
       });
+      
+      setTimeout(() => {
+        if (!isMicMuted) {
+          console.log('Setting isListening to true after error');
+          setIsListening(true);
+        }
+      }, 1000);
     } finally {
       setIsLoading(false);
     }
@@ -224,7 +216,6 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     const newMutedState = !isMicMuted;
     setIsMicMuted(newMutedState);
     
-    // If we're turning the mic off and it's currently listening, stop listening
     if (newMutedState && isListening) {
       console.log('Stopping listening because mic was muted');
       setIsListening(false);
