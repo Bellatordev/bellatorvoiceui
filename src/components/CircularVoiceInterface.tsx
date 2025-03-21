@@ -6,6 +6,7 @@ import { useConversation } from '@/contexts/ConversationContext';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from '@/components/ui/use-toast';
 
 const CircularVoiceInterface: React.FC = () => {
   const { 
@@ -21,7 +22,8 @@ const CircularVoiceInterface: React.FC = () => {
     currentTranscript,
     volume,
     setVolume,
-    microphonePermission
+    microphonePermission,
+    requestMicrophoneAccess
   } = useConversation();
 
   // Log state changes for debugging
@@ -38,6 +40,41 @@ const CircularVoiceInterface: React.FC = () => {
     setVolume(value[0]);
   };
 
+  // Handle microphone permission request
+  const handleMicrophonePermissionRequest = async () => {
+    try {
+      console.log("Requesting microphone permission from UI button");
+      if (requestMicrophoneAccess) {
+        const success = await requestMicrophoneAccess();
+        if (success) {
+          toast({
+            title: "Microphone Access Granted",
+            description: "You can now use voice features.",
+          });
+          // Start listening if permission was granted
+          handleListenStart();
+        }
+      } else {
+        // Fallback if requestMicrophoneAccess is not available
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        toast({
+          title: "Microphone Access Granted",
+          description: "You can now use voice features.",
+        });
+        // Start listening
+        handleListenStart();
+      }
+    } catch (error) {
+      console.error("Failed to get microphone permission:", error);
+      toast({
+        title: "Microphone Access Denied",
+        description: "Please enable microphone access in your browser settings to use voice features.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="relative flex flex-col items-center justify-center">
       {/* Microphone permission alert */}
@@ -46,7 +83,26 @@ const CircularVoiceInterface: React.FC = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Microphone Access Denied</AlertTitle>
           <AlertDescription>
-            Please enable microphone access in your browser settings to use voice features.
+            <p>Please enable microphone access in your browser settings to use voice features.</p>
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleMicrophonePermissionRequest}
+                className="mt-2"
+              >
+                Request Microphone Access
+              </Button>
+              <div className="mt-2 text-xs">
+                <strong>Browser Instructions:</strong>
+                <ul className="list-disc pl-5 mt-1">
+                  <li>Chrome/Edge: Click the lock/camera icon in address bar → Site settings → Allow microphone</li>
+                  <li>Safari: Preferences → Websites → Microphone → Allow for this website</li>
+                  <li>Firefox: Click the shield icon in address bar → Allow microphone</li>
+                  <li>Mobile: Check browser permissions in device settings</li>
+                </ul>
+              </div>
+            </div>
           </AlertDescription>
         </Alert>
       )}
@@ -119,7 +175,7 @@ const CircularVoiceInterface: React.FC = () => {
         <button
           onClick={
             microphonePermission === 'denied' 
-              ? () => navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => console.error(err))
+              ? handleMicrophonePermissionRequest
               : isMicMuted ? toggleMic : handleListenStart
           }
           className={cn(

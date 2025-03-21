@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/contexts/ConversationTypes';
 import useElevenLabs from './useElevenLabs';
@@ -40,7 +41,12 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     modelId: 'eleven_multilingual_v2'
   });
 
-  const { transcript, isRecognitionSupported, permissionState: microphonePermission } = useSpeechRecognition({
+  const { 
+    transcript, 
+    isRecognitionSupported, 
+    permissionState: microphonePermission,
+    requestMicrophoneAccess
+  } = useSpeechRecognition({
     isListening,
     isMicMuted,
     onTranscript: (text) => {
@@ -101,6 +107,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     playWelcomeMessage();
   }, []);
 
+  // Auto-activate microphone after speech generation
   useEffect(() => {
     if (shouldAutoListen && !isPlaying && !isGenerating) {
       console.log('Auto-activating microphone after speech generation');
@@ -119,6 +126,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     }
   }, [shouldAutoListen, isPlaying, isGenerating, isMicMuted, microphonePermission]);
 
+  // Auto-activate microphone after playback ended
   useEffect(() => {
     if (!isPlaying && !isGenerating && !isListening && !isMicMuted && microphonePermission !== 'denied') {
       const timer = setTimeout(() => {
@@ -147,7 +155,15 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
   const handleListenStart = useCallback(() => {
     if (microphonePermission !== 'denied') {
       setIsListening(true);
+    } else if (requestMicrophoneAccess) {
+      // Use the explicit request function from useSpeechRecognition
+      requestMicrophoneAccess().then(success => {
+        if (success) {
+          setIsListening(true);
+        }
+      });
     } else {
+      // Fallback to old method if requestMicrophoneAccess is not available
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(() => {
           setIsListening(true);
@@ -161,7 +177,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
           });
         });
     }
-  }, [microphonePermission]);
+  }, [microphonePermission, requestMicrophoneAccess]);
 
   const handleListenStop = useCallback(async (duration: number) => {
     setIsListening(false);
@@ -276,6 +292,7 @@ export const useConversationState = ({ apiKey, agentId }: UseConversationStatePr
     currentTranscript,
     error,
     microphonePermission,
+    requestMicrophoneAccess,
     sendMessage,
     handleToggleAudio,
     handleListenStart,
