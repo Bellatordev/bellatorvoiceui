@@ -9,7 +9,7 @@ interface UseConversationOptions {
   autoStartMic: boolean;
   isPlaying: boolean;
   isGenerating: boolean;
-  startListening: () => Promise<void>;
+  startListening?: () => Promise<void>;
   ttsError: string | null;
 }
 
@@ -23,9 +23,12 @@ export const useConversation = ({
   ttsError
 }: UseConversationOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const processUserInput = (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isProcessing) return;
+    
+    setIsProcessing(true);
     
     const userMessage: Message = {
       id: uuidv4(),
@@ -55,9 +58,11 @@ export const useConversation = ({
             console.error("Failed to generate speech:", err);
           }
         }
-      } else if (autoStartMic && !isPlaying && !isGenerating) {
+      } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
         setTimeout(startListening, 300);
       }
+      
+      setIsProcessing(false);
     }, 1000);
   };
 
@@ -85,7 +90,8 @@ export const useConversation = ({
     messages,
     setMessages,
     processUserInput,
-    initializeConversation
+    initializeConversation,
+    isProcessing
   };
 };
 

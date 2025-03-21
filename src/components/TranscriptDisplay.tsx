@@ -34,7 +34,11 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   if (transcript && isListening) {
     return (
       <div className="px-4 py-2 mb-4 bg-agent-secondary/10 rounded-lg text-gray-600 italic">
-        Listening: {transcript}
+        <div className="flex items-center">
+          <span className="flex-1">Listening: {transcript}</span>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse ml-2" 
+               title="Recording in progress"></div>
+        </div>
       </div>
     );
   }

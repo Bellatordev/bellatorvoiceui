@@ -38,19 +38,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   });
 
   const {
-    isListening,
-    transcript,
-    startListening,
-    stopListening,
-    toggleListening
-  } = useSpeechRecognition({
-    autoStartMic,
-    isMicMuted,
-    isPlaying,
-    isGenerating
-  });
-
-  const {
     messages,
     setMessages,
     processUserInput,
@@ -61,8 +48,29 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     autoStartMic,
     isPlaying,
     isGenerating,
-    startListening,
     ttsError
+  });
+
+  // Handle final transcript and send to chat
+  const handleFinalTranscript = (finalText: string) => {
+    console.log("Processing final transcript:", finalText);
+    if (finalText.trim()) {
+      processUserInput(finalText);
+    }
+  };
+
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening,
+    toggleListening
+  } = useSpeechRecognition({
+    autoStartMic,
+    isMicMuted,
+    isPlaying,
+    isGenerating,
+    onFinalTranscript: handleFinalTranscript
   });
 
   useEffect(() => {

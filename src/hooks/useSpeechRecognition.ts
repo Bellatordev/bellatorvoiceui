@@ -1,5 +1,4 @@
-
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { 
   requestMicrophoneAccess,
@@ -11,6 +10,7 @@ interface UseSpeechRecognitionOptions {
   isMicMuted: boolean;
   isPlaying: boolean;
   isGenerating: boolean;
+  onFinalTranscript?: (text: string) => void;
 }
 
 interface UseSpeechRecognitionReturn {
@@ -25,13 +25,23 @@ export const useSpeechRecognition = ({
   autoStartMic,
   isMicMuted,
   isPlaying,
-  isGenerating
+  isGenerating,
+  onFinalTranscript
 }: UseSpeechRecognitionOptions): UseSpeechRecognitionReturn => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasRequestedMicPermission = useRef(false);
   const hasAttemptedSpeechRecognition = useRef(false);
+  const pauseTimeoutRef = useRef<number | null>(null);
+  
+  const handleSpeechPause = useCallback((finalText: string) => {
+    if (finalText.trim() && onFinalTranscript) {
+      console.log('Final transcript detected:', finalText);
+      onFinalTranscript(finalText);
+      setTranscript("");
+    }
+  }, [onFinalTranscript]);
 
   useEffect(() => {
     const initializeSpeechRecognition = async () => {
@@ -61,6 +71,10 @@ export const useSpeechRecognition = ({
             console.log('Speech recognition stopped');
             setIsListening(false);
             
+            if (transcript.trim() && onFinalTranscript) {
+              handleSpeechPause(transcript);
+            }
+            
             if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current) {
               hasAttemptedSpeechRecognition.current = true;
               setTimeout(() => {
@@ -85,12 +99,32 @@ export const useSpeechRecognition = ({
             const text = result[0].transcript;
             setTranscript(text);
             
+            if (pauseTimeoutRef.current) {
+              clearTimeout(pauseTimeoutRef.current);
+              pauseTimeoutRef.current = null;
+            }
+            
             if (result.isFinal) {
-              setTranscript("");
-              
-              if (recognitionRef.current) {
-                recognitionRef.current.stop();
-              }
+              pauseTimeoutRef.current = window.setTimeout(() => {
+                handleSpeechPause(text);
+                
+                if (recognitionRef.current && isListening && !isMicMuted) {
+                  try {
+                    recognitionRef.current.stop();
+                    setTimeout(() => {
+                      if (recognitionRef.current && !isMicMuted) {
+                        recognitionRef.current.start();
+                      }
+                    }, 200);
+                  } catch (e) {
+                    console.error('Error restarting recognition after final result:', e);
+                  }
+                }
+              }, 1000);
+            } else {
+              pauseTimeoutRef.current = window.setTimeout(() => {
+                handleSpeechPause(text);
+              }, 2000);
             }
           };
           
@@ -129,8 +163,13 @@ export const useSpeechRecognition = ({
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
+      
+      if (pauseTimeoutRef.current) {
+        clearTimeout(pauseTimeoutRef.current);
+        pauseTimeoutRef.current = null;
+      }
     };
-  }, [autoStartMic, isMicMuted, isPlaying, isGenerating]);
+  }, [autoStartMic, isMicMuted, isPlaying, isGenerating, transcript, onFinalTranscript, handleSpeechPause]);
 
   const requestMicrophonePermission = async () => {
     if (hasRequestedMicPermission.current) return true;
@@ -171,6 +210,11 @@ export const useSpeechRecognition = ({
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
+    }
+    
+    if (pauseTimeoutRef.current) {
+      clearTimeout(pauseTimeoutRef.current);
+      pauseTimeoutRef.current = null;
     }
   };
 
