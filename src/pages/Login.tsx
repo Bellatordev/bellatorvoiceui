@@ -51,18 +51,18 @@ const Login = () => {
       {/* Hero Section with Animated Text */}
       <AnimatedHero onScrollToLogin={scrollToLogin} />
       
-      {/* Lamp Component */}
-      <div className="w-full">
-        <LampDemo />
-      </div>
-      
-      {/* Login Section with increased spacing from the hero section */}
-      <div 
-        ref={loginSectionRef} 
-        className="min-h-screen flex flex-col items-center justify-center px-4 py-20 bg-[#1a1a24]"
-      >
-        <div className="w-full max-w-md bg-[#1b1b2e] rounded-xl p-8 border border-gray-800 shadow-xl">
-          <LoginScreen onLogin={handleLogin} />
+      {/* Login Section with Lamp Component directly above it */}
+      <div ref={loginSectionRef} className="w-full flex flex-col items-center">
+        {/* Lamp Component - adjusted to be closer to the login form */}
+        <div className="w-full h-[50vh] mb-[-100px]">
+          <LampDemo />
+        </div>
+        
+        {/* Login Form */}
+        <div className="w-full px-4 py-12 bg-[#1a1a24] flex justify-center">
+          <div className="w-full max-w-md bg-[#1b1b2e] rounded-xl p-8 border border-gray-800 shadow-xl">
+            <LoginScreen onLogin={handleLogin} />
+          </div>
         </div>
       </div>
     </div>
