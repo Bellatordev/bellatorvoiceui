@@ -1,6 +1,10 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { isSpeechRecognitionSupported, createSpeechRecognitionInstance } from '@/utils/speechRecognitionUtils';
+import { useMicrophonePermission } from './useMicrophonePermission';
+import { useTranscriptionHandler } from './useTranscriptionHandler';
+import { useSpeechRecognitionError } from './useSpeechRecognitionError';
 
 interface UseSpeechRecognitionProps {
   isListening: boolean;
@@ -17,15 +21,29 @@ export const useSpeechRecognition = ({
 }: UseSpeechRecognitionProps) => {
   const [transcript, setTranscript] = useState('');
   const [isRecognitionSupported, setIsRecognitionSupported] = useState(true);
-  const [hasMicrophonePermission, setHasMicrophonePermission] = useState<boolean | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isListeningRef = useRef<boolean>(false);
 
+  // Initialize microphone permission handling
+  const { hasMicrophonePermission, setHasMicrophonePermission } = useMicrophonePermission(isListening);
+
+  // Initialize transcription handler
+  const { handleTranscriptionResult } = useTranscriptionHandler({
+    onTranscript,
+    onFinalTranscript: (text) => {
+      onFinalTranscript?.(text);
+      setTranscript('');
+    }
+  });
+
+  // Initialize error handler
+  const { handleRecognitionError } = useSpeechRecognitionError({
+    setHasMicrophonePermission
+  });
+
   // Check for browser support first
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
+    if (!isSpeechRecognitionSupported()) {
       console.error('Speech recognition not supported in this browser');
       setIsRecognitionSupported(false);
       
@@ -39,117 +57,39 @@ export const useSpeechRecognition = ({
     }
   }, []);
 
-  // Check for microphone permissions - but only do this check when needed
-  useEffect(() => {
-    // Only check if we're trying to listen and don't already know we have permission
-    if (isListening && hasMicrophonePermission === null) {
-      console.log('Checking microphone permission...');
-      
-      if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(() => {
-            console.log('Microphone permission granted');
-            setHasMicrophonePermission(true);
-          })
-          .catch((error) => {
-            console.error('Microphone permission denied:', error);
-            setHasMicrophonePermission(false);
-            
-            toast({
-              title: "Microphone Access Denied",
-              description: "Please enable microphone access in your browser settings to use voice features.",
-              variant: "destructive",
-            });
-          });
-      }
-    }
-  }, [isListening, hasMicrophonePermission]);
-
   // Initialize speech recognition
   useEffect(() => {
     // Skip if speech recognition is not supported
     if (!isRecognitionSupported) return;
     
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      console.error('Speech recognition not available');
+    // Create recognition instance
+    const recognitionInstance = createSpeechRecognitionInstance();
+    if (!recognitionInstance) {
+      setIsRecognitionSupported(false);
       return;
     }
-
-    try {
-      const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = true;
-      recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'en-US';
+    
+    // Set up event handlers
+    recognitionInstance.onresult = handleTranscriptionResult;
+    recognitionInstance.onerror = handleRecognitionError;
+    
+    recognitionInstance.onend = () => {
+      console.log('Speech recognition ended');
       
-      recognitionInstance.onresult = (event) => {
-        let currentTranscript = '';
-        let isFinal = false;
-        
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          currentTranscript += event.results[i][0].transcript;
-          isFinal = event.results[i].isFinal;
+      // If we're still supposed to be listening, restart
+      if (isListeningRef.current && !isMicMuted) {
+        console.log('Restarting speech recognition because it ended unexpectedly');
+        try {
+          recognitionInstance.start();
+          console.log('Speech recognition restarted');
+        } catch (error) {
+          console.error('Error restarting speech recognition:', error);
         }
-        
-        console.log('Speech recognition result:', currentTranscript, isFinal);
-        setTranscript(currentTranscript);
-        
-        // Always call onTranscript with the current transcript for real-time display
-        onTranscript?.(currentTranscript);
-        
-        if (isFinal) {
-          console.log('Final transcript:', currentTranscript);
-          onFinalTranscript?.(currentTranscript);
-          setTranscript('');
-        }
-      };
-      
-      recognitionInstance.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        
-        if (event.error === 'not-allowed') {
-          console.error('Microphone access denied');
-          setHasMicrophonePermission(false);
-          
-          toast({
-            title: "Microphone Access Denied",
-            description: "Please enable microphone access in your browser settings to use voice features.",
-            variant: "destructive",
-          });
-        } else if (event.error === 'no-speech') {
-          console.log('No speech detected');
-          // This is a common error that doesn't indicate a problem
-        } else {
-          toast({
-            title: "Speech Recognition Error",
-            description: `Error: ${event.error}. Try refreshing the page.`,
-            variant: "destructive",
-          });
-        }
-      };
-      
-      recognitionInstance.onend = () => {
-        console.log('Speech recognition ended');
-        
-        // If we're still supposed to be listening, restart
-        if (isListeningRef.current && !isMicMuted) {
-          console.log('Restarting speech recognition because it ended unexpectedly');
-          try {
-            recognitionInstance.start();
-            console.log('Speech recognition restarted');
-          } catch (error) {
-            console.error('Error restarting speech recognition:', error);
-          }
-        }
-      };
-      
-      recognitionRef.current = recognitionInstance;
-      console.log('Speech recognition initialized');
-    } catch (error) {
-      console.error('Error initializing speech recognition:', error);
-      setIsRecognitionSupported(false);
-    }
+      }
+    };
+    
+    recognitionRef.current = recognitionInstance;
+    console.log('Speech recognition initialized');
     
     return () => {
       if (recognitionRef.current) {
@@ -161,7 +101,7 @@ export const useSpeechRecognition = ({
         }
       }
     };
-  }, [onTranscript, onFinalTranscript, isRecognitionSupported, isMicMuted]);
+  }, [isRecognitionSupported, isMicMuted, handleTranscriptionResult, handleRecognitionError]);
 
   // Start/stop recognition based on listening state and mic mute state
   useEffect(() => {
