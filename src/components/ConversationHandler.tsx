@@ -41,15 +41,17 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     ttsError
   });
 
-  // Fix infinite loop by ensuring initialization only happens once
+  // Initialize the conversation when the component mounts
   useEffect(() => {
-    // Only initialize once when the component mounts
-    const initialized = sessionStorage.getItem('conversation_initialized');
-    if (!initialized) {
-      initializeConversation();
-      sessionStorage.setItem('conversation_initialized', 'true');
+    // Clean up the storage to force initialization on page refresh
+    if (window.location.pathname.includes('/conversation')) {
+      sessionStorage.removeItem('conversation_initialized');
     }
-  }, []);  // Empty dependency array ensures this only runs once
+    
+    // Always initialize when this component mounts
+    console.log("ConversationHandler mounted, initializing conversation");
+    initializeConversation();
+  }, [initializeConversation]);
 
   return <>{children({ messages, setMessages, processUserInput, isProcessing })}</>;
 };

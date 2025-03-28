@@ -19,7 +19,7 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   let displayMessage = '';
   
   if (inputMode === 'text') {
-    displayMessage = 'Type below';
+    displayMessage = 'Type your message below';
   } else if (isGeneratingVoice) {
     displayMessage = 'Voice generation in progress...';
   } else if (isMicMuted) {
@@ -33,7 +33,7 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   }
 
   return (
-    <div className="py-3 px-4 text-muted-foreground italic border-t border-border text-center bg-muted/20">
+    <div className="py-3 px-4 text-foreground border-t border-border text-center bg-muted/20">
       {displayMessage}
     </div>
   );

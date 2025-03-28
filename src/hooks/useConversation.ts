@@ -24,6 +24,7 @@ export const useConversation = ({
 }: UseConversationOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const processUserInput = useCallback((text: string) => {
     if (!text.trim() || isProcessing) return;
@@ -68,6 +69,9 @@ export const useConversation = ({
 
   // Initialize with welcome message - now a memoized function
   const initializeConversation = useCallback(() => {
+    if (isInitialized) return; // Prevent reinitializing
+    
+    console.log("Initializing conversation with welcome message");
     const welcomeMessage: Message = {
       id: uuidv4(),
       text: "Hello! How can I help you today?",
@@ -76,15 +80,18 @@ export const useConversation = ({
     };
     
     setMessages([welcomeMessage]);
+    setIsInitialized(true);
     
+    // Always generate speech for welcome message unless muted
     if (!isMuted && generateSpeech) {
+      console.log("Generating speech for welcome message");
       try {
         generateSpeech(welcomeMessage.text);
       } catch (err) {
         console.error("Failed to generate speech for welcome message:", err);
       }
     }
-  }, [generateSpeech, isMuted]);
+  }, [generateSpeech, isMuted, isInitialized]);
 
   return {
     messages,
