@@ -22,7 +22,7 @@ export function LampDemo() {
           duration: 0.8,
           ease: "easeInOut"
         }} 
-        className="mt-8 bg-gradient-to-br from-[#a8a0f0] to-purple-500 py-4 bg-clip-text text-center tracking-tight text-transparent md:text-7xl text-5xl"
+        className="mt-8 bg-gradient-to-br from-[#a8a0f0] to-[#9b87f5] py-4 bg-clip-text text-center tracking-tight text-transparent md:text-7xl text-5xl"
       >
         <span className="font-serif font-extrabold">Bellator</span>
         <span className="text-yellow-400 font-serif font-extrabold">.ai</span>
