@@ -1,12 +1,17 @@
+
 import React, { useEffect, useState } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
+import { LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
 const Conversation = () => {
   const [apiKey, setApiKey] = useState('');
   const [agentId, setAgentId] = useState('');
   const navigate = useNavigate();
+  
   useEffect(() => {
     // Get credentials from localStorage
     const storedApiKey = localStorage.getItem('voiceAgent_apiKey');
@@ -25,6 +30,7 @@ const Conversation = () => {
     setApiKey(storedApiKey);
     setAgentId(storedAgentId);
   }, [navigate]);
+  
   const handleLogout = () => {
     // Clear credentials from localStorage
     localStorage.removeItem('voiceAgent_apiKey');
@@ -40,29 +46,52 @@ const Conversation = () => {
 
   // Only render the conversation interface if we have credentials
   if (!apiKey || !agentId) {
-    return <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-agent-background via-agent-background to-agent-secondary/30 dark:from-gray-900 dark:via-gray-900 dark:to-agent-secondary/10">
-        <div className="agent-card p-8 shadow-glow-sm dark:shadow-glow">
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/30">
+        <div className="agent-card p-8 shadow-lg">
           <div className="animate-pulse">Loading...</div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen flex flex-col bg-gradient-to-br from-agent-background via-agent-background to-agent-secondary/30 transition-colors duration-300 dark:from-gray-900 dark:via-gray-900 dark:to-agent-secondary/10">
+  
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/30 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         <header className="mb-8 flex justify-between items-center">
+          <h1 className="text-2xl font-serif font-bold text-foreground">
+            <span className="text-gradient">Bellator</span>
+            <span className="text-gradient-yellow">.ai</span>
+          </h1>
           
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={handleLogout}
+              className="text-foreground"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+            <ThemeToggle />
+          </div>
         </header>
         
         <main className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
-          <div className="agent-card mb-4 overflow-hidden shadow-glow-sm dark:shadow-glow">
-            <ConversationInterface apiKey={apiKey} agentId={agentId} onLogout={handleLogout} />
+          <div className="agent-card mb-4 overflow-hidden">
+            <ConversationInterface 
+              apiKey={apiKey} 
+              agentId={agentId} 
+            />
           </div>
         </main>
         
-        <footer className="mt-8 text-center text-sm text-agent-foreground/60">
+        <footer className="mt-8 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Voice Assistant</p>
         </footer>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Conversation;

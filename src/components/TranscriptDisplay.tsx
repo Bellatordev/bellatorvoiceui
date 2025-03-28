@@ -33,7 +33,7 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({
   }
 
   return (
-    <div className="py-2 px-4 text-gray-600 italic border-t border-gray-200 text-center">
+    <div className="py-3 px-4 text-muted-foreground italic border-t border-border text-center bg-muted/20">
       {displayMessage}
     </div>
   );

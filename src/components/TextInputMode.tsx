@@ -1,5 +1,8 @@
 
 import React, { useState, FormEvent } from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Mic } from "lucide-react";
 
 interface TextInputModeProps {
   onSendMessage: (text: string) => void;
@@ -18,27 +21,26 @@ const TextInputMode: React.FC<TextInputModeProps> = ({ onSendMessage, onSwitchTo
   };
 
   return (
-    <form onSubmit={handleTextSubmit} className="flex items-center space-x-2 p-4">
-      <input
+    <form onSubmit={handleTextSubmit} className="flex items-center space-x-2 p-4 bg-background border-t border-border">
+      <Input
         type="text"
         value={textInput}
         onChange={(e) => setTextInput(e.target.value)}
         placeholder="Type your message..."
-        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-agent-primary"
+        className="flex-1 text-foreground"
       />
-      <button
-        type="submit"
-        className="px-4 py-2 bg-agent-primary text-white rounded-md hover:bg-agent-primary/90"
-      >
+      <Button type="submit" variant="default">
         Send
-      </button>
-      <button
-        type="button"
-        onClick={onSwitchToVoice}
-        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+      </Button>
+      <Button 
+        type="button" 
+        onClick={onSwitchToVoice} 
+        variant="outline"
+        className="flex items-center gap-2"
       >
-        Use Voice
-      </button>
+        <Mic className="h-4 w-4" />
+        Voice
+      </Button>
     </form>
   );
 };
