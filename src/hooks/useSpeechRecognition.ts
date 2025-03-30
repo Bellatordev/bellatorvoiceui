@@ -75,20 +75,18 @@ export const useSpeechRecognition = ({
               handleSpeechPause(transcript);
             }
             
-            if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current) {
+            if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current && !isPlaying && !isGenerating) {
               hasAttemptedSpeechRecognition.current = true;
               setTimeout(() => {
-                if (!isPlaying && !isGenerating) {
-                  console.log('Attempting to restart speech recognition');
-                  try {
-                    recognition.start();
-                  } catch (e) {
-                    console.error('Failed to restart speech recognition:', e);
-                  }
-                  setTimeout(() => {
-                    hasAttemptedSpeechRecognition.current = false;
-                  }, 5000);
+                console.log('Attempting to restart speech recognition');
+                try {
+                  recognition.start();
+                } catch (e) {
+                  console.error('Failed to restart speech recognition:', e);
                 }
+                setTimeout(() => {
+                  hasAttemptedSpeechRecognition.current = false;
+                }, 5000);
               }, 1000);
             }
           };
@@ -112,7 +110,7 @@ export const useSpeechRecognition = ({
                   try {
                     recognitionRef.current.stop();
                     setTimeout(() => {
-                      if (recognitionRef.current && !isMicMuted) {
+                      if (recognitionRef.current && !isMicMuted && !isPlaying && !isGenerating) {
                         recognitionRef.current.start();
                       }
                     }, 200);
