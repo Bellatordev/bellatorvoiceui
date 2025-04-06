@@ -11,7 +11,7 @@ interface UseSpeechRecognitionOptions {
   isMicMuted: boolean;
   isPlaying: boolean;
   isGenerating: boolean;
-  active?: boolean; // Add active prop
+  active?: boolean;
   onFinalTranscript?: (text: string) => void;
 }
 
@@ -28,7 +28,7 @@ export const useSpeechRecognition = ({
   isMicMuted,
   isPlaying,
   isGenerating,
-  active = true, // Default to true for backward compatibility
+  active = true,
   onFinalTranscript
 }: UseSpeechRecognitionOptions): UseSpeechRecognitionReturn => {
   const [isListening, setIsListening] = useState(false);
@@ -37,6 +37,7 @@ export const useSpeechRecognition = ({
   const hasRequestedMicPermission = useRef(false);
   const hasAttemptedSpeechRecognition = useRef(false);
   const pauseTimeoutRef = useRef<number | null>(null);
+  const isInitializedRef = useRef(false);
   
   const handleSpeechPause = useCallback((finalText: string) => {
     if (finalText.trim() && onFinalTranscript && active) {
@@ -56,10 +57,15 @@ export const useSpeechRecognition = ({
     }
   }, [active, isListening]);
 
+  // Initialize speech recognition once
   useEffect(() => {
+    // Only initialize if active and not already initialized
+    if (!active || isInitializedRef.current) return;
+    
+    console.log('Initializing speech recognition...');
+    isInitializedRef.current = true;
+    
     const initializeSpeechRecognition = async () => {
-      console.log('Initializing speech recognition...');
-      
       try {
         await requestMicrophoneAccess();
       } catch (err) {
@@ -88,21 +94,24 @@ export const useSpeechRecognition = ({
               handleSpeechPause(transcript);
             }
             
-            if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current && !isPlaying && !isGenerating && active) {
-              hasAttemptedSpeechRecognition.current = true;
-              setTimeout(() => {
-                console.log('Attempting to restart speech recognition');
-                try {
-                  if (active) {
-                    recognition.start();
-                  }
-                } catch (e) {
-                  console.error('Failed to restart speech recognition:', e);
-                }
+            // Only auto-restart if the conversation is active and not manually stopped
+            if (autoStartMic && !isMicMuted && !isPlaying && !isGenerating && active) {
+              if (!hasAttemptedSpeechRecognition.current) {
+                hasAttemptedSpeechRecognition.current = true;
                 setTimeout(() => {
-                  hasAttemptedSpeechRecognition.current = false;
-                }, 5000);
-              }, 1000);
+                  console.log('Attempting to restart speech recognition');
+                  try {
+                    if (active && recognitionRef.current) {
+                      recognitionRef.current.start();
+                    }
+                  } catch (e) {
+                    console.error('Failed to restart speech recognition:', e);
+                  }
+                  setTimeout(() => {
+                    hasAttemptedSpeechRecognition.current = false;
+                  }, 5000);
+                }, 1000);
+              }
             }
           };
           
@@ -121,11 +130,11 @@ export const useSpeechRecognition = ({
               pauseTimeoutRef.current = window.setTimeout(() => {
                 handleSpeechPause(text);
                 
-                if (recognitionRef.current && isListening && !isMicMuted) {
+                if (recognitionRef.current && isListening && !isMicMuted && active) {
                   try {
                     recognitionRef.current.stop();
                     setTimeout(() => {
-                      if (recognitionRef.current && !isMicMuted && !isPlaying && !isGenerating) {
+                      if (recognitionRef.current && !isMicMuted && !isPlaying && !isGenerating && active) {
                         recognitionRef.current.start();
                       }
                     }, 200);
@@ -157,6 +166,14 @@ export const useSpeechRecognition = ({
           };
           
           recognitionRef.current = recognition;
+          
+          // Auto-start mic if needed and conversation is active
+          if (autoStartMic && !isMicMuted && !isPlaying && !isGenerating && active) {
+            setTimeout(() => {
+              startListening();
+            }, 1000);
+          }
+          
         } catch (error) {
           console.error('Error setting up speech recognition:', error);
         }
@@ -170,9 +187,7 @@ export const useSpeechRecognition = ({
       }
     };
     
-    if (active) {
-      initializeSpeechRecognition();
-    }
+    initializeSpeechRecognition();
     
     return () => {
       if (recognitionRef.current) {
@@ -185,7 +200,7 @@ export const useSpeechRecognition = ({
         pauseTimeoutRef.current = null;
       }
     };
-  }, [autoStartMic, isMicMuted, isPlaying, isGenerating, transcript, onFinalTranscript, handleSpeechPause, active]);
+  }, [active, autoStartMic, isMicMuted, isPlaying, isGenerating, handleSpeechPause, startListening]);
 
   const requestMicrophonePermission = async () => {
     if (hasRequestedMicPermission.current) return true;
@@ -223,7 +238,7 @@ export const useSpeechRecognition = ({
     }
   };
 
-  const stopListening = () => {
+  const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
       console.log('Explicitly stopping speech recognition');
       recognitionRef.current.stop();
@@ -233,7 +248,7 @@ export const useSpeechRecognition = ({
       clearTimeout(pauseTimeoutRef.current);
       pauseTimeoutRef.current = null;
     }
-  };
+  }, [isListening]);
 
   const toggleListening = async () => {
     if (isMicMuted || !active) {

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import useSpeechRecognition from '@/hooks/useSpeechRecognition';
 
 interface SpeechHandlerProps {
@@ -8,7 +8,7 @@ interface SpeechHandlerProps {
   isPlaying: boolean;
   isGenerating: boolean;
   inputMode: 'voice' | 'text';
-  active?: boolean; // Add active prop
+  active?: boolean;
   onFinalTranscript: (text: string) => void;
   children: (props: {
     isListening: boolean;
@@ -25,7 +25,7 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
   isPlaying,
   isGenerating,
   inputMode,
-  active = true, // Default to true for backward compatibility
+  active = true,
   onFinalTranscript,
   children,
 }) => {
@@ -40,7 +40,7 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
     isMicMuted,
     isPlaying,
     isGenerating,
-    active, // Pass active state to hook
+    active,
     onFinalTranscript
   });
 
@@ -52,9 +52,10 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
     }
   }, [active, isListening, stopListening]);
 
-  // This effect ensures that we stop the microphone when voice generation
-  // starts and resume it after completion or stop when inactive
+  // This effect handles microphone state based on audio playback and active state
+  // The dependencies are carefully managed to prevent rapid re-renders
   useEffect(() => {
+    // Only run this effect when the component is active
     if (!active) {
       // If conversation is not active, ensure microphone is stopped
       console.log('Conversation inactive, ensuring microphone is stopped');
@@ -69,7 +70,9 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
       // Only auto-start the mic after audio stops, with a small delay, and if conversation is active
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
-        startListening();
+        if (active && !isMicMuted && !isGenerating && !isPlaying) {
+          startListening();
+        }
       }, 500);
       
       return () => clearTimeout(timer);

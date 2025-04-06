@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -33,18 +33,16 @@ const Conversation = () => {
     
     // Re-enable conversation if returning to page
     setIsActive(true);
-  }, [navigate]);
-  
-  // Add cleanup effect when component unmounts
-  useEffect(() => {
+    
+    // Cleanup when component unmounts
     return () => {
       // Ensure conversation is deactivated when navigating away
       setIsActive(false);
       console.log("Conversation page unmounting, ensuring conversation is inactive");
     };
-  }, []);
+  }, [navigate]);
   
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     // First set active to false to stop all ongoing processes
     setIsActive(false);
     
@@ -61,7 +59,7 @@ const Conversation = () => {
       // Navigate back to login
       navigate('/');
     }, 500);
-  };
+  }, [navigate]);
 
   // Only render the conversation interface if we have credentials
   if (!apiKey || !agentId) {
