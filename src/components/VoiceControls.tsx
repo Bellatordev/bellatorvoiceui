@@ -75,7 +75,9 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
     
     // If currently listening and toggling to muted, make sure to stop listening first
     if (isListening && !isMicMuted) {
+      console.log("Stopping listening before muting microphone");
       onStopListening();
+      
       // Small delay to ensure stopping completes before toggling
       setTimeout(() => {
         onMicMuteToggle();

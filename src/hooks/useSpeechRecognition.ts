@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { 
@@ -44,6 +45,15 @@ export const useSpeechRecognition = ({
     }
   }, [onFinalTranscript]);
 
+  // Effect to handle mic mute state changes
+  useEffect(() => {
+    if (isMicMuted && isListening && recognitionRef.current) {
+      console.log('Stopping speech recognition because microphone is now muted');
+      recognitionRef.current.abort(); // Use abort instead of stop for immediate termination
+      setIsListening(false);
+    }
+  }, [isMicMuted, isListening]);
+
   useEffect(() => {
     const initializeSpeechRecognition = async () => {
       console.log('Initializing speech recognition...');
@@ -81,7 +91,9 @@ export const useSpeechRecognition = ({
               setTimeout(() => {
                 console.log('Attempting to restart speech recognition');
                 try {
-                  recognition.start();
+                  if (!isMicMuted) { // Add additional check before restarting
+                    recognition.start();
+                  }
                 } catch (e) {
                   console.error('Failed to restart speech recognition:', e);
                 }
@@ -160,7 +172,7 @@ export const useSpeechRecognition = ({
     
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.abort();
+        recognitionRef.current.abort(); // Use abort for cleanup
       }
       
       if (pauseTimeoutRef.current) {
@@ -207,8 +219,16 @@ export const useSpeechRecognition = ({
   };
 
   const stopListening = () => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+    if (recognitionRef.current) {
+      if (isListening) {
+        try {
+          console.log('Stopping speech recognition');
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.error('Error stopping speech recognition, using abort instead:', e);
+          recognitionRef.current.abort();
+        }
+      }
     }
     
     if (pauseTimeoutRef.current) {
@@ -231,9 +251,11 @@ export const useSpeechRecognition = ({
   };
 
   const resetRecognition = () => {
+    console.log('Aborting and resetting speech recognition');
     stopListening();
     setTranscript("");
     if (recognitionRef.current) {
+      // Use abort() to terminate immediately rather than stop()
       recognitionRef.current.abort();
     }
   };

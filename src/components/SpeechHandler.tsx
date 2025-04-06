@@ -51,6 +51,7 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
       stopListening();
     } else if (isMicMuted && isListening) {
       // Stop listening when the mic is muted
+      console.log('Stopping microphone because it is muted');
       stopListening();
     } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice') {
       // Only auto-start the mic after audio stops, with a small delay
@@ -64,6 +65,7 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
   }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, inputMode, startListening, stopListening]);
 
   const resetSpeech = () => {
+    console.log('Resetting speech recognition completely');
     stopListening();
     resetRecognition();
   };

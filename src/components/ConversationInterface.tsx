@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
 import TranscriptDisplay from './TranscriptDisplay';
@@ -71,15 +71,29 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleEndConversation = (resetSpeech: () => void, endConversation: () => void) => {
+    console.log("Ending conversation and shutting down all audio services");
+    // First stop any playing audio
     stopAudio();
+    
+    // Immediately set microphone to muted state
     setIsMicMuted(true);
+    
+    // Reset speech recognition completely (this will abort any ongoing recognition)
     resetSpeech();
+    
+    // End the conversation
     endConversation();
+    
     toast({
       title: "Conversation Ended",
       description: "The conversation has been reset. You can start a new one."
     });
   };
+
+  // Effect to ensure microphone is properly reset when mute state changes
+  useEffect(() => {
+    console.log(`Microphone mute state changed to: ${isMicMuted ? 'muted' : 'unmuted'}`);
+  }, [isMicMuted]);
 
   return (
     <div className="flex flex-col h-full">
