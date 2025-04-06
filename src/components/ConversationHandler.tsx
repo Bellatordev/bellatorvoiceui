@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import useConversation from '@/hooks/useConversation';
 
 interface ConversationHandlerProps {
@@ -9,7 +9,6 @@ interface ConversationHandlerProps {
   isPlaying: boolean;
   isGenerating: boolean;
   ttsError: string | null;
-  active: boolean;
   children: (props: {
     messages: any[];
     setMessages: React.Dispatch<React.SetStateAction<any[]>>;
@@ -25,28 +24,22 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   isPlaying,
   isGenerating,
   ttsError,
-  active,
   children,
 }) => {
-  // Memoize conversation options to prevent re-renders
-  const conversationOptions = useMemo(() => ({
-    generateSpeech,
-    isMuted,
-    autoStartMic,
-    isPlaying,
-    isGenerating,
-    ttsError,
-    active
-  }), [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, ttsError, active]);
-
   const {
     messages,
     setMessages,
     processUserInput,
     initializeConversation,
-    isProcessing,
-    cleanupConversation
-  } = useConversation(conversationOptions);
+    isProcessing
+  } = useConversation({
+    generateSpeech,
+    isMuted,
+    autoStartMic,
+    isPlaying,
+    isGenerating,
+    ttsError
+  });
 
   // Initialize the conversation when the component mounts
   useEffect(() => {
@@ -55,28 +48,12 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       sessionStorage.removeItem('conversation_initialized');
     }
     
-    // Only initialize when active
-    if (active) {
-      console.log("ConversationHandler mounted, initializing conversation");
-      initializeConversation();
-    }
-    
-    // Cleanup when component unmounts or becomes inactive
-    return () => {
-      console.log("ConversationHandler unmounting or inactive, cleaning up resources");
-      cleanupConversation();
-    };
-  }, [initializeConversation, active, cleanupConversation]);
+    // Always initialize when this component mounts
+    console.log("ConversationHandler mounted, initializing conversation");
+    initializeConversation();
+  }, [initializeConversation]);
 
-  // Memoize the props for children to prevent unnecessary re-renders
-  const childProps = useMemo(() => ({
-    messages, 
-    setMessages, 
-    processUserInput, 
-    isProcessing
-  }), [messages, setMessages, processUserInput, isProcessing]);
-
-  return <>{children(childProps)}</>;
+  return <>{children({ messages, setMessages, processUserInput, isProcessing })}</>;
 };
 
-export default React.memo(ConversationHandler);
+export default ConversationHandler;

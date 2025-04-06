@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
 
@@ -11,7 +11,6 @@ interface UseConversationOptions {
   isGenerating: boolean;
   startListening?: () => Promise<void>;
   ttsError: string | null;
-  active?: boolean; // Add active prop
 }
 
 export const useConversation = ({
@@ -21,25 +20,14 @@ export const useConversation = ({
   isPlaying,
   isGenerating,
   startListening,
-  ttsError,
-  active = true // Default to true for backward compatibility
+  ttsError
 }: UseConversationOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Reset state when active changes to false
-  useEffect(() => {
-    if (!active && isInitialized) {
-      console.log("Conversation is no longer active, resetting state");
-      setIsInitialized(false);
-      setMessages([]);
-      setIsProcessing(false);
-    }
-  }, [active, isInitialized]);
-
   const processUserInput = useCallback((text: string) => {
-    if (!text.trim() || isProcessing || !active) return;
+    if (!text.trim() || isProcessing) return;
     
     setIsProcessing(true);
     
@@ -63,7 +51,7 @@ export const useConversation = ({
       
       setMessages(prev => [...prev, assistantMessage]);
       
-      if (!isMuted && !ttsError && active) {
+      if (!isMuted && !ttsError) {
         if (generateSpeech) {
           try {
             generateSpeech(assistantResponse);
@@ -71,17 +59,17 @@ export const useConversation = ({
             console.error("Failed to generate speech:", err);
           }
         }
-      } else if (autoStartMic && !isPlaying && !isGenerating && startListening && active) {
+      } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
         setTimeout(startListening, 300);
       }
       
       setIsProcessing(false);
     }, 1000);
-  }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, active]);
+  }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing]);
 
   // Initialize with welcome message - now a memoized function
   const initializeConversation = useCallback(() => {
-    if (isInitialized || !active) return; // Prevent reinitializing or initializing when inactive
+    if (isInitialized) return; // Prevent reinitializing
     
     console.log("Initializing conversation with welcome message");
     const welcomeMessage: Message = {
@@ -95,7 +83,7 @@ export const useConversation = ({
     setIsInitialized(true);
     
     // Always generate speech for welcome message unless muted
-    if (!isMuted && generateSpeech && active) {
+    if (!isMuted && generateSpeech) {
       console.log("Generating speech for welcome message");
       try {
         generateSpeech(welcomeMessage.text);
@@ -103,22 +91,13 @@ export const useConversation = ({
         console.error("Failed to generate speech for welcome message:", err);
       }
     }
-  }, [generateSpeech, isMuted, isInitialized, active]);
-
-  // Cleanup function to reset state
-  const cleanupConversation = useCallback(() => {
-    console.log("Cleaning up conversation resources");
-    setIsInitialized(false);
-    setMessages([]);
-    setIsProcessing(false);
-  }, []);
+  }, [generateSpeech, isMuted, isInitialized]);
 
   return {
     messages,
     setMessages,
     processUserInput,
     initializeConversation,
-    cleanupConversation,
     isProcessing
   };
 };

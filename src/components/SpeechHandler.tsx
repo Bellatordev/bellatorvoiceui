@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import useSpeechRecognition from '@/hooks/useSpeechRecognition';
 
 interface SpeechHandlerProps {
@@ -8,7 +8,6 @@ interface SpeechHandlerProps {
   isPlaying: boolean;
   isGenerating: boolean;
   inputMode: 'voice' | 'text';
-  active?: boolean;
   onFinalTranscript: (text: string) => void;
   children: (props: {
     isListening: boolean;
@@ -25,80 +24,41 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
   isPlaying,
   isGenerating,
   inputMode,
-  active = true,
   onFinalTranscript,
   children,
 }) => {
-  // Memoize speech recognition options to prevent re-renders
-  const speechRecognitionOptions = useMemo(() => ({
-    autoStartMic,
-    isMicMuted,
-    isPlaying,
-    isGenerating,
-    active,
-    onFinalTranscript
-  }), [autoStartMic, isMicMuted, isPlaying, isGenerating, active, onFinalTranscript]);
-
   const {
     isListening,
     transcript,
     startListening,
     stopListening,
     toggleListening
-  } = useSpeechRecognition(speechRecognitionOptions);
+  } = useSpeechRecognition({
+    autoStartMic,
+    isMicMuted,
+    isPlaying,
+    isGenerating,
+    onFinalTranscript
+  });
 
-  // Immediately stop listening when active becomes false
+  // This effect ensures that we stop the microphone when voice generation
+  // starts and resume it after completion
   useEffect(() => {
-    if (!active && isListening) {
-      console.log('Conversation deactivated, immediately stopping microphone');
-      stopListening();
-    }
-  }, [active, isListening, stopListening]);
-
-  // This effect handles microphone state based on audio playback and active state
-  useEffect(() => {
-    // Only run this effect when the component is active
-    if (!active) {
-      // If conversation is not active, ensure microphone is stopped
-      console.log('Conversation inactive, ensuring microphone is stopped');
-      stopListening();
-      return;
-    }
-    
     if (isGenerating || isPlaying) {
       // Stop listening immediately when audio is playing or generating
       stopListening();
-    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice' && active) {
-      // Only auto-start the mic after audio stops, with a small delay, and if conversation is active
+    } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice') {
+      // Only auto-start the mic after audio stops, with a small delay
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
-        if (active && !isMicMuted && !isGenerating && !isPlaying) {
-          startListening();
-        }
+        startListening();
       }, 500);
       
       return () => clearTimeout(timer);
     }
-  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, inputMode, startListening, stopListening, active]);
+  }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, inputMode, startListening, stopListening]);
 
-  // Ensure microphone is stopped when component unmounts
-  useEffect(() => {
-    return () => {
-      console.log('SpeechHandler unmounting, stopping microphone');
-      stopListening();
-    };
-  }, [stopListening]);
-
-  // Memoize the props for children to prevent unnecessary re-renders
-  const childProps = useMemo(() => ({
-    isListening, 
-    transcript, 
-    startListening, 
-    stopListening, 
-    toggleListening
-  }), [isListening, transcript, startListening, stopListening, toggleListening]);
-
-  return <>{children(childProps)}</>;
+  return <>{children({ isListening, transcript, startListening, stopListening, toggleListening })}</>;
 };
 
-export default React.memo(SpeechHandler);
+export default SpeechHandler;

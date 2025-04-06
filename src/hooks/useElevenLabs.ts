@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import ElevenLabsService from '../services/elevenLabsService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -7,47 +7,23 @@ interface UseElevenLabsOptions {
   apiKey: string;
   voiceId: string;
   modelId?: string;
-  active?: boolean; // Add active prop
 }
 
 interface UseElevenLabsReturn {
   generateSpeech: (text: string) => Promise<void>;
   stopAudio: () => void;
   togglePlayback: () => void;
-  cleanup: () => void; // Add cleanup method
   isGenerating: boolean;
   isPlaying: boolean;
   error: string | null;
 }
 
-export const useElevenLabs = ({ 
-  apiKey, 
-  voiceId, 
-  modelId,
-  active = true // Default to true for backward compatibility
-}: UseElevenLabsOptions): UseElevenLabsReturn => {
+export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions): UseElevenLabsReturn => {
   const [state, setState] = useState({
     isGenerating: false,
     isPlaying: false,
     error: null as string | null
   });
-
-  // Store unsubscribe function in a ref
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-
-  // Effect to handle changes to active state
-  useEffect(() => {
-    if (!active && (state.isGenerating || state.isPlaying)) {
-      console.log('Component inactive, stopping all audio immediately');
-      const service = ElevenLabsService.getInstance();
-      service.stopAudio();
-      setState({
-        isGenerating: false,
-        isPlaying: false,
-        error: null
-      });
-    }
-  }, [active, state.isGenerating, state.isPlaying]);
 
   useEffect(() => {
     if (!apiKey || !voiceId) {
@@ -55,31 +31,16 @@ export const useElevenLabs = ({
       return;
     }
 
-    // Only initialize service if active
-    if (active) {
-      const service = ElevenLabsService.getInstance();
-      const unsubscribe = service.subscribe(setState);
-      unsubscribeRef.current = unsubscribe;
-      
-      return () => {
-        if (unsubscribeRef.current) {
-          unsubscribeRef.current();
-          unsubscribeRef.current = null;
-        }
-        // Stop any audio when component unmounts
-        service.stopAudio();
-      };
-    } else {
-      // If not active, make sure to clean up
-      cleanup();
-    }
-  }, [apiKey, voiceId, active]);
+    const service = ElevenLabsService.getInstance();
+    const unsubscribe = service.subscribe(setState);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [apiKey, voiceId]);
 
   const generateSpeech = async (text: string): Promise<void> => {
-    if (!text.trim() || !active) {
-      console.log('Speech generation prevented: empty text or inactive state');
-      return;
-    }
+    if (!text.trim()) return;
     
     try {
       const service = ElevenLabsService.getInstance();
@@ -115,38 +76,14 @@ export const useElevenLabs = ({
   };
 
   const togglePlayback = (): void => {
-    if (!active) {
-      console.log('Playback toggle prevented: inactive state');
-      return;
-    }
-    
     const service = ElevenLabsService.getInstance();
     service.togglePlayback();
   };
-
-  // Add cleanup method to completely reset state and stop audio
-  const cleanup = useCallback((): void => {
-    console.log('Cleaning up ElevenLabs service');
-    const service = ElevenLabsService.getInstance();
-    service.stopAudio();
-    
-    if (unsubscribeRef.current) {
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
-    }
-    
-    setState({
-      isGenerating: false,
-      isPlaying: false,
-      error: null
-    });
-  }, []);
 
   return {
     generateSpeech,
     stopAudio,
     togglePlayback,
-    cleanup,
     ...state
   };
 };
