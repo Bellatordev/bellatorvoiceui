@@ -1,8 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatedHero } from '@/components/ui/animated-hero';
-import { LampDemo } from '@/components/ui/lamp-demo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { RainbowButton } from '@/components/ui/rainbow-button';
 import { ArrowRight } from 'lucide-react';
@@ -11,7 +10,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate('/');
+    navigate('/login');
   };
 
   return (
@@ -58,11 +57,6 @@ const Index = () => {
             </RainbowButton>
           </div>
         </div>
-      </div>
-      
-      {/* Lamp Component at the bottom */}
-      <div className="w-full h-[50vh] mb-[-100px] mt-auto">
-        <LampDemo />
       </div>
     </div>
   );
