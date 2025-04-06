@@ -16,6 +16,7 @@ interface UseElevenLabsReturn {
   isGenerating: boolean;
   isPlaying: boolean;
   error: string | null;
+  cleanup: () => void;
 }
 
 export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions): UseElevenLabsReturn => {
@@ -80,10 +81,16 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     service.togglePlayback();
   };
 
+  const cleanup = (): void => {
+    console.log('Cleaning up ElevenLabs service');
+    ElevenLabsService.destroyInstance();
+  };
+
   return {
     generateSpeech,
     stopAudio,
     togglePlayback,
+    cleanup,
     ...state
   };
 };

@@ -34,11 +34,21 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     isGenerating, 
     isPlaying, 
     error,
-    stopAudio 
+    stopAudio,
+    cleanup 
   } = useElevenLabs({
     apiKey,
     voiceId: agentId,
   });
+
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('ConversationInterface unmounting, cleaning up resources');
+      stopAudio();
+      cleanup();
+    };
+  }, [stopAudio, cleanup]);
 
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
@@ -95,6 +105,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     console.log(`Microphone mute state changed to: ${isMicMuted ? 'muted' : 'unmuted'}`);
   }, [isMicMuted]);
 
+  // Handle logout by cleaning up first
+  const handleLogout = () => {
+    if (onLogout) {
+      // First clean up audio and mic resources
+      console.log('Preparing for logout, cleaning up resources');
+      stopAudio();
+      cleanup();
+      // Then call the parent's logout handler
+      onLogout();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <ConversationHandler
@@ -143,7 +165,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                     isGeneratingAudio={isGenerating} 
                     isPlayingAudio={isPlaying}
                     onToggleAudio={generateSpeech}
-                    onLogout={onLogout}
+                    onLogout={handleLogout}
                     className="h-full" 
                   />
                 </div>

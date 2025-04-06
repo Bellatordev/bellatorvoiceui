@@ -1,11 +1,12 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ElevenLabsService from '@/services/elevenLabsService';
 
 const Conversation = () => {
   const [apiKey, setApiKey] = useState('');
@@ -29,12 +30,24 @@ const Conversation = () => {
     }
     setApiKey(storedApiKey);
     setAgentId(storedAgentId);
+    
+    // Cleanup function to ensure all resources are released when component unmounts
+    return () => {
+      console.log('Conversation page unmounting, cleaning up resources');
+      // Make sure to clean up the ElevenLabs service when unmounting
+      ElevenLabsService.destroyInstance();
+    };
   }, [navigate]);
   
   const handleLogout = () => {
+    // First, clean up any active audio resources
+    console.log('Logging out and cleaning up audio resources');
+    ElevenLabsService.destroyInstance();
+    
     // Clear credentials from localStorage
     localStorage.removeItem('voiceAgent_apiKey');
     localStorage.removeItem('voiceAgent_agentId');
+    
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out"
@@ -82,6 +95,7 @@ const Conversation = () => {
             <ConversationInterface 
               apiKey={apiKey} 
               agentId={agentId} 
+              onLogout={handleLogout}
             />
           </div>
         </main>

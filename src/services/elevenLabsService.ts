@@ -168,6 +168,39 @@ class ElevenLabsService {
   public getState(): ElevenLabsState {
     return { ...this.state };
   }
+
+  // Add a cleanup method to properly dispose of the service
+  public cleanup(): void {
+    console.log('Cleaning up ElevenLabs service resources');
+    this.stopAudio();
+    
+    if (this.audioElement) {
+      // Release audio resources
+      const src = this.audioElement.src;
+      this.audioElement.src = '';
+      if (src && src.startsWith('blob:')) {
+        URL.revokeObjectURL(src);
+      }
+    }
+    
+    // Clear all listeners
+    this.stateListeners = [];
+    
+    // Reset state
+    this.updateState({
+      isGenerating: false,
+      isPlaying: false,
+      error: null
+    });
+  }
+  
+  // Method to destroy the singleton instance
+  public static destroyInstance(): void {
+    if (ElevenLabsService.instance) {
+      ElevenLabsService.instance.cleanup();
+      ElevenLabsService.instance = null;
+    }
+  }
 }
 
 export default ElevenLabsService;
