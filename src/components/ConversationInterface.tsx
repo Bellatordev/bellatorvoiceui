@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
 import TranscriptDisplay from './TranscriptDisplay';
@@ -12,12 +12,14 @@ interface ConversationInterfaceProps {
   apiKey: string;
   agentId: string;
   onLogout?: () => void;
+  active?: boolean; // Add active prop
 }
 
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ 
   apiKey, 
   agentId,
-  onLogout 
+  onLogout,
+  active = true // Default to true for backward compatibility
 }) => {
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   const [isMuted, setIsMuted] = useState(false);
@@ -31,11 +33,26 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     isGenerating, 
     isPlaying, 
     error,
-    stopAudio 
+    stopAudio,
+    cleanup 
   } = useElevenLabs({
     apiKey,
     voiceId: agentId,
+    active
   });
+
+  // Cleanup when component unmounts or becomes inactive
+  useEffect(() => {
+    if (!active) {
+      console.log("Conversation interface is inactive, cleaning up resources");
+      cleanup();
+    }
+    
+    return () => {
+      console.log("Conversation interface unmounting, cleaning up resources");
+      cleanup();
+    };
+  }, [active, cleanup]);
 
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
@@ -70,6 +87,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         isPlaying={isPlaying}
         isGenerating={isGenerating}
         ttsError={ttsError}
+        active={active}
       >
         {({ messages, setMessages, processUserInput }) => (
           <SpeechHandler
@@ -78,6 +96,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             isPlaying={isPlaying}
             isGenerating={isGenerating}
             inputMode={inputMode}
+            active={active}
             onFinalTranscript={processUserInput}
           >
             {({ isListening, transcript, toggleListening }) => (
@@ -123,7 +142,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                     const newMuteState = !isMicMuted;
                     setIsMicMuted(newMuteState);
                     
-                    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
+                    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating && active) {
                       setTimeout(() => toggleListening(), 300);
                     }
                   }}

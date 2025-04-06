@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 const Conversation = () => {
   const [apiKey, setApiKey] = useState('');
   const [agentId, setAgentId] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -32,16 +33,22 @@ const Conversation = () => {
   }, [navigate]);
   
   const handleLogout = () => {
-    // Clear credentials from localStorage
-    localStorage.removeItem('voiceAgent_apiKey');
-    localStorage.removeItem('voiceAgent_agentId');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out"
-    });
-
-    // Navigate back to login
-    navigate('/');
+    // First set active to false to stop all ongoing processes
+    setIsActive(false);
+    
+    // Give a moment for cleanup to happen
+    setTimeout(() => {
+      // Clear credentials from localStorage
+      localStorage.removeItem('voiceAgent_apiKey');
+      localStorage.removeItem('voiceAgent_agentId');
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out"
+      });
+  
+      // Navigate back to login
+      navigate('/');
+    }, 300);
   };
 
   // Only render the conversation interface if we have credentials
@@ -82,6 +89,8 @@ const Conversation = () => {
             <ConversationInterface 
               apiKey={apiKey} 
               agentId={agentId} 
+              onLogout={handleLogout}
+              active={isActive}
             />
           </div>
         </main>

@@ -9,6 +9,7 @@ interface ConversationHandlerProps {
   isPlaying: boolean;
   isGenerating: boolean;
   ttsError: string | null;
+  active: boolean; // Add new prop to track if conversation is active
   children: (props: {
     messages: any[];
     setMessages: React.Dispatch<React.SetStateAction<any[]>>;
@@ -24,6 +25,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   isPlaying,
   isGenerating,
   ttsError,
+  active, // Add active prop
   children,
 }) => {
   const {
@@ -31,14 +33,16 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     setMessages,
     processUserInput,
     initializeConversation,
-    isProcessing
+    isProcessing,
+    cleanupConversation
   } = useConversation({
     generateSpeech,
     isMuted,
     autoStartMic,
     isPlaying,
     isGenerating,
-    ttsError
+    ttsError,
+    active // Pass active state to hook
   });
 
   // Initialize the conversation when the component mounts
@@ -48,10 +52,18 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       sessionStorage.removeItem('conversation_initialized');
     }
     
-    // Always initialize when this component mounts
-    console.log("ConversationHandler mounted, initializing conversation");
-    initializeConversation();
-  }, [initializeConversation]);
+    // Only initialize when active
+    if (active) {
+      console.log("ConversationHandler mounted, initializing conversation");
+      initializeConversation();
+    }
+    
+    // Cleanup when component unmounts or becomes inactive
+    return () => {
+      console.log("ConversationHandler unmounting or inactive, cleaning up resources");
+      cleanupConversation();
+    };
+  }, [initializeConversation, active, cleanupConversation]);
 
   return <>{children({ messages, setMessages, processUserInput, isProcessing })}</>;
 };

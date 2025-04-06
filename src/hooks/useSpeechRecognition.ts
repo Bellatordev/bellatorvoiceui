@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { 
@@ -10,6 +11,7 @@ interface UseSpeechRecognitionOptions {
   isMicMuted: boolean;
   isPlaying: boolean;
   isGenerating: boolean;
+  active?: boolean; // Add active prop
   onFinalTranscript?: (text: string) => void;
 }
 
@@ -26,6 +28,7 @@ export const useSpeechRecognition = ({
   isMicMuted,
   isPlaying,
   isGenerating,
+  active = true, // Default to true for backward compatibility
   onFinalTranscript
 }: UseSpeechRecognitionOptions): UseSpeechRecognitionReturn => {
   const [isListening, setIsListening] = useState(false);
@@ -36,12 +39,22 @@ export const useSpeechRecognition = ({
   const pauseTimeoutRef = useRef<number | null>(null);
   
   const handleSpeechPause = useCallback((finalText: string) => {
-    if (finalText.trim() && onFinalTranscript) {
+    if (finalText.trim() && onFinalTranscript && active) {
       console.log('Final transcript detected:', finalText);
       onFinalTranscript(finalText);
       setTranscript("");
     }
-  }, [onFinalTranscript]);
+  }, [onFinalTranscript, active]);
+
+  // Stop listening if active state changes to false
+  useEffect(() => {
+    if (!active && isListening && recognitionRef.current) {
+      console.log('Conversation inactive, stopping speech recognition');
+      recognitionRef.current.abort();
+      setIsListening(false);
+      setTranscript("");
+    }
+  }, [active, isListening]);
 
   useEffect(() => {
     const initializeSpeechRecognition = async () => {
@@ -71,16 +84,18 @@ export const useSpeechRecognition = ({
             console.log('Speech recognition stopped');
             setIsListening(false);
             
-            if (transcript.trim() && onFinalTranscript) {
+            if (transcript.trim() && onFinalTranscript && active) {
               handleSpeechPause(transcript);
             }
             
-            if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current && !isPlaying && !isGenerating) {
+            if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current && !isPlaying && !isGenerating && active) {
               hasAttemptedSpeechRecognition.current = true;
               setTimeout(() => {
                 console.log('Attempting to restart speech recognition');
                 try {
-                  recognition.start();
+                  if (active) {
+                    recognition.start();
+                  }
                 } catch (e) {
                   console.error('Failed to restart speech recognition:', e);
                 }
@@ -155,10 +170,13 @@ export const useSpeechRecognition = ({
       }
     };
     
-    initializeSpeechRecognition();
+    if (active) {
+      initializeSpeechRecognition();
+    }
     
     return () => {
       if (recognitionRef.current) {
+        console.log('Cleaning up speech recognition on unmount');
         recognitionRef.current.abort();
       }
       
@@ -167,7 +185,7 @@ export const useSpeechRecognition = ({
         pauseTimeoutRef.current = null;
       }
     };
-  }, [autoStartMic, isMicMuted, isPlaying, isGenerating, transcript, onFinalTranscript, handleSpeechPause]);
+  }, [autoStartMic, isMicMuted, isPlaying, isGenerating, transcript, onFinalTranscript, handleSpeechPause, active]);
 
   const requestMicrophonePermission = async () => {
     if (hasRequestedMicPermission.current) return true;
@@ -183,8 +201,8 @@ export const useSpeechRecognition = ({
   };
 
   const startListening = async () => {
-    if (isPlaying || isGenerating || isMicMuted) {
-      console.log('Cannot start listening: audio is active or mic is muted');
+    if (isPlaying || isGenerating || isMicMuted || !active) {
+      console.log('Cannot start listening: audio is active, mic is muted, or conversation is inactive');
       return;
     }
     
@@ -207,6 +225,7 @@ export const useSpeechRecognition = ({
 
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
+      console.log('Explicitly stopping speech recognition');
       recognitionRef.current.stop();
     }
     
@@ -217,8 +236,8 @@ export const useSpeechRecognition = ({
   };
 
   const toggleListening = async () => {
-    if (isMicMuted) {
-      console.log('Microphone is muted, cannot toggle listening');
+    if (isMicMuted || !active) {
+      console.log('Microphone is muted or conversation is inactive, cannot toggle listening');
       return;
     }
     
