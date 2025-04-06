@@ -30,7 +30,19 @@ const Conversation = () => {
     }
     setApiKey(storedApiKey);
     setAgentId(storedAgentId);
+    
+    // Re-enable conversation if returning to page
+    setIsActive(true);
   }, [navigate]);
+  
+  // Add cleanup effect when component unmounts
+  useEffect(() => {
+    return () => {
+      // Ensure conversation is deactivated when navigating away
+      setIsActive(false);
+      console.log("Conversation page unmounting, ensuring conversation is inactive");
+    };
+  }, []);
   
   const handleLogout = () => {
     // First set active to false to stop all ongoing processes
@@ -48,7 +60,7 @@ const Conversation = () => {
   
       // Navigate back to login
       navigate('/');
-    }, 300);
+    }, 500);
   };
 
   // Only render the conversation interface if we have credentials

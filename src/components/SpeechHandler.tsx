@@ -44,6 +44,14 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
     onFinalTranscript
   });
 
+  // Immediately stop listening when active becomes false
+  useEffect(() => {
+    if (!active && isListening) {
+      console.log('Conversation deactivated, immediately stopping microphone');
+      stopListening();
+    }
+  }, [active, isListening, stopListening]);
+
   // This effect ensures that we stop the microphone when voice generation
   // starts and resume it after completion or stop when inactive
   useEffect(() => {

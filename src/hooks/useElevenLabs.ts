@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ElevenLabsService from '../services/elevenLabsService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -35,6 +35,20 @@ export const useElevenLabs = ({
   // Store unsubscribe function in a ref
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
+  // Effect to handle changes to active state
+  useEffect(() => {
+    if (!active && (state.isGenerating || state.isPlaying)) {
+      console.log('Component inactive, stopping all audio immediately');
+      const service = ElevenLabsService.getInstance();
+      service.stopAudio();
+      setState({
+        isGenerating: false,
+        isPlaying: false,
+        error: null
+      });
+    }
+  }, [active, state.isGenerating, state.isPlaying]);
+
   useEffect(() => {
     if (!apiKey || !voiceId) {
       setState(prev => ({ ...prev, error: "Missing API key or voice ID" }));
@@ -62,7 +76,10 @@ export const useElevenLabs = ({
   }, [apiKey, voiceId, active]);
 
   const generateSpeech = async (text: string): Promise<void> => {
-    if (!text.trim() || !active) return;
+    if (!text.trim() || !active) {
+      console.log('Speech generation prevented: empty text or inactive state');
+      return;
+    }
     
     try {
       const service = ElevenLabsService.getInstance();
@@ -98,6 +115,11 @@ export const useElevenLabs = ({
   };
 
   const togglePlayback = (): void => {
+    if (!active) {
+      console.log('Playback toggle prevented: inactive state');
+      return;
+    }
+    
     const service = ElevenLabsService.getInstance();
     service.togglePlayback();
   };
@@ -128,8 +150,5 @@ export const useElevenLabs = ({
     ...state
   };
 };
-
-// Add missing useRef import at the top
-import { useRef } from 'react';
 
 export default useElevenLabs;
