@@ -19,6 +19,7 @@ interface UseSpeechRecognitionReturn {
   startListening: () => Promise<void>;
   stopListening: () => void;
   toggleListening: () => Promise<void>;
+  resetRecognition: () => void;
 }
 
 export const useSpeechRecognition = ({
@@ -229,12 +230,21 @@ export const useSpeechRecognition = ({
     }
   };
 
+  const resetRecognition = () => {
+    stopListening();
+    setTranscript("");
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+    }
+  };
+
   return {
     isListening,
     transcript,
     startListening,
     stopListening,
-    toggleListening
+    toggleListening,
+    resetRecognition
   };
 };
 

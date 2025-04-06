@@ -7,6 +7,8 @@ import SpeechHandler from './SpeechHandler';
 import ConversationHandler from './ConversationHandler';
 import ErrorHandler from './ErrorHandler';
 import AudioSettings from './AudioSettings';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -67,6 +69,17 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setIsMicMuted(newMuteState);
   };
 
+  const handleEndConversation = (resetSpeech: () => void, endConversation: () => void) => {
+    stopAudio();
+    setIsMicMuted(true);
+    resetSpeech();
+    endConversation();
+    toast({
+      title: "Conversation Ended",
+      description: "The conversation has been reset. You can start a new one."
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       <ConversationHandler
@@ -77,7 +90,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         isGenerating={isGenerating}
         ttsError={ttsError}
       >
-        {({ messages, setMessages, processUserInput }) => (
+        {({ messages, setMessages, processUserInput, isProcessing, initializeConversation }) => (
           <SpeechHandler
             autoStartMic={autoStartMic}
             isMicMuted={isMicMuted}
@@ -86,13 +99,30 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             inputMode={inputMode}
             onFinalTranscript={processUserInput}
           >
-            {({ isListening, transcript, toggleListening, stopListening }) => (
+            {({ isListening, transcript, toggleListening, stopListening, resetSpeech }) => (
               <ErrorHandler
                 error={error}
                 messages={messages}
                 setMessages={setMessages}
               >
                 <div className="flex-1 agent-card mb-6 overflow-hidden">
+                  <div className="flex justify-between items-center mb-4">
+                    <div />
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      className="flex gap-2 items-center"
+                      onClick={() => handleEndConversation(resetSpeech, () => {
+                        setMessages([]);
+                        setTimeout(() => {
+                          initializeConversation();
+                        }, 300);
+                      })}
+                    >
+                      <X size={16} />
+                      End Conversation
+                    </Button>
+                  </div>
                   <ConversationLog 
                     messages={messages} 
                     isGeneratingAudio={isGenerating} 

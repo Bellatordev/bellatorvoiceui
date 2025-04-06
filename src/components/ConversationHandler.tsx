@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import useConversation from '@/hooks/useConversation';
+import { toast } from '@/components/ui/use-toast';
 
 interface ConversationHandlerProps {
   generateSpeech?: (text: string) => Promise<void>;
@@ -14,6 +15,7 @@ interface ConversationHandlerProps {
     setMessages: React.Dispatch<React.SetStateAction<any[]>>;
     processUserInput: (text: string) => void;
     isProcessing: boolean;
+    initializeConversation: () => void;
   }) => React.ReactNode;
 }
 
@@ -53,7 +55,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     initializeConversation();
   }, [initializeConversation]);
 
-  return <>{children({ messages, setMessages, processUserInput, isProcessing })}</>;
+  return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation })}</>;
 };
 
 export default ConversationHandler;

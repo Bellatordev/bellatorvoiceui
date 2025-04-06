@@ -15,6 +15,7 @@ interface SpeechHandlerProps {
     startListening: () => Promise<void>;
     stopListening: () => void;
     toggleListening: () => Promise<void>;
+    resetSpeech: () => void;
   }) => React.ReactNode;
 }
 
@@ -32,7 +33,8 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
     transcript,
     startListening,
     stopListening,
-    toggleListening
+    toggleListening,
+    resetRecognition
   } = useSpeechRecognition({
     autoStartMic,
     isMicMuted,
@@ -61,7 +63,12 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
     }
   }, [isGenerating, isPlaying, isListening, autoStartMic, isMicMuted, inputMode, startListening, stopListening]);
 
-  return <>{children({ isListening, transcript, startListening, stopListening, toggleListening })}</>;
+  const resetSpeech = () => {
+    stopListening();
+    resetRecognition();
+  };
+
+  return <>{children({ isListening, transcript, startListening, stopListening, toggleListening, resetSpeech })}</>;
 };
 
 export default SpeechHandler;
