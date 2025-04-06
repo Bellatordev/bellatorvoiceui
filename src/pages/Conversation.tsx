@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -42,6 +42,10 @@ const Conversation = () => {
   const handleLogout = () => {
     // First, clean up any active audio resources
     console.log('Logging out and cleaning up audio resources');
+    
+    // Make sure audio is stopped and completely cleaned up
+    ElevenLabsService.getInstance().stopAudio();
+    ElevenLabsService.getInstance().cleanup();
     ElevenLabsService.destroyInstance();
     
     // Clear credentials from localStorage

@@ -144,9 +144,22 @@ class ElevenLabsService {
   public stopAudio(): void {
     if (this.audioElement) {
       console.log('Stopping audio playback');
-      this.audioElement.pause();
-      this.audioElement.currentTime = 0;
-      this.updateState({ isPlaying: false });
+      try {
+        // Force pause and reset
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
+        
+        // Release the audio source
+        const src = this.audioElement.src;
+        this.audioElement.src = '';
+        if (src && src.startsWith('blob:')) {
+          URL.revokeObjectURL(src);
+        }
+        
+        this.updateState({ isPlaying: false, isGenerating: false });
+      } catch (err) {
+        console.error('Error stopping audio:', err);
+      }
     }
   }
 
@@ -172,15 +185,27 @@ class ElevenLabsService {
   // Add a cleanup method to properly dispose of the service
   public cleanup(): void {
     console.log('Cleaning up ElevenLabs service resources');
+    
+    // First stop any playing audio
     this.stopAudio();
     
     if (this.audioElement) {
+      // Remove all event listeners to prevent memory leaks
+      const element = this.audioElement;
+      element.onplay = null;
+      element.onpause = null;
+      element.onended = null;
+      element.onerror = null;
+      
       // Release audio resources
-      const src = this.audioElement.src;
-      this.audioElement.src = '';
+      const src = element.src;
+      element.src = '';
       if (src && src.startsWith('blob:')) {
         URL.revokeObjectURL(src);
       }
+      
+      // Set to null to allow garbage collection
+      this.audioElement = null;
     }
     
     // Clear all listeners
@@ -200,6 +225,7 @@ class ElevenLabsService {
       ElevenLabsService.instance.cleanup();
       ElevenLabsService.instance = null;
     }
+    console.log('ElevenLabs service instance destroyed');
   }
 }
 

@@ -36,6 +36,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     const unsubscribe = service.subscribe(setState);
     
     return () => {
+      console.log('useElevenLabs hook unmounting, cleaning up subscription');
       unsubscribe();
     };
   }, [apiKey, voiceId]);
@@ -71,7 +72,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
   };
 
   const stopAudio = (): void => {
-    console.log('Stopping audio playback');
+    console.log('Stopping audio playback from hook');
     const service = ElevenLabsService.getInstance();
     service.stopAudio();
   };
@@ -81,8 +82,20 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     service.togglePlayback();
   };
 
+  // Enhanced cleanup that ensures complete audio shutdown
   const cleanup = (): void => {
-    console.log('Cleaning up ElevenLabs service');
+    console.log('Cleaning up ElevenLabs service from hook');
+    
+    // First stop any playing audio
+    try {
+      const service = ElevenLabsService.getInstance();
+      service.stopAudio();
+      service.cleanup();
+    } catch (error) {
+      console.error('Error during ElevenLabs cleanup:', error);
+    }
+    
+    // Then destroy the service instance
     ElevenLabsService.destroyInstance();
   };
 
