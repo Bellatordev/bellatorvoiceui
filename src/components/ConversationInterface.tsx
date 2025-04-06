@@ -165,7 +165,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                     isGeneratingAudio={isGenerating} 
                     isPlayingAudio={isPlaying}
                     onToggleAudio={generateSpeech}
-                    onLogout={handleLogout}
                     className="h-full" 
                   />
                 </div>
