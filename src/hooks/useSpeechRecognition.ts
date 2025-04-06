@@ -47,6 +47,71 @@ export const useSpeechRecognition = ({
     }
   }, [onFinalTranscript, active]);
 
+  // Define the requestMicrophonePermission function before it's used
+  const requestMicrophonePermission = async () => {
+    if (hasRequestedMicPermission.current) return true;
+    
+    try {
+      hasRequestedMicPermission.current = true;
+      await requestMicrophoneAccess();
+      return true;
+    } catch (err) {
+      console.error('Microphone permission error:', err);
+      return true;
+    }
+  };
+
+  // Define startListening before it's used in useEffect
+  const startListening = async () => {
+    if (isPlaying || isGenerating || isMicMuted || !active) {
+      console.log('Cannot start listening: audio is active, mic is muted, or conversation is inactive');
+      return;
+    }
+    
+    if (isListening) return;
+    
+    if (!recognitionRef.current) {
+      console.log('Speech recognition not available, but allowing voice UI');
+      return;
+    }
+    
+    await requestMicrophonePermission();
+    
+    try {
+      recognitionRef.current.start();
+      console.log('Microphone activated');
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+    }
+  };
+
+  // Define stopListening before it's used in useEffect
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      console.log('Explicitly stopping speech recognition');
+      recognitionRef.current.stop();
+    }
+    
+    if (pauseTimeoutRef.current) {
+      clearTimeout(pauseTimeoutRef.current);
+      pauseTimeoutRef.current = null;
+    }
+  }, [isListening]);
+
+  // Define toggleListening before it's used in useEffect
+  const toggleListening = async () => {
+    if (isMicMuted || !active) {
+      console.log('Microphone is muted or conversation is inactive, cannot toggle listening');
+      return;
+    }
+    
+    if (isListening) {
+      stopListening();
+    } else {
+      await startListening();
+    }
+  };
+
   // Stop listening if active state changes to false
   useEffect(() => {
     if (!active && isListening && recognitionRef.current) {
@@ -169,6 +234,7 @@ export const useSpeechRecognition = ({
           
           // Auto-start mic if needed and conversation is active
           if (autoStartMic && !isMicMuted && !isPlaying && !isGenerating && active) {
+            // Now we can safely use startListening because it's defined above
             setTimeout(() => {
               startListening();
             }, 1000);
@@ -200,68 +266,7 @@ export const useSpeechRecognition = ({
         pauseTimeoutRef.current = null;
       }
     };
-  }, [active, autoStartMic, isMicMuted, isPlaying, isGenerating, handleSpeechPause, startListening]);
-
-  const requestMicrophonePermission = async () => {
-    if (hasRequestedMicPermission.current) return true;
-    
-    try {
-      hasRequestedMicPermission.current = true;
-      await requestMicrophoneAccess();
-      return true;
-    } catch (err) {
-      console.error('Microphone permission error:', err);
-      return true;
-    }
-  };
-
-  const startListening = async () => {
-    if (isPlaying || isGenerating || isMicMuted || !active) {
-      console.log('Cannot start listening: audio is active, mic is muted, or conversation is inactive');
-      return;
-    }
-    
-    if (isListening) return;
-    
-    if (!recognitionRef.current) {
-      console.log('Speech recognition not available, but allowing voice UI');
-      return;
-    }
-    
-    await requestMicrophonePermission();
-    
-    try {
-      recognitionRef.current.start();
-      console.log('Microphone activated');
-    } catch (error) {
-      console.error('Error starting speech recognition:', error);
-    }
-  };
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      console.log('Explicitly stopping speech recognition');
-      recognitionRef.current.stop();
-    }
-    
-    if (pauseTimeoutRef.current) {
-      clearTimeout(pauseTimeoutRef.current);
-      pauseTimeoutRef.current = null;
-    }
-  }, [isListening]);
-
-  const toggleListening = async () => {
-    if (isMicMuted || !active) {
-      console.log('Microphone is muted or conversation is inactive, cannot toggle listening');
-      return;
-    }
-    
-    if (isListening) {
-      stopListening();
-    } else {
-      await startListening();
-    }
-  };
+  }, [active, autoStartMic, isMicMuted, isPlaying, isGenerating, handleSpeechPause, transcript]);
 
   return {
     isListening,
