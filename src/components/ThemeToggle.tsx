@@ -24,14 +24,23 @@ export default function ThemeToggle() {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    
+    // Apply theme to the document element
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+    
     localStorage.setItem('theme', newTheme);
   };
 
   return (
     <button 
       onClick={toggleTheme} 
-      className="p-3 rounded-full bg-[#2b2a3d] hover:bg-[#3a3952] text-gray-300 transition-colors duration-200 shadow-lg border border-gray-700/50"
+      className="p-3 rounded-full bg-[#2b2a3d] hover:bg-[#3a3952] text-gray-300 transition-colors duration-200 shadow-lg border border-gray-700/50 dark:bg-[#2b2a3d] light:bg-gray-200 light:text-gray-700 light:hover:bg-gray-300 light:border-gray-300/50"
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? <Moon size={20} className="text-yellow-400" /> : <Sun size={20} className="text-yellow-400" />}
