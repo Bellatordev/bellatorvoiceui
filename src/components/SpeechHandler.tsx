@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import useSpeechRecognition from '@/hooks/useSpeechRecognition';
 
 interface SpeechHandlerProps {
@@ -29,20 +29,23 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
   onFinalTranscript,
   children,
 }) => {
-  const {
-    isListening,
-    transcript,
-    startListening,
-    stopListening,
-    toggleListening
-  } = useSpeechRecognition({
+  // Memoize speech recognition options to prevent re-renders
+  const speechRecognitionOptions = useMemo(() => ({
     autoStartMic,
     isMicMuted,
     isPlaying,
     isGenerating,
     active,
     onFinalTranscript
-  });
+  }), [autoStartMic, isMicMuted, isPlaying, isGenerating, active, onFinalTranscript]);
+
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening,
+    toggleListening
+  } = useSpeechRecognition(speechRecognitionOptions);
 
   // Immediately stop listening when active becomes false
   useEffect(() => {
@@ -53,7 +56,6 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
   }, [active, isListening, stopListening]);
 
   // This effect handles microphone state based on audio playback and active state
-  // The dependencies are carefully managed to prevent rapid re-renders
   useEffect(() => {
     // Only run this effect when the component is active
     if (!active) {
@@ -87,7 +89,16 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
     };
   }, [stopListening]);
 
-  return <>{children({ isListening, transcript, startListening, stopListening, toggleListening })}</>;
+  // Memoize the props for children to prevent unnecessary re-renders
+  const childProps = useMemo(() => ({
+    isListening, 
+    transcript, 
+    startListening, 
+    stopListening, 
+    toggleListening
+  }), [isListening, transcript, startListening, stopListening, toggleListening]);
+
+  return <>{children(childProps)}</>;
 };
 
-export default SpeechHandler;
+export default React.memo(SpeechHandler);

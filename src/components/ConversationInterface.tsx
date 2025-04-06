@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
 import TranscriptDisplay from './TranscriptDisplay';
@@ -39,13 +39,18 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   }, []);
 
   const handleSwitchToTextMode = useCallback(() => {
-    setIsMicMuted(true);
+    setMicMuted(true);
     setInputMode('text');
   }, []);
 
   const handleSwitchToVoiceMode = useCallback(() => {
-    setIsMicMuted(false);
+    setMicMuted(false);
     setInputMode('voice');
+  }, []);
+  
+  const setMicMuted = useCallback((value: boolean) => {
+    console.log('Setting mic muted to', value);
+    setIsMicMuted(value);
   }, []);
   
   const { 
@@ -73,6 +78,25 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       cleanup();
     };
   }, [active, cleanup]);
+
+  // Memoize the toggleListening handler to prevent re-renders
+  const handleToggleListening = useCallback(async (toggleListening: () => Promise<void>) => {
+    if (isPlaying || isGenerating) {
+      stopAudio();
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    await toggleListening();
+  }, [isPlaying, isGenerating, stopAudio]);
+
+  // Memoize the micMuteToggle handler to prevent re-renders
+  const handleMicMuteToggle = useCallback((toggleListening: () => Promise<void>) => {
+    const newMuteState = !isMicMuted;
+    setMicMuted(newMuteState);
+    
+    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating && active) {
+      setTimeout(() => toggleListening(), 300);
+    }
+  }, [isMicMuted, autoStartMic, isPlaying, isGenerating, active, setMicMuted]);
 
   return (
     <div className="flex flex-col h-full">
@@ -126,22 +150,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   isMuted={isMuted}
                   isMicMuted={isMicMuted}
                   volume={volume}
-                  onToggleListening={async () => {
-                    if (isPlaying || isGenerating) {
-                      stopAudio();
-                      await new Promise(resolve => setTimeout(resolve, 300));
-                    }
-                    await toggleListening();
-                  }}
+                  onToggleListening={() => handleToggleListening(toggleListening)}
                   onMuteToggle={handleMuteToggle}
-                  onMicMuteToggle={() => {
-                    const newMuteState = !isMicMuted;
-                    setIsMicMuted(newMuteState);
-                    
-                    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating && active) {
-                      setTimeout(() => toggleListening(), 300);
-                    }
-                  }}
+                  onMicMuteToggle={() => handleMicMuteToggle(toggleListening)}
                   onVolumeChange={handleVolumeChange}
                   onSwitchToTextMode={handleSwitchToTextMode}
                   onSwitchToVoiceMode={handleSwitchToVoiceMode}
@@ -156,4 +167,4 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   );
 };
 
-export default ConversationInterface;
+export default memo(ConversationInterface);

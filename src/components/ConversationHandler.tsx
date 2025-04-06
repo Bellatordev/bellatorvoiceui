@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import useConversation from '@/hooks/useConversation';
 
 interface ConversationHandlerProps {
@@ -9,7 +9,7 @@ interface ConversationHandlerProps {
   isPlaying: boolean;
   isGenerating: boolean;
   ttsError: string | null;
-  active: boolean; // Add new prop to track if conversation is active
+  active: boolean;
   children: (props: {
     messages: any[];
     setMessages: React.Dispatch<React.SetStateAction<any[]>>;
@@ -25,9 +25,20 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   isPlaying,
   isGenerating,
   ttsError,
-  active, // Add active prop
+  active,
   children,
 }) => {
+  // Memoize conversation options to prevent re-renders
+  const conversationOptions = useMemo(() => ({
+    generateSpeech,
+    isMuted,
+    autoStartMic,
+    isPlaying,
+    isGenerating,
+    ttsError,
+    active
+  }), [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, ttsError, active]);
+
   const {
     messages,
     setMessages,
@@ -35,15 +46,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     initializeConversation,
     isProcessing,
     cleanupConversation
-  } = useConversation({
-    generateSpeech,
-    isMuted,
-    autoStartMic,
-    isPlaying,
-    isGenerating,
-    ttsError,
-    active // Pass active state to hook
-  });
+  } = useConversation(conversationOptions);
 
   // Initialize the conversation when the component mounts
   useEffect(() => {
@@ -65,7 +68,15 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     };
   }, [initializeConversation, active, cleanupConversation]);
 
-  return <>{children({ messages, setMessages, processUserInput, isProcessing })}</>;
+  // Memoize the props for children to prevent unnecessary re-renders
+  const childProps = useMemo(() => ({
+    messages, 
+    setMessages, 
+    processUserInput, 
+    isProcessing
+  }), [messages, setMessages, processUserInput, isProcessing]);
+
+  return <>{children(childProps)}</>;
 };
 
-export default ConversationHandler;
+export default React.memo(ConversationHandler);
