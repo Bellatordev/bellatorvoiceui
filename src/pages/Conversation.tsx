@@ -4,19 +4,29 @@ import ConversationInterface from '../components/ConversationInterface';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ElevenLabsService from '@/services/elevenLabsService';
+import SettingsModal from '@/components/SettingsModal';
+import { VoiceAgent } from '@/types/voiceAgent';
+import { getVoiceAgents } from '@/utils/voiceAgentStorage';
+import AgentSelector from '@/components/AgentSelector';
 
 const Conversation = () => {
   const [apiKey, setApiKey] = useState('');
+  const [voiceId, setVoiceId] = useState('');
   const [agentId, setAgentId] = useState('');
+  const [agentName, setAgentName] = useState('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [agents, setAgents] = useState<VoiceAgent[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<VoiceAgent | null>(null);
   const navigate = useNavigate();
   
   useEffect(() => {
     // Get credentials from localStorage
     const storedApiKey = localStorage.getItem('voiceAgent_apiKey');
     const storedAgentId = localStorage.getItem('voiceAgent_agentId');
+    const storedAgentName = localStorage.getItem('voiceAgent_agentName') || 'Assistant';
 
     // If credentials aren't available, redirect to login
     if (!storedApiKey || !storedAgentId) {
@@ -28,8 +38,25 @@ const Conversation = () => {
       navigate('/');
       return;
     }
+    
     setApiKey(storedApiKey);
     setAgentId(storedAgentId);
+    setAgentName(storedAgentName);
+    
+    // Load the voice agents
+    const savedAgents = getVoiceAgents();
+    setAgents(savedAgents);
+    
+    // Find the current agent
+    const currentAgent = savedAgents.find(agent => agent.id === storedAgentId);
+    if (currentAgent) {
+      setSelectedAgent(currentAgent);
+      setVoiceId(currentAgent.voiceId);
+    } else if (savedAgents.length > 0) {
+      // Fallback to first agent if the stored one isn't found
+      setSelectedAgent(savedAgents[0]);
+      setVoiceId(savedAgents[0].voiceId);
+    }
     
     // Cleanup function to ensure all resources are released when component unmounts
     return () => {
@@ -51,6 +78,7 @@ const Conversation = () => {
     // Clear credentials from localStorage
     localStorage.removeItem('voiceAgent_apiKey');
     localStorage.removeItem('voiceAgent_agentId');
+    localStorage.removeItem('voiceAgent_agentName');
     
     toast({
       title: "Logged Out",
@@ -61,8 +89,28 @@ const Conversation = () => {
     navigate('/');
   };
 
+  const handleChangeAgent = (agent: VoiceAgent) => {
+    setSelectedAgent(agent);
+    setVoiceId(agent.voiceId);
+    setAgentName(agent.name);
+    
+    // Store the new agent ID
+    localStorage.setItem('voiceAgent_agentId', agent.id);
+    localStorage.setItem('voiceAgent_agentName', agent.name);
+    
+    toast({
+      title: "Agent Changed",
+      description: `Now talking to ${agent.name}`
+    });
+  };
+
+  const handleSaveApiKey = (newApiKey: string) => {
+    setApiKey(newApiKey);
+    localStorage.setItem('voiceAgent_apiKey', newApiKey);
+  };
+
   // Only render the conversation interface if we have credentials
-  if (!apiKey || !agentId) {
+  if (!apiKey || !voiceId) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/30">
         <div className="agent-card p-8 shadow-lg">
@@ -82,6 +130,13 @@ const Conversation = () => {
           </h1>
           
           <div className="flex items-center gap-3">
+            <AgentSelector 
+              agents={agents}
+              selectedAgent={selectedAgent}
+              onSelectAgent={handleChangeAgent}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
+            
             <Button 
               variant="ghost" 
               size="icon"
@@ -98,7 +153,7 @@ const Conversation = () => {
           <div className="agent-card mb-4 overflow-hidden">
             <ConversationInterface 
               apiKey={apiKey} 
-              agentId={agentId} 
+              agentId={voiceId} 
               onLogout={handleLogout}
             />
           </div>
@@ -108,6 +163,19 @@ const Conversation = () => {
           <p>© {new Date().getFullYear()} Voice Assistant</p>
         </footer>
       </div>
+      
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        apiKey={apiKey}
+        onSaveApiKey={handleSaveApiKey}
+        agents={agents}
+        selectedAgentId={selectedAgent?.id || null}
+        onSelectAgent={handleChangeAgent}
+        onAddAgent={(agent) => {
+          setAgents(prev => [...prev, agent]);
+        }}
+      />
     </div>
   );
 };
