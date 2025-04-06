@@ -53,9 +53,14 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   }, []);
   
   const handleTapToSpeakClick = () => {
-    // If mic is muted, unmute it first
+    // If mic is muted, don't do anything
     if (isMicMuted) {
-      onMicMuteToggle();
+      toast({
+        title: "Microphone is muted",
+        description: "Unmute the microphone to speak",
+        variant: "default"
+      });
+      return;
     }
     
     if (isListening) {
@@ -67,11 +72,22 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   
   const handleMicMuteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onMicMuteToggle();
+    
+    // If currently listening and toggling to muted, make sure to stop listening first
+    if (isListening && !isMicMuted) {
+      onStopListening();
+      // Small delay to ensure stopping completes before toggling
+      setTimeout(() => {
+        onMicMuteToggle();
+      }, 100);
+    } else {
+      onMicMuteToggle();
+    }
   };
   
   const getStatusText = () => {
     if (isCheckingMic) return "Checking mic...";
+    if (isMicMuted) return "Mic is muted";
     return "Tap to speak";
   };
   

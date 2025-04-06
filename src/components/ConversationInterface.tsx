@@ -61,6 +61,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setInputMode('voice');
   };
 
+  const handleMicMuteToggle = () => {
+    const newMuteState = !isMicMuted;
+    console.log(`Microphone mute toggled to: ${newMuteState ? 'muted' : 'unmuted'}`);
+    setIsMicMuted(newMuteState);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <ConversationHandler
@@ -80,7 +86,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             inputMode={inputMode}
             onFinalTranscript={processUserInput}
           >
-            {({ isListening, transcript, toggleListening }) => (
+            {({ isListening, transcript, toggleListening, stopListening }) => (
               <ErrorHandler
                 error={error}
                 messages={messages}
@@ -119,14 +125,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                     await toggleListening();
                   }}
                   onMuteToggle={handleMuteToggle}
-                  onMicMuteToggle={() => {
-                    const newMuteState = !isMicMuted;
-                    setIsMicMuted(newMuteState);
-                    
-                    if (!newMuteState && autoStartMic && !isPlaying && !isGenerating) {
-                      setTimeout(() => toggleListening(), 300);
-                    }
-                  }}
+                  onMicMuteToggle={handleMicMuteToggle}
                   onVolumeChange={handleVolumeChange}
                   onSwitchToTextMode={handleSwitchToTextMode}
                   onSwitchToVoiceMode={handleSwitchToVoiceMode}

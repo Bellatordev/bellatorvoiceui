@@ -42,10 +42,13 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
   });
 
   // This effect ensures that we stop the microphone when voice generation
-  // starts and resume it after completion
+  // starts or when the mic is muted
   useEffect(() => {
     if (isGenerating || isPlaying) {
       // Stop listening immediately when audio is playing or generating
+      stopListening();
+    } else if (isMicMuted && isListening) {
+      // Stop listening when the mic is muted
       stopListening();
     } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice') {
       // Only auto-start the mic after audio stops, with a small delay
