@@ -9,6 +9,7 @@ import ErrorHandler from './ErrorHandler';
 import AudioSettings from './AudioSettings';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 interface ConversationInterfaceProps {
   apiKey: string;
