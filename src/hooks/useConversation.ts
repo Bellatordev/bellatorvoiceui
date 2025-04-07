@@ -147,10 +147,16 @@ export const useConversation = ({
   const restartConversation = useCallback(() => {
     console.log("Restarting conversation");
     
+    // Generate a unique ID for the restart event
+    const restartId = uuidv4();
+    const restartMessage = "Conversation restarted";
+    
     // Send conversation_end event to webhook if configured
     if (webhookUrlRef.current) {
       sendWebhookRequest(webhookUrlRef.current, {
         type: 'conversation_restart',
+        message: restartMessage,
+        messageId: restartId,
         messageCount: messages.length,
         agent: agentName
       });
