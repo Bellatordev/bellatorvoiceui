@@ -88,11 +88,15 @@ export const useConversation = ({
     // Always generate speech for welcome message unless muted
     if (!isMuted && generateSpeech) {
       console.log("Generating speech for welcome message");
-      try {
-        generateSpeech(welcomeMessage.text);
-      } catch (err) {
-        console.error("Failed to generate speech for welcome message:", err);
-      }
+      setTimeout(() => {
+        try {
+          generateSpeech(welcomeMessage.text).catch(err => {
+            console.error("Error generating welcome speech:", err);
+          });
+        } catch (err) {
+          console.error("Failed to generate speech for welcome message:", err);
+        }
+      }, 300); // Small delay to ensure message is rendered first
     }
   }, [generateSpeech, isMuted]);
 

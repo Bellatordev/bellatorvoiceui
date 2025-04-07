@@ -57,7 +57,14 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     
     // Always initialize when this component mounts
     console.log("ConversationHandler mounted, initializing conversation");
-    initializeConversation();
+    
+    // Small delay to ensure all services are properly initialized before
+    // triggering the welcome message with speech
+    const timer = setTimeout(() => {
+      initializeConversation();
+    }, 300);
+    
+    return () => clearTimeout(timer);
   }, [initializeConversation]);
 
   return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation })}</>;

@@ -42,9 +42,13 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
   }, [apiKey, voiceId]);
 
   const generateSpeech = async (text: string): Promise<void> => {
-    if (!text.trim()) return;
+    if (!text || !text.trim()) {
+      console.log('Empty text provided to generateSpeech, skipping');
+      return;
+    }
     
     try {
+      console.log(`Generating speech for text: "${text.substring(0, 30)}..."`);
       const service = ElevenLabsService.getInstance();
       await service.generateSpeech({ text, voiceId, apiKey, modelId });
     } catch (error) {
