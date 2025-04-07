@@ -60,7 +60,8 @@ export const useConversation = ({
           }
         }
       } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
-        setTimeout(startListening, 300);
+        // Increased delay to wait for proper silence detection
+        setTimeout(startListening, 1500);
       }
       
       setIsProcessing(false);

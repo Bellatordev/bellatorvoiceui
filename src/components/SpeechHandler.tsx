@@ -54,11 +54,11 @@ const SpeechHandler: React.FC<SpeechHandlerProps> = ({
       console.log('Stopping microphone because it is muted');
       stopListening();
     } else if (autoStartMic && !isListening && !isGenerating && !isPlaying && !isMicMuted && inputMode === 'voice') {
-      // Only auto-start the mic after audio stops, with a small delay
+      // Only auto-start the mic after audio stops, with a longer delay to prevent feedback loops
       console.log('Auto-starting microphone after audio playback complete');
       const timer = setTimeout(() => {
         startListening();
-      }, 500);
+      }, 1000); // Increased delay to give time for audio to fully stop
       
       return () => clearTimeout(timer);
     }

@@ -36,6 +36,7 @@ export const useSpeechRecognition = ({
   const hasRequestedMicPermission = useRef(false);
   const hasAttemptedSpeechRecognition = useRef(false);
   const pauseTimeoutRef = useRef<number | null>(null);
+  const lastPlaybackEndTime = useRef<number>(0);
   
   const handleSpeechPause = useCallback((finalText: string) => {
     if (finalText.trim() && onFinalTranscript) {
@@ -53,6 +54,13 @@ export const useSpeechRecognition = ({
       setIsListening(false);
     }
   }, [isMicMuted, isListening]);
+
+  // Effect to track when audio playback ends
+  useEffect(() => {
+    if (!isPlaying && !isGenerating) {
+      lastPlaybackEndTime.current = Date.now();
+    }
+  }, [isPlaying, isGenerating]);
 
   useEffect(() => {
     const initializeSpeechRecognition = async () => {
@@ -86,12 +94,18 @@ export const useSpeechRecognition = ({
               handleSpeechPause(transcript);
             }
             
-            if (autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current && !isPlaying && !isGenerating) {
+            // Only auto-restart if sufficient time has passed since audio playback ended
+            // to avoid picking up the end of audio
+            const timeSincePlaybackEnded = Date.now() - lastPlaybackEndTime.current;
+            const shouldAutoStart = autoStartMic && !isMicMuted && !hasAttemptedSpeechRecognition.current && 
+                                    !isPlaying && !isGenerating && timeSincePlaybackEnded > 1500;
+            
+            if (shouldAutoStart) {
               hasAttemptedSpeechRecognition.current = true;
               setTimeout(() => {
                 console.log('Attempting to restart speech recognition');
                 try {
-                  if (!isMicMuted) { // Add additional check before restarting
+                  if (!isMicMuted && !isPlaying && !isGenerating) { // Additional checks before restarting
                     recognition.start();
                   }
                 } catch (e) {
@@ -100,7 +114,7 @@ export const useSpeechRecognition = ({
                 setTimeout(() => {
                   hasAttemptedSpeechRecognition.current = false;
                 }, 5000);
-              }, 1000);
+              }, 1500); // Increased delay to avoid picking up system sounds
             }
           };
           
@@ -108,6 +122,13 @@ export const useSpeechRecognition = ({
             const last = event.results.length - 1;
             const result = event.results[last];
             const text = result[0].transcript;
+            
+            // Filter out very short or likely noise inputs
+            if (text.trim().length < 2) {
+              console.log('Ignoring very short input that might be noise');
+              return;
+            }
+            
             setTranscript(text);
             
             if (pauseTimeoutRef.current) {
@@ -116,6 +137,7 @@ export const useSpeechRecognition = ({
             }
             
             if (result.isFinal) {
+              // Longer pause detection for final results to ensure the user has finished speaking
               pauseTimeoutRef.current = window.setTimeout(() => {
                 handleSpeechPause(text);
                 
@@ -126,16 +148,17 @@ export const useSpeechRecognition = ({
                       if (recognitionRef.current && !isMicMuted && !isPlaying && !isGenerating) {
                         recognitionRef.current.start();
                       }
-                    }, 200);
+                    }, 800); // Longer delay before restarting
                   } catch (e) {
                     console.error('Error restarting recognition after final result:', e);
                   }
                 }
-              }, 1000);
+              }, 1500); // Longer pause detection (1.5 seconds)
             } else {
+              // Wait for natural pause in speech
               pauseTimeoutRef.current = window.setTimeout(() => {
                 handleSpeechPause(text);
-              }, 2000);
+              }, 2500); // Even longer pause for interim results (2.5 seconds)
             }
           };
           
@@ -196,8 +219,16 @@ export const useSpeechRecognition = ({
   };
 
   const startListening = async () => {
+    // Don't start listening if audio is playing or generating
     if (isPlaying || isGenerating || isMicMuted) {
       console.log('Cannot start listening: audio is active or mic is muted');
+      return;
+    }
+    
+    // Check if enough time has passed since audio finished playing
+    const timeSincePlaybackEnded = Date.now() - lastPlaybackEndTime.current;
+    if (timeSincePlaybackEnded < 1000) {
+      console.log('Not starting microphone yet - too soon after audio playback');
       return;
     }
     
