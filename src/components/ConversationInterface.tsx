@@ -77,7 +77,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setIsMicMuted(newMuteState);
   };
 
-  const handleEndConversation = (resetSpeech: () => void, endConversation: () => void) => {
+  const handleEndConversation = (resetSpeech: () => void, endConversation: () => void, stopListening: () => void) => {
     console.log("Ending conversation and shutting down all audio services");
     // First stop any playing audio
     stopAudio();
@@ -87,6 +87,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     
     // Reset speech recognition
     resetSpeech();
+    
+    // Stop speech recognition completely
+    stopListening();
     
     // Clear conversation messages
     endConversation();
@@ -124,9 +127,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const handleLogout = () => {
     if (onLogout) {
       console.log('Preparing for logout, cleaning up resources');
+      // Make sure we completely stop all audio playback
       stopAudio();
+      
+      // Force complete cleanup of all audio services
       cleanup();
-      onLogout();
+      
+      // Wait a small moment to ensure cleanup completes
+      setTimeout(() => {
+        onLogout();
+      }, 100);
     }
   };
 
@@ -177,7 +187,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                         setMessages([]);
                         // Completely stop any remaining speech recognition
                         stopListening();
-                      })}
+                      }, stopListening)}
                     >
                       <X size={16} />
                       End Conversation

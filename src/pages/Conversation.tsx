@@ -61,10 +61,14 @@ const Conversation = () => {
     return () => {
       console.log('Conversation page unmounting, cleaning up resources');
       // Make sure to clean up the ElevenLabs service when unmounting
-      const elevenLabsInstance = ElevenLabsService.getInstance();
-      elevenLabsInstance.stopAudio();
-      elevenLabsInstance.cleanup();
-      ElevenLabsService.destroyInstance();
+      try {
+        const elevenLabsInstance = ElevenLabsService.getInstance();
+        elevenLabsInstance.stopAudio();
+        elevenLabsInstance.cleanup();
+        ElevenLabsService.destroyInstance();
+      } catch (err) {
+        console.error('Error during cleanup:', err);
+      }
     };
   }, [navigate]);
   
@@ -72,30 +76,37 @@ const Conversation = () => {
     // First, thoroughly clean up any active audio resources
     console.log('Logging out and cleaning up audio resources');
     
-    // Get the instance and make sure it's completely shut down
-    const elevenLabsInstance = ElevenLabsService.getInstance();
+    try {
+      // Get the instance and make sure it's completely shut down
+      const elevenLabsInstance = ElevenLabsService.getInstance();
+      
+      // Stop any current audio playback
+      elevenLabsInstance.stopAudio();
+      
+      // Run the full cleanup procedure
+      elevenLabsInstance.cleanup();
+      
+      // Destroy the singleton instance to prevent any lingering resources
+      ElevenLabsService.destroyInstance();
+    } catch (err) {
+      console.error('Error during logout cleanup:', err);
+    }
     
-    // Stop any current audio playback
-    elevenLabsInstance.stopAudio();
-    
-    // Run the full cleanup procedure
-    elevenLabsInstance.cleanup();
-    
-    // Destroy the singleton instance to prevent any lingering resources
-    ElevenLabsService.destroyInstance();
-    
-    // Clear credentials from localStorage
+    // Clear all credentials from localStorage
     localStorage.removeItem('voiceAgent_apiKey');
     localStorage.removeItem('voiceAgent_agentId');
     localStorage.removeItem('voiceAgent_agentName');
     
+    // Show logout toast notification
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out"
     });
 
     // Navigate back to login only after cleanup is complete
-    navigate('/');
+    setTimeout(() => {
+      navigate('/');
+    }, 100);
   };
 
   const handleChangeAgent = (agent: VoiceAgent) => {

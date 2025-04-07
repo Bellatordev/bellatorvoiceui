@@ -26,19 +26,28 @@ class ElevenLabsService {
 
   private constructor() {
     this.audioElement = new Audio();
+    this.setupAudioEventListeners();
+  }
+  
+  private setupAudioEventListeners() {
+    if (!this.audioElement) return;
+    
     this.audioElement.addEventListener('play', () => {
       console.log('Audio started playing');
       this.updateState({ isPlaying: true });
     });
+    
     this.audioElement.addEventListener('ended', () => {
       console.log('Audio finished playing');
       this.updateState({ isPlaying: false });
       // Notify audio has ended - listeners will handle auto-start microphone
     });
+    
     this.audioElement.addEventListener('pause', () => {
       console.log('Audio paused');
       this.updateState({ isPlaying: false });
     });
+    
     this.audioElement.addEventListener('error', (e) => {
       console.error('Audio playback error:', e);
       this.updateState({ 
@@ -123,6 +132,16 @@ class ElevenLabsService {
         this.audioElement.pause();
         this.audioElement.currentTime = 0;
         
+        // Remove old source if it exists
+        const oldSrc = this.audioElement.src;
+        if (oldSrc && oldSrc.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(oldSrc);
+          } catch (e) {
+            console.error('Error revoking old audio URL:', e);
+          }
+        }
+        
         this.audioElement.src = audioUrl;
         this.audioElement.play().catch(error => {
           console.error('Error playing audio:', error);
@@ -142,24 +161,29 @@ class ElevenLabsService {
   }
 
   public stopAudio(): void {
-    if (this.audioElement) {
-      console.log('Stopping audio playback');
-      try {
-        // Force pause and reset
-        this.audioElement.pause();
-        this.audioElement.currentTime = 0;
-        
-        // Release the audio source
-        const src = this.audioElement.src;
-        this.audioElement.src = '';
-        if (src && src.startsWith('blob:')) {
+    if (!this.audioElement) return;
+    
+    console.log('Stopping audio playback');
+    try {
+      // Force pause and reset
+      this.audioElement.pause();
+      this.audioElement.currentTime = 0;
+      
+      // Release the audio source
+      const src = this.audioElement.src;
+      this.audioElement.src = '';
+      
+      if (src && src.startsWith('blob:')) {
+        try {
           URL.revokeObjectURL(src);
+        } catch (e) {
+          console.error('Error revoking audio URL:', e);
         }
-        
-        this.updateState({ isPlaying: false, isGenerating: false });
-      } catch (err) {
-        console.error('Error stopping audio:', err);
       }
+      
+      this.updateState({ isPlaying: false, isGenerating: false });
+    } catch (err) {
+      console.error('Error stopping audio:', err);
     }
   }
 
@@ -191,17 +215,21 @@ class ElevenLabsService {
     
     if (this.audioElement) {
       // Remove all event listeners to prevent memory leaks
-      const element = this.audioElement;
-      element.onplay = null;
-      element.onpause = null;
-      element.onended = null;
-      element.onerror = null;
-      
-      // Release audio resources
-      const src = element.src;
-      element.src = '';
-      if (src && src.startsWith('blob:')) {
-        URL.revokeObjectURL(src);
+      try {
+        const element = this.audioElement;
+        element.onplay = null;
+        element.onpause = null;
+        element.onended = null;
+        element.onerror = null;
+        
+        // Release audio resources
+        const src = element.src;
+        element.src = '';
+        if (src && src.startsWith('blob:')) {
+          URL.revokeObjectURL(src);
+        }
+      } catch (e) {
+        console.error('Error cleaning up audio element:', e);
       }
       
       // Set to null to allow garbage collection
@@ -222,8 +250,13 @@ class ElevenLabsService {
   // Method to destroy the singleton instance
   public static destroyInstance(): void {
     if (ElevenLabsService.instance) {
-      ElevenLabsService.instance.cleanup();
-      ElevenLabsService.instance = null;
+      try {
+        ElevenLabsService.instance.cleanup();
+      } catch (e) {
+        console.error('Error destroying ElevenLabs instance:', e);
+      } finally {
+        ElevenLabsService.instance = null;
+      }
     }
     console.log('ElevenLabs service instance destroyed');
   }
