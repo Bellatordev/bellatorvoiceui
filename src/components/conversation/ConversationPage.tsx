@@ -150,6 +150,8 @@ const ConversationPage = () => {
             apiKey={apiKey} 
             voiceId={voiceId} 
             onLogout={handleLogout}
+            webhookUrl={selectedAgent?.webhookUrl}
+            agentName={agentName}
           />
         </main>
         

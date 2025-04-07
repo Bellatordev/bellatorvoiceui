@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
@@ -13,12 +12,16 @@ interface ConversationInterfaceProps {
   apiKey: string;
   agentId: string;
   onLogout?: () => void;
+  webhookUrl?: string;
+  agentName?: string;
 }
 
 const ConversationInterface: React.FC<ConversationInterfaceProps> = ({ 
   apiKey, 
   agentId,
-  onLogout 
+  onLogout,
+  webhookUrl,
+  agentName
 }) => {
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   const [isMuted, setIsMuted] = useState(false);
@@ -77,24 +80,12 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleEndConversation = (resetSpeech: () => void, endConversation: () => void, stopListening: () => void) => {
     console.log("Ending conversation and shutting down all audio services");
-    // First stop any playing audio
     stopAudio();
-    
-    // Stop listening to the microphone
     setIsMicMuted(true);
-    
-    // Reset speech recognition
     resetSpeech();
-    
-    // Stop speech recognition completely
     stopListening();
-    
-    // Clear conversation messages
     endConversation();
-    
-    // Force cleanup of voice generation service
     cleanup();
-    
     toast({
       title: "Conversation Ended",
       description: "The conversation has been reset. You can start a new one."
@@ -125,13 +116,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const handleLogout = () => {
     if (onLogout) {
       console.log('Preparing for logout, cleaning up resources');
-      // Make sure we completely stop all audio playback
       stopAudio();
-      
-      // Force complete cleanup of all audio services
       cleanup();
-      
-      // Wait a small moment to ensure cleanup completes
       setTimeout(() => {
         onLogout();
       }, 100);
@@ -148,6 +134,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         isGenerating={isGenerating}
         startListening={null}
         ttsError={ttsError}
+        webhookUrl={webhookUrl}
+        agentName={agentName}
       >
         {({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation }) => (
           <SpeechHandler
@@ -172,7 +160,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
                   onEndConversation={() => handleEndConversation(resetSpeech, () => {
                     setMessages([]);
-                    // Completely stop any remaining speech recognition
                     stopListening();
                   }, stopListening)}
                   onLogout={handleLogout}

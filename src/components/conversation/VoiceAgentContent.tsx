@@ -6,12 +6,16 @@ interface VoiceAgentContentProps {
   apiKey: string;
   voiceId: string;
   onLogout?: () => void;
+  webhookUrl?: string;
+  agentName?: string;
 }
 
 const VoiceAgentContent: React.FC<VoiceAgentContentProps> = ({ 
   apiKey, 
   voiceId, 
-  onLogout 
+  onLogout,
+  webhookUrl,
+  agentName 
 }) => {
   return (
     <div className="agent-card mb-4 overflow-hidden">
@@ -19,6 +23,8 @@ const VoiceAgentContent: React.FC<VoiceAgentContentProps> = ({
         apiKey={apiKey} 
         agentId={voiceId} 
         onLogout={onLogout}
+        webhookUrl={webhookUrl}
+        agentName={agentName}
       />
     </div>
   );

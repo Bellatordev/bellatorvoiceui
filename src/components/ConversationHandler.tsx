@@ -11,6 +11,8 @@ interface ConversationHandlerProps {
   isGenerating: boolean;
   startListening?: () => Promise<void>;
   ttsError: string | null;
+  webhookUrl?: string;
+  agentName?: string;
   children: (props: {
     messages: any[];
     setMessages: React.Dispatch<React.SetStateAction<any[]>>;
@@ -29,6 +31,8 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   isGenerating,
   startListening,
   ttsError,
+  webhookUrl,
+  agentName,
   children,
 }) => {
   const {
@@ -45,7 +49,9 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     isPlaying,
     isGenerating,
     startListening,
-    ttsError
+    ttsError,
+    webhookUrl,
+    agentName
   });
 
   // Initialize the conversation when the component mounts
