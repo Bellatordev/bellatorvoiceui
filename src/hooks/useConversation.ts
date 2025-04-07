@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
 import { toast } from '@/components/ui/use-toast';
+import { sendWebhookRequest } from '@/utils/webhookService';
 
 interface UseConversationOptions {
   generateSpeech?: (text: string) => Promise<void>;
@@ -37,34 +38,6 @@ export const useConversation = ({
     webhookUrlRef.current = webhookUrl;
   }, [webhookUrl]);
 
-  // Function to send data to the webhook
-  const sendToWebhook = useCallback(async (data: any) => {
-    if (!webhookUrlRef.current) return;
-    
-    console.log(`Sending data to webhook for agent: ${agentName}`);
-    
-    try {
-      await fetch(webhookUrlRef.current, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: "no-cors", // Handle CORS issues
-        body: JSON.stringify({
-          ...data,
-          agent: agentName,
-          timestamp: new Date().toISOString(),
-          source: window.location.origin
-        }),
-      });
-      
-      console.log("Webhook request sent successfully");
-    } catch (error) {
-      console.error("Error sending webhook request:", error);
-      // Silent fail - don't interrupt the user experience if the webhook fails
-    }
-  }, [agentName]);
-
   const processUserInput = useCallback((text: string) => {
     if (!text.trim() || isProcessing) return;
     
@@ -81,10 +54,11 @@ export const useConversation = ({
     
     // Send user message to webhook if configured
     if (webhookUrlRef.current) {
-      sendToWebhook({
+      sendWebhookRequest(webhookUrlRef.current, {
         type: 'user_message',
         message: text,
-        messageId: userMessage.id
+        messageId: userMessage.id,
+        agent: agentName
       });
     }
     
@@ -101,11 +75,12 @@ export const useConversation = ({
       
       // Send assistant response to webhook if configured
       if (webhookUrlRef.current) {
-        sendToWebhook({
+        sendWebhookRequest(webhookUrlRef.current, {
           type: 'assistant_response',
           message: assistantResponse,
           messageId: assistantMessage.id,
-          inResponseTo: userMessage.id
+          inResponseTo: userMessage.id,
+          agent: agentName
         });
       }
       
@@ -124,7 +99,7 @@ export const useConversation = ({
       
       setIsProcessing(false);
     }, 1000);
-  }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, sendToWebhook]);
+  }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, agentName]);
 
   // Initialize with welcome message - now a memoized function
   const initializeConversation = useCallback(() => {
@@ -145,10 +120,11 @@ export const useConversation = ({
     
     // Send welcome message to webhook if configured
     if (webhookUrlRef.current) {
-      sendToWebhook({
+      sendWebhookRequest(webhookUrlRef.current, {
         type: 'conversation_start',
         message: welcomeMessage.text,
-        messageId: welcomeMessage.id
+        messageId: welcomeMessage.id,
+        agent: agentName
       });
     }
     
@@ -165,7 +141,7 @@ export const useConversation = ({
         }
       }, 300); // Small delay to ensure message is rendered first
     }
-  }, [generateSpeech, isMuted, sendToWebhook]);
+  }, [generateSpeech, isMuted, agentName]);
 
   // Function to restart the conversation
   const restartConversation = useCallback(() => {
@@ -173,9 +149,10 @@ export const useConversation = ({
     
     // Send conversation_end event to webhook if configured
     if (webhookUrlRef.current) {
-      sendToWebhook({
+      sendWebhookRequest(webhookUrlRef.current, {
         type: 'conversation_restart',
-        messageCount: messages.length
+        messageCount: messages.length,
+        agent: agentName
       });
     }
     
@@ -186,7 +163,7 @@ export const useConversation = ({
     setTimeout(() => {
       initializeConversation();
     }, 300);
-  }, [initializeConversation, messages.length, sendToWebhook]);
+  }, [initializeConversation, messages.length, agentName]);
 
   return {
     messages,
