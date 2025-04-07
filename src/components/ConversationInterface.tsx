@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
@@ -175,6 +176,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                     isPlayingAudio={isPlaying}
                     onToggleAudio={generateSpeech}
                     className="h-full" 
+                    onLogout={handleLogout}
                   />
                 </div>
                 

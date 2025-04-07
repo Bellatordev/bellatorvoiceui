@@ -94,9 +94,6 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     } catch (error) {
       console.error('Error during ElevenLabs cleanup:', error);
     }
-    
-    // Then destroy the service instance
-    ElevenLabsService.destroyInstance();
   };
 
   return {
