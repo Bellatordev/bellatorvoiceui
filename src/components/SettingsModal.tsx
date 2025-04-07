@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentManager from './VoiceAgentManager';
-import ApiKeyForm from './ApiKeyForm';
+import { addVoiceAgent } from '@/utils/voiceAgentStorage';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,12 +29,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectAgent,
   onAddAgent
 }) => {
+  const [inputApiKey, setInputApiKey] = useState(apiKey);
   const { toast } = useToast();
 
   const handleSave = () => {
+    onSaveApiKey(inputApiKey);
     toast({
       title: "Settings Saved",
-      description: "Your voice agent settings have been updated"
+      description: "Your ElevenLabs API key has been updated"
     });
     onClose();
   };
@@ -49,10 +52,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         </DialogHeader>
         
         <div className="space-y-6">
-          <ApiKeyForm
-            onSaveApiKey={onSaveApiKey}
-            hasApiKey={!!apiKey}
-          />
+          <div className="space-y-3">
+            <h3 className="text-lg font-medium">ElevenLabs API Key</h3>
+            <Input
+              value={inputApiKey}
+              onChange={(e) => setInputApiKey(e.target.value)}
+              placeholder="Enter your API key"
+              type="password"
+            />
+            <p className="text-xs text-muted-foreground">
+              Get your API key from the ElevenLabs dashboard.
+            </p>
+          </div>
           
           <VoiceAgentManager
             agents={agents}
@@ -64,7 +75,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Close</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

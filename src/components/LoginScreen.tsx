@@ -6,7 +6,6 @@ import { Settings, Plus } from 'lucide-react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentCard from './VoiceAgentCard';
 import SettingsModal from './SettingsModal';
-import ApiKeyForm from './ApiKeyForm';
 import { getVoiceAgents, addVoiceAgent, getDefaultVoiceId } from '@/utils/voiceAgentStorage';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,12 +26,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
 
   // Load saved agents on mount
   useEffect(() => {
-    // If API key is in storage, retrieve it
-    const storedApiKey = localStorage.getItem('voiceAgent_apiKey');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
-
     const savedAgents = getVoiceAgents();
     setAgents(savedAgents);
     
@@ -51,6 +44,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     } else {
       // Select the first agent by default
       setSelectedAgent(savedAgents[0]);
+    }
+    
+    // If API key is in storage, retrieve it
+    const storedApiKey = localStorage.getItem('voiceAgent_apiKey');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
     }
   }, []);
 
@@ -104,12 +103,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         </Button>
       </div>
       
-      {/* API Key Form */}
-      <ApiKeyForm 
-        onSaveApiKey={handleSaveApiKey} 
-        hasApiKey={!!apiKey}
-      />
-      
       <div className="grid gap-3 mb-6">
         {agents.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-[#282838]">
@@ -131,7 +124,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Button type="submit" className="w-full py-6 rounded-md bg-[#9583f4] hover:bg-[#8070e6] text-white font-medium font-sans text-lg" disabled={isLoading || !selectedAgent || !apiKey}>
+        <div className="space-y-2">
+          <label htmlFor="apiKey" className="block text-gray-300 text-sm font-medium font-sans">
+            Eleven Labs API Key
+          </label>
+          <Input id="apiKey" type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="Enter your Eleven Labs API Key" className="bg-[#282838] border-gray-700 text-white font-sans placeholder:text-gray-500 rounded-md" required />
+        </div>
+        
+        <Button type="submit" className="w-full py-6 rounded-md bg-[#9583f4] hover:bg-[#8070e6] text-white font-medium font-sans text-lg" disabled={isLoading || !selectedAgent}>
           {isLoading ? 'Connecting...' : `Connect to ${selectedAgent?.name || 'Voice Agent'}`}
         </Button>
       </form>
