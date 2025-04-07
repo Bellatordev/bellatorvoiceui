@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ConversationLog from './ConversationLog';
 import useElevenLabs from '@/hooks/useElevenLabs';
@@ -41,7 +40,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     voiceId: agentId,
   });
 
-  // Clean up resources when component unmounts
   useEffect(() => {
     return () => {
       console.log('ConversationInterface unmounting, cleaning up resources');
@@ -63,13 +61,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   };
 
   const handleSwitchToTextMode = () => {
-    // Stop listening and mute the microphone when switching to text mode
     setIsMicMuted(true);
     setInputMode('text');
   };
 
   const handleSwitchToVoiceMode = () => {
-    // Unmute the microphone when switching to voice mode
     setIsMicMuted(false);
     setInputMode('voice');
   };
@@ -82,18 +78,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleEndConversation = (resetSpeech: () => void, endConversation: () => void) => {
     console.log("Ending conversation and shutting down all audio services");
-    // First stop any playing audio
     stopAudio();
-    
-    // Immediately set microphone to muted state
     setIsMicMuted(true);
-    
-    // Reset speech recognition completely (this will abort any ongoing recognition)
     resetSpeech();
-    
-    // End the conversation
     endConversation();
-    
     toast({
       title: "Conversation Ended",
       description: "The conversation has been reset. You can start a new one."
@@ -102,44 +90,30 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleRestartConversation = (resetSpeech: () => void, restartConversation: () => void) => {
     console.log("Restarting conversation");
-    // First stop any playing audio
     stopAudio();
-    
-    // Temporarily mute the microphone during restart
     setIsMicMuted(true);
-    
-    // Reset speech recognition
     resetSpeech();
-    
-    // Restart the conversation
     restartConversation();
-    
-    // After a short delay, unmute the microphone if in voice mode
     setTimeout(() => {
       if (inputMode === 'voice') {
         setIsMicMuted(false);
       }
     }, 1000);
-    
     toast({
       title: "Conversation Restarted",
       description: "Starting a new conversation."
     });
   };
 
-  // Effect to ensure microphone is properly reset when mute state changes
   useEffect(() => {
     console.log(`Microphone mute state changed to: ${isMicMuted ? 'muted' : 'unmuted'}`);
   }, [isMicMuted]);
 
-  // Handle logout by cleaning up first
   const handleLogout = () => {
     if (onLogout) {
-      // First clean up audio and mic resources
       console.log('Preparing for logout, cleaning up resources');
       stopAudio();
       cleanup();
-      // Then call the parent's logout handler
       onLogout();
     }
   };
@@ -189,9 +163,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                       className="flex gap-2 items-center"
                       onClick={() => handleEndConversation(resetSpeech, () => {
                         setMessages([]);
-                        setTimeout(() => {
-                          initializeConversation();
-                        }, 300);
                       })}
                     >
                       <X size={16} />
