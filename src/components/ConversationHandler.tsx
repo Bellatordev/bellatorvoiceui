@@ -9,6 +9,7 @@ interface ConversationHandlerProps {
   autoStartMic: boolean;
   isPlaying: boolean;
   isGenerating: boolean;
+  startListening?: () => Promise<void>;
   ttsError: string | null;
   children: (props: {
     messages: any[];
@@ -25,6 +26,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   autoStartMic,
   isPlaying,
   isGenerating,
+  startListening,
   ttsError,
   children,
 }) => {
@@ -40,6 +42,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     autoStartMic,
     isPlaying,
     isGenerating,
+    startListening,
     ttsError
   });
 

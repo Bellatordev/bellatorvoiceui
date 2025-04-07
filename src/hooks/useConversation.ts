@@ -51,13 +51,13 @@ export const useConversation = ({
       
       setMessages(prev => [...prev, assistantMessage]);
       
-      if (!isMuted && !ttsError) {
-        if (generateSpeech) {
-          try {
-            generateSpeech(assistantResponse);
-          } catch (err) {
-            console.error("Failed to generate speech:", err);
-          }
+      // Always generate speech for assistant responses unless muted
+      if (!isMuted && generateSpeech) {
+        console.log("Automatically generating speech for assistant response");
+        try {
+          generateSpeech(assistantResponse);
+        } catch (err) {
+          console.error("Failed to generate speech:", err);
         }
       } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
         // Increased delay to wait for proper silence detection
