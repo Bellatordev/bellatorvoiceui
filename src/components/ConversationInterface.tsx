@@ -79,10 +79,21 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleEndConversation = (resetSpeech: () => void, endConversation: () => void) => {
     console.log("Ending conversation and shutting down all audio services");
+    // First stop any playing audio
     stopAudio();
+    
+    // Stop listening to the microphone
     setIsMicMuted(true);
+    
+    // Reset speech recognition
     resetSpeech();
+    
+    // Clear conversation messages
     endConversation();
+    
+    // Force cleanup of voice generation service
+    cleanup();
+    
     toast({
       title: "Conversation Ended",
       description: "The conversation has been reset. You can start a new one."
@@ -164,6 +175,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                       className="flex gap-2 items-center"
                       onClick={() => handleEndConversation(resetSpeech, () => {
                         setMessages([]);
+                        // Completely stop any remaining speech recognition
+                        stopListening();
                       })}
                     >
                       <X size={16} />
