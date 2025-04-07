@@ -8,7 +8,7 @@ import ConversationHandler from './ConversationHandler';
 import ErrorHandler from './ErrorHandler';
 import AudioSettings from './AudioSettings';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface ConversationInterfaceProps {
@@ -100,6 +100,33 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     });
   };
 
+  const handleRestartConversation = (resetSpeech: () => void, restartConversation: () => void) => {
+    console.log("Restarting conversation");
+    // First stop any playing audio
+    stopAudio();
+    
+    // Temporarily mute the microphone during restart
+    setIsMicMuted(true);
+    
+    // Reset speech recognition
+    resetSpeech();
+    
+    // Restart the conversation
+    restartConversation();
+    
+    // After a short delay, unmute the microphone if in voice mode
+    setTimeout(() => {
+      if (inputMode === 'voice') {
+        setIsMicMuted(false);
+      }
+    }, 1000);
+    
+    toast({
+      title: "Conversation Restarted",
+      description: "Starting a new conversation."
+    });
+  };
+
   // Effect to ensure microphone is properly reset when mute state changes
   useEffect(() => {
     console.log(`Microphone mute state changed to: ${isMicMuted ? 'muted' : 'unmuted'}`);
@@ -125,9 +152,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         autoStartMic={autoStartMic}
         isPlaying={isPlaying}
         isGenerating={isGenerating}
+        startListening={null}
         ttsError={ttsError}
       >
-        {({ messages, setMessages, processUserInput, isProcessing, initializeConversation }) => (
+        {({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation }) => (
           <SpeechHandler
             autoStartMic={autoStartMic}
             isMicMuted={isMicMuted}
@@ -144,7 +172,17 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
               >
                 <div className="flex-1 agent-card mb-6 overflow-hidden">
                   <div className="flex justify-between items-center mb-4">
-                    <div />
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex gap-2 items-center"
+                        onClick={() => handleRestartConversation(resetSpeech, restartConversation)}
+                      >
+                        <RefreshCw size={16} />
+                        Restart
+                      </Button>
+                    </div>
                     <Button 
                       variant="destructive" 
                       size="sm" 

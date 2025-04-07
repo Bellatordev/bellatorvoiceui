@@ -17,6 +17,7 @@ interface ConversationHandlerProps {
     processUserInput: (text: string) => void;
     isProcessing: boolean;
     initializeConversation: () => void;
+    restartConversation: () => void;
   }) => React.ReactNode;
 }
 
@@ -35,6 +36,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     setMessages,
     processUserInput,
     initializeConversation,
+    restartConversation,
     isProcessing
   } = useConversation({
     generateSpeech,
@@ -58,7 +60,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     initializeConversation();
   }, [initializeConversation]);
 
-  return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation })}</>;
+  return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation })}</>;
 };
 
 export default ConversationHandler;

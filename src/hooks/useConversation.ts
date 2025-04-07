@@ -70,9 +70,11 @@ export const useConversation = ({
 
   // Initialize with welcome message - now a memoized function
   const initializeConversation = useCallback(() => {
-    if (isInitialized) return; // Prevent reinitializing
-    
     console.log("Initializing conversation with welcome message");
+    
+    // Clear existing messages
+    setMessages([]);
+    
     const welcomeMessage: Message = {
       id: uuidv4(),
       text: "Hello! How can I help you today?",
@@ -92,13 +94,26 @@ export const useConversation = ({
         console.error("Failed to generate speech for welcome message:", err);
       }
     }
-  }, [generateSpeech, isMuted, isInitialized]);
+  }, [generateSpeech, isMuted]);
+
+  // Function to restart the conversation
+  const restartConversation = useCallback(() => {
+    console.log("Restarting conversation");
+    setIsInitialized(false);
+    setMessages([]);
+    
+    // Re-initialize with a slight delay to ensure clean state
+    setTimeout(() => {
+      initializeConversation();
+    }, 300);
+  }, [initializeConversation]);
 
   return {
     messages,
     setMessages,
     processUserInput,
     initializeConversation,
+    restartConversation,
     isProcessing
   };
 };
