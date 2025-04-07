@@ -1,15 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import ConversationLog from './ConversationLog';
-import useElevenLabs from '@/hooks/useElevenLabs';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
 import ConversationHandler from './ConversationHandler';
 import ErrorHandler from './ErrorHandler';
 import AudioSettings from './AudioSettings';
-import { Button } from '@/components/ui/button';
-import { X, RefreshCw } from 'lucide-react';
+import useElevenLabs from '@/hooks/useElevenLabs';
 import { toast } from '@/components/ui/use-toast';
+import ConversationContainer from './conversation/ConversationContainer';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -166,42 +164,19 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 messages={messages}
                 setMessages={setMessages}
               >
-                <div className="flex-1 agent-card mb-6 overflow-hidden">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex gap-2 items-center"
-                        onClick={() => handleRestartConversation(resetSpeech, restartConversation)}
-                      >
-                        <RefreshCw size={16} />
-                        Restart
-                      </Button>
-                    </div>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="flex gap-2 items-center"
-                      onClick={() => handleEndConversation(resetSpeech, () => {
-                        setMessages([]);
-                        // Completely stop any remaining speech recognition
-                        stopListening();
-                      }, stopListening)}
-                    >
-                      <X size={16} />
-                      End Conversation
-                    </Button>
-                  </div>
-                  <ConversationLog 
-                    messages={messages} 
-                    isGeneratingAudio={isGenerating} 
-                    isPlayingAudio={isPlaying}
-                    onToggleAudio={generateSpeech}
-                    className="h-full" 
-                    onLogout={handleLogout}
-                  />
-                </div>
+                <ConversationContainer 
+                  messages={messages}
+                  isGenerating={isGenerating}
+                  isPlaying={isPlaying}
+                  onToggleAudio={generateSpeech}
+                  onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
+                  onEndConversation={() => handleEndConversation(resetSpeech, () => {
+                    setMessages([]);
+                    // Completely stop any remaining speech recognition
+                    stopListening();
+                  }, stopListening)}
+                  onLogout={handleLogout}
+                />
                 
                 <TranscriptDisplay 
                   transcript={transcript}
