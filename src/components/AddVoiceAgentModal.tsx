@@ -36,6 +36,7 @@ const AddVoiceAgentModal: React.FC<AddVoiceAgentModalProps> = ({ isOpen, onClose
     
     onAddAgent(newAgent);
     form.reset();
+    onClose();
   };
 
   return (
@@ -102,7 +103,7 @@ const AddVoiceAgentModal: React.FC<AddVoiceAgentModalProps> = ({ isOpen, onClose
               name="webhookUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Webhook URL</FormLabel>
+                  <FormLabel>Webhook URL (Optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="https://your-webhook-url.com" {...field} />
                   </FormControl>
