@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import ConversationInterface from '../components/ConversationInterface';
 import { useNavigate } from 'react-router-dom';
@@ -62,17 +61,27 @@ const Conversation = () => {
     return () => {
       console.log('Conversation page unmounting, cleaning up resources');
       // Make sure to clean up the ElevenLabs service when unmounting
+      const elevenLabsInstance = ElevenLabsService.getInstance();
+      elevenLabsInstance.stopAudio();
+      elevenLabsInstance.cleanup();
       ElevenLabsService.destroyInstance();
     };
   }, [navigate]);
   
   const handleLogout = () => {
-    // First, clean up any active audio resources
+    // First, thoroughly clean up any active audio resources
     console.log('Logging out and cleaning up audio resources');
     
-    // Make sure audio is stopped and completely cleaned up
-    ElevenLabsService.getInstance().stopAudio();
-    ElevenLabsService.getInstance().cleanup();
+    // Get the instance and make sure it's completely shut down
+    const elevenLabsInstance = ElevenLabsService.getInstance();
+    
+    // Stop any current audio playback
+    elevenLabsInstance.stopAudio();
+    
+    // Run the full cleanup procedure
+    elevenLabsInstance.cleanup();
+    
+    // Destroy the singleton instance to prevent any lingering resources
     ElevenLabsService.destroyInstance();
     
     // Clear credentials from localStorage
@@ -85,7 +94,7 @@ const Conversation = () => {
       description: "You have been successfully logged out"
     });
 
-    // Navigate back to login
+    // Navigate back to login only after cleanup is complete
     navigate('/');
   };
 
