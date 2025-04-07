@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentManager from './VoiceAgentManager';
 import { addVoiceAgent } from '@/utils/voiceAgentStorage';
-
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,7 +16,6 @@ interface SettingsModalProps {
   onSelectAgent: (agent: VoiceAgent) => void;
   onAddAgent: (agent: VoiceAgent) => void;
 }
-
 const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
@@ -30,8 +27,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onAddAgent
 }) => {
   const [inputApiKey, setInputApiKey] = useState(apiKey);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSave = () => {
     onSaveApiKey(inputApiKey);
     toast({
@@ -40,37 +38,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     });
     onClose();
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+  return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
-            Configure your ElevenLabs API key and manage voice agents.
-          </DialogDescription>
+          <DialogDescription>Configure and manage voice agents.</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-lg font-medium">ElevenLabs API Key</h3>
-            <Input
-              value={inputApiKey}
-              onChange={(e) => setInputApiKey(e.target.value)}
-              placeholder="Enter your API key"
-              type="password"
-            />
-            <p className="text-xs text-muted-foreground">
-              Get your API key from the ElevenLabs dashboard.
-            </p>
-          </div>
           
-          <VoiceAgentManager
-            agents={agents}
-            selectedAgentId={selectedAgentId}
-            onSelectAgent={onSelectAgent}
-            onAddAgent={onAddAgent}
-          />
+          
+          <VoiceAgentManager agents={agents} selectedAgentId={selectedAgentId} onSelectAgent={onSelectAgent} onAddAgent={onAddAgent} />
         </div>
 
         <DialogFooter className="mt-4">
@@ -78,8 +56,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default SettingsModal;
