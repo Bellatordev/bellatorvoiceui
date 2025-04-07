@@ -8,6 +8,7 @@ import ElevenLabsService from '@/services/elevenLabsService';
 import VoiceAgentContent from './VoiceAgentContent';
 import PageHeader from './PageHeader';
 import PageFooter from './PageFooter';
+import ConversationLoading from './ConversationLoading';
 import SettingsModal from '@/components/SettingsModal';
 
 const ConversationPage = () => {
