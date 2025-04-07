@@ -3,6 +3,13 @@
  * Utility service for handling webhook interactions
  */
 
+interface WebhookRequestData {
+  type: string;
+  message: string;
+  messageId: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 /**
  * Send data to a webhook URL
  * 
@@ -10,11 +17,32 @@
  * @param data The data to send
  * @returns A promise that resolves when the request is complete
  */
-export const sendWebhookRequest = async (webhookUrl: string, data: any): Promise<void> => {
+export const sendWebhookRequest = async (webhookUrl: string, data: WebhookRequestData): Promise<void> => {
   if (!webhookUrl) return;
   
   try {
-    console.log(`Sending webhook request to: ${webhookUrl}`);
+    // Create URL object to handle query parameters
+    const url = new URL(webhookUrl);
+    
+    // Add query parameters based on request type
+    if (data.message) {
+      url.searchParams.append('message', data.message);
+    }
+    
+    // Add messageId as a query parameter
+    if (data.messageId) {
+      url.searchParams.append('messageId', data.messageId);
+    }
+    
+    // Construct path parameter URL if needed
+    // If the messageId is present, add it as a path parameter
+    let finalUrl = url.toString();
+    if (data.messageId) {
+      // Ensure the URL doesn't end with a slash before appending
+      finalUrl = finalUrl.endsWith('/') ? `${finalUrl}${data.messageId}` : `${finalUrl}/${data.messageId}`;
+    }
+    
+    console.log(`Sending webhook request to: ${finalUrl}`);
     
     // Add common fields
     const webhookData = {
@@ -23,7 +51,7 @@ export const sendWebhookRequest = async (webhookUrl: string, data: any): Promise
       source: window.location.origin
     };
     
-    await fetch(webhookUrl, {
+    await fetch(finalUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
