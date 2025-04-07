@@ -37,7 +37,7 @@ export const useSpeechRecognitionEvents = ({
       setIsListening(false);
       
       // Handle any remaining transcript when recognition ends
-      const currentTranscript = recognitionRef.current?.transcript || '';
+      const currentTranscript = recognitionRef.current ? recognitionRef.current.toString() : '';
       if (currentTranscript.trim() && handleSpeechPause) {
         handleSpeechPause(currentTranscript);
       }
