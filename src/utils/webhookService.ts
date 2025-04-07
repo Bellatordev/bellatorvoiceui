@@ -24,9 +24,17 @@ export const sendWebhookRequest = async (webhookUrl: string, data: WebhookReques
     // Create URL object to handle query parameters
     const url = new URL(webhookUrl);
     
-    // Add query parameters based on request type
+    // Ensure the message is a proper string
     if (data.message) {
-      url.searchParams.append('message', data.message);
+      const messageText = typeof data.message === 'object' 
+        ? JSON.stringify(data.message)
+        : String(data.message);
+      
+      // Add message as a query parameter
+      url.searchParams.append('message', messageText);
+      
+      // Also ensure message in the body is a proper string
+      data.message = messageText;
     }
     
     // Add messageId as a query parameter
@@ -43,6 +51,7 @@ export const sendWebhookRequest = async (webhookUrl: string, data: WebhookReques
     }
     
     console.log(`Sending webhook request to: ${finalUrl}`);
+    console.log('Webhook data:', data);
     
     // Add common fields
     const webhookData = {
@@ -60,7 +69,7 @@ export const sendWebhookRequest = async (webhookUrl: string, data: WebhookReques
       body: JSON.stringify(webhookData),
     });
     
-    console.log("Webhook request sent");
+    console.log("Webhook request sent successfully");
   } catch (error) {
     console.error("Error sending webhook request:", error);
     // We intentionally don't throw here to avoid disrupting the user experience

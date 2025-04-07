@@ -29,8 +29,14 @@ export const useRecognitionState = (
   const handleSpeechPause = useCallback((finalText: string) => {
     if (finalText.trim() && onFinalTranscript) {
       console.log('Final transcript detected:', finalText);
-      onFinalTranscript(finalText);
-      setTranscript("");
+      
+      // Make sure we're passing a string, not an object
+      const cleanText = typeof finalText === 'string' ? finalText : '';
+      
+      if (cleanText) {
+        onFinalTranscript(cleanText);
+        setTranscript("");
+      }
     }
   }, [onFinalTranscript]);
   

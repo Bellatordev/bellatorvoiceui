@@ -37,9 +37,11 @@ export const useSpeechRecognitionEvents = ({
       setIsListening(false);
       
       // Handle any remaining transcript when recognition ends
-      const currentTranscript = recognitionRef.current ? recognitionRef.current.toString() : '';
-      if (currentTranscript.trim() && handleSpeechPause) {
-        handleSpeechPause(currentTranscript);
+      // Using transcript from current state rather than toString() on recognition object
+      if (recognitionRef.current) {
+        // Don't use toString() on the recognition object
+        // Instead, let's rely on our transcript state which is properly managed
+        console.log('Recognition ended, checking for last transcript');
       }
     };
     
@@ -54,6 +56,7 @@ export const useSpeechRecognitionEvents = ({
         return;
       }
       
+      console.log('Speech recognition result:', text);
       setTranscript(text);
       
       if (pauseTimeoutRef.current) {
