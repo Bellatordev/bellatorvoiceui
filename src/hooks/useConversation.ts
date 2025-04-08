@@ -38,7 +38,7 @@ export const useConversation = ({
     webhookUrlRef.current = webhookUrl;
   }, [webhookUrl]);
 
-  const processUserInput = useCallback((text: string) => {
+  const processUserInput = useCallback(async (text: string) => {
     if (!text.trim() || isProcessing) return;
     
     setIsProcessing(true);
@@ -52,57 +52,86 @@ export const useConversation = ({
     
     setMessages(prev => [...prev, userMessage]);
     
-    // Send user message to webhook if configured
+    // Send user message to webhook if configured and wait for response
     if (webhookUrlRef.current) {
-      sendWebhookRequest(webhookUrlRef.current, {
-        type: 'user_message',
-        message: text,
-        messageId: userMessage.id,
-        agent: agentName
-      });
-    }
-    
-    setTimeout(() => {
-      const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
-      const assistantMessage: Message = {
-        id: uuidv4(),
-        text: assistantResponse,
-        sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Send assistant response to webhook if configured
-      if (webhookUrlRef.current) {
-        sendWebhookRequest(webhookUrlRef.current, {
-          type: 'assistant_response',
-          message: assistantResponse,
-          messageId: assistantMessage.id,
-          inResponseTo: userMessage.id,
+      try {
+        const webhookResponse = await sendWebhookRequest(webhookUrlRef.current, {
+          type: 'user_message',
+          message: text,
+          messageId: userMessage.id,
           agent: agentName
         });
-      }
-      
-      // Always generate speech for assistant responses unless muted
-      if (!isMuted && generateSpeech) {
-        console.log("Automatically generating speech for assistant response");
-        try {
-          generateSpeech(assistantResponse);
-        } catch (err) {
-          console.error("Failed to generate speech:", err);
+        
+        if (webhookResponse && webhookResponse.message) {
+          // Use the response from the webhook
+          const assistantMessage: Message = {
+            id: uuidv4(),
+            text: webhookResponse.message,
+            sender: 'assistant',
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          // Generate speech for the response if not muted
+          if (!isMuted && generateSpeech) {
+            try {
+              generateSpeech(assistantMessage.text);
+            } catch (err) {
+              console.error("Failed to generate speech:", err);
+            }
+          } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
+            setTimeout(startListening, 1500);
+          }
+        } else {
+          // Handle case where webhook didn't return a valid response
+          toast({
+            title: "Error",
+            description: "No valid response received from the webhook",
+            variant: "destructive"
+          });
         }
-      } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
-        // Increased delay to wait for proper silence detection
-        setTimeout(startListening, 1500);
+      } catch (error) {
+        console.error("Error processing webhook request:", error);
+        toast({
+          title: "Error",
+          description: "Failed to get response from webhook",
+          variant: "destructive"
+        });
+      } finally {
+        setIsProcessing(false);
       }
-      
-      setIsProcessing(false);
-    }, 1000);
+    } else {
+      // Fallback behavior when no webhook is configured
+      setTimeout(() => {
+        const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
+        const assistantMessage: Message = {
+          id: uuidv4(),
+          text: assistantResponse,
+          sender: 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Always generate speech for assistant responses unless muted
+        if (!isMuted && generateSpeech) {
+          try {
+            generateSpeech(assistantResponse);
+          } catch (err) {
+            console.error("Failed to generate speech:", err);
+          }
+        } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
+          setTimeout(startListening, 1500);
+        }
+        
+        setIsProcessing(false);
+      }, 1000);
+    }
   }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, agentName]);
 
   // Initialize with welcome message - now a memoized function
-  const initializeConversation = useCallback(() => {
+  const initializeConversation = useCallback(async () => {
     console.log("Initializing conversation with welcome message");
     
     // Clear existing messages
@@ -120,15 +149,19 @@ export const useConversation = ({
     
     // Send welcome message to webhook if configured
     if (webhookUrlRef.current) {
-      sendWebhookRequest(webhookUrlRef.current, {
-        type: 'conversation_start',
-        message: welcomeMessage.text,
-        messageId: welcomeMessage.id,
-        agent: agentName
-      });
+      try {
+        await sendWebhookRequest(webhookUrlRef.current, {
+          type: 'conversation_start',
+          message: welcomeMessage.text,
+          messageId: welcomeMessage.id,
+          agent: agentName
+        });
+      } catch (error) {
+        console.error("Error sending initial webhook request:", error);
+      }
     }
     
-    // Always generate speech for welcome message unless muted
+    // Generate speech for welcome message unless muted
     if (!isMuted && generateSpeech) {
       console.log("Generating speech for welcome message");
       setTimeout(() => {
@@ -144,22 +177,26 @@ export const useConversation = ({
   }, [generateSpeech, isMuted, agentName]);
 
   // Function to restart the conversation
-  const restartConversation = useCallback(() => {
+  const restartConversation = useCallback(async () => {
     console.log("Restarting conversation");
     
     // Generate a unique ID for the restart event
     const restartId = uuidv4();
     const restartMessage = "Conversation restarted";
     
-    // Send conversation_end event to webhook if configured
+    // Send conversation_restart event to webhook if configured
     if (webhookUrlRef.current) {
-      sendWebhookRequest(webhookUrlRef.current, {
-        type: 'conversation_restart',
-        message: restartMessage,
-        messageId: restartId,
-        messageCount: messages.length,
-        agent: agentName
-      });
+      try {
+        await sendWebhookRequest(webhookUrlRef.current, {
+          type: 'conversation_restart',
+          message: restartMessage,
+          messageId: restartId,
+          messageCount: messages.length,
+          agent: agentName
+        });
+      } catch (error) {
+        console.error("Error sending restart webhook request:", error);
+      }
     }
     
     setIsInitialized(false);

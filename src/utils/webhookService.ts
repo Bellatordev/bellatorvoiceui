@@ -1,6 +1,6 @@
 
 /**
- * Utility service for handling webhook interactions
+ * Utility service for handling webhook interactions with n8n
  */
 
 interface WebhookRequestData {
@@ -10,47 +10,33 @@ interface WebhookRequestData {
   [key: string]: any; // Allow for additional properties
 }
 
+interface WebhookResponse {
+  message: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 /**
- * Send data to a webhook URL
+ * Send data to a webhook URL and get a response
  * 
  * @param webhookUrl The URL to send the data to
  * @param data The data to send
- * @returns A promise that resolves when the request is complete
+ * @returns A promise that resolves with the webhook response
  */
-export const sendWebhookRequest = async (webhookUrl: string, data: WebhookRequestData): Promise<void> => {
-  if (!webhookUrl) return;
+export const sendWebhookRequest = async (webhookUrl: string, data: WebhookRequestData): Promise<WebhookResponse | null> => {
+  if (!webhookUrl) {
+    console.warn("No webhook URL provided");
+    return null;
+  }
   
   try {
-    // Create URL object to handle query parameters
-    const url = new URL(webhookUrl);
-    
     // Ensure the message is a proper string
     if (data.message) {
-      const messageText = typeof data.message === 'object' 
+      data.message = typeof data.message === 'object' 
         ? JSON.stringify(data.message)
         : String(data.message);
-      
-      // Add message as a query parameter
-      url.searchParams.append('message', messageText);
-      
-      // Also ensure message in the body is a proper string
-      data.message = messageText;
     }
     
-    // Add messageId as a query parameter
-    if (data.messageId) {
-      url.searchParams.append('messageId', data.messageId);
-    }
-    
-    // Construct path parameter URL if needed
-    // If the messageId is present, add it as a path parameter
-    let finalUrl = url.toString();
-    if (data.messageId) {
-      // Ensure the URL doesn't end with a slash before appending
-      finalUrl = finalUrl.endsWith('/') ? `${finalUrl}${data.messageId}` : `${finalUrl}/${data.messageId}`;
-    }
-    
-    console.log(`Sending webhook request to: ${finalUrl}`);
+    console.log(`Sending webhook request to: ${webhookUrl}`);
     console.log('Webhook data:', data);
     
     // Add common fields
@@ -60,18 +46,26 @@ export const sendWebhookRequest = async (webhookUrl: string, data: WebhookReques
       source: window.location.origin
     };
     
-    await fetch(finalUrl, {
+    // Send POST request with JSON body (not using no-cors to get a response)
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      mode: "no-cors", // This is necessary to avoid CORS issues with external webhooks
       body: JSON.stringify(webhookData),
     });
     
-    console.log("Webhook request sent successfully");
+    // Process the response
+    if (!response.ok) {
+      throw new Error(`Webhook returned status: ${response.status}`);
+    }
+    
+    // Parse the response as JSON
+    const result = await response.json();
+    console.log("Webhook response received:", result);
+    return result;
   } catch (error) {
     console.error("Error sending webhook request:", error);
-    // We intentionally don't throw here to avoid disrupting the user experience
+    return null;
   }
 };

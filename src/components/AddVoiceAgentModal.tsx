@@ -102,10 +102,13 @@ const AddVoiceAgentModal: React.FC<AddVoiceAgentModalProps> = ({ isOpen, onClose
               name="webhookUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Webhook URL</FormLabel>
+                  <FormLabel>n8n Webhook URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://your-webhook-url.com" {...field} />
+                    <Input placeholder="https://your-n8n-webhook-url.com" {...field} />
                   </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    URL of your n8n webhook that will process messages and return responses
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
