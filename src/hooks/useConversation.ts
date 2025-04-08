@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -31,6 +32,7 @@ export const useConversation = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const webhookUrlRef = useRef<string | undefined>(webhookUrl);
+  const sessionIdRef = useRef<string>(uuidv4()); // Create a unique session ID when the hook initializes
   
   // Update the webhook URL ref when it changes
   useEffect(() => {
@@ -54,8 +56,12 @@ export const useConversation = ({
     // Send user message to webhook if configured and wait for response
     if (webhookUrlRef.current) {
       try {
-        // Only send the user's message text to the webhook
-        const webhookResponse = await sendWebhookRequest(webhookUrlRef.current, text);
+        // Send the user's message text and the session ID to the webhook
+        const webhookResponse = await sendWebhookRequest(
+          webhookUrlRef.current, 
+          text,
+          sessionIdRef.current
+        );
         
         if (webhookResponse && webhookResponse.message) {
           // Use the response from the webhook
@@ -129,6 +135,10 @@ export const useConversation = ({
   const initializeConversation = useCallback(async () => {
     console.log("Initializing conversation with welcome message");
     
+    // Generate a new session ID for each new conversation
+    sessionIdRef.current = uuidv4();
+    console.log("New session initialized with ID:", sessionIdRef.current);
+    
     // Clear existing messages
     setMessages([]);
     
@@ -163,6 +173,10 @@ export const useConversation = ({
   const restartConversation = useCallback(async () => {
     console.log("Restarting conversation");
     
+    // Generate a new session ID for the restarted conversation
+    sessionIdRef.current = uuidv4();
+    console.log("Conversation restarted with new session ID:", sessionIdRef.current);
+    
     // No need to send restart event to webhook since we're only sending user messages
     
     setIsInitialized(false);
@@ -180,7 +194,8 @@ export const useConversation = ({
     processUserInput,
     initializeConversation,
     restartConversation,
-    isProcessing
+    isProcessing,
+    sessionId: sessionIdRef.current // Expose session ID in case it's needed elsewhere
   };
 };
 

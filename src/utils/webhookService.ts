@@ -8,14 +8,24 @@ interface WebhookResponse {
   [key: string]: any; // Allow for additional properties
 }
 
+interface WebhookPayload {
+  message: string;
+  sessionId: string;
+}
+
 /**
  * Send data to a webhook URL and get a response
  * 
  * @param webhookUrl The URL to send the data to
  * @param message The user's message to send
+ * @param sessionId Unique identifier for the conversation session
  * @returns A promise that resolves with the webhook response
  */
-export const sendWebhookRequest = async (webhookUrl: string, message: string): Promise<WebhookResponse | null> => {
+export const sendWebhookRequest = async (
+  webhookUrl: string, 
+  message: string, 
+  sessionId: string
+): Promise<WebhookResponse | null> => {
   if (!webhookUrl) {
     console.warn("No webhook URL provided");
     return null;
@@ -29,14 +39,18 @@ export const sendWebhookRequest = async (webhookUrl: string, message: string): P
     
     console.log(`Sending webhook request to: ${webhookUrl}`);
     console.log('Webhook message:', messageText);
+    console.log('Session ID:', sessionId);
     
-    // Send POST request with only the message as the body
+    // Send POST request with the message and sessionId
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message: messageText }),
+      body: JSON.stringify({ 
+        message: messageText,
+        sessionId: sessionId
+      }),
     });
     
     // Process the response
