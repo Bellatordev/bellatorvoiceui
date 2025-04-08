@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -55,12 +54,8 @@ export const useConversation = ({
     // Send user message to webhook if configured and wait for response
     if (webhookUrlRef.current) {
       try {
-        const webhookResponse = await sendWebhookRequest(webhookUrlRef.current, {
-          type: 'user_message',
-          message: text,
-          messageId: userMessage.id,
-          agent: agentName
-        });
+        // Only send the user's message text to the webhook
+        const webhookResponse = await sendWebhookRequest(webhookUrlRef.current, text);
         
         if (webhookResponse && webhookResponse.message) {
           // Use the response from the webhook
@@ -147,19 +142,7 @@ export const useConversation = ({
     setMessages([welcomeMessage]);
     setIsInitialized(true);
     
-    // Send welcome message to webhook if configured
-    if (webhookUrlRef.current) {
-      try {
-        await sendWebhookRequest(webhookUrlRef.current, {
-          type: 'conversation_start',
-          message: welcomeMessage.text,
-          messageId: welcomeMessage.id,
-          agent: agentName
-        });
-      } catch (error) {
-        console.error("Error sending initial webhook request:", error);
-      }
-    }
+    // Don't send welcome message to webhook since we're only sending user messages now
     
     // Generate speech for welcome message unless muted
     if (!isMuted && generateSpeech) {
@@ -174,30 +157,13 @@ export const useConversation = ({
         }
       }, 300); // Small delay to ensure message is rendered first
     }
-  }, [generateSpeech, isMuted, agentName]);
+  }, [generateSpeech, isMuted]);
 
   // Function to restart the conversation
   const restartConversation = useCallback(async () => {
     console.log("Restarting conversation");
     
-    // Generate a unique ID for the restart event
-    const restartId = uuidv4();
-    const restartMessage = "Conversation restarted";
-    
-    // Send conversation_restart event to webhook if configured
-    if (webhookUrlRef.current) {
-      try {
-        await sendWebhookRequest(webhookUrlRef.current, {
-          type: 'conversation_restart',
-          message: restartMessage,
-          messageId: restartId,
-          messageCount: messages.length,
-          agent: agentName
-        });
-      } catch (error) {
-        console.error("Error sending restart webhook request:", error);
-      }
-    }
+    // No need to send restart event to webhook since we're only sending user messages
     
     setIsInitialized(false);
     setMessages([]);
@@ -206,7 +172,7 @@ export const useConversation = ({
     setTimeout(() => {
       initializeConversation();
     }, 300);
-  }, [initializeConversation, messages.length, agentName]);
+  }, [initializeConversation]);
 
   return {
     messages,
