@@ -37,6 +37,13 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
+    // Create the request body - ensure message is the primary data being sent
+    const requestBody = {
+      message: messageText
+    };
+    
+    console.log('Full request body:', JSON.stringify(requestBody));
+    
     // First try with proper CORS handling to get full response
     try {
       const response = await fetch(webhookUrl, {
@@ -47,9 +54,7 @@ export const sendWebhookRequest = async (
           "X-Session-ID": sessionId,
           "Authorization": `Session ${sessionId}`
         },
-        body: JSON.stringify({ 
-          message: messageText
-        })
+        body: JSON.stringify(requestBody)
       });
       
       // If the request was successful (no CORS error)
@@ -91,9 +96,7 @@ export const sendWebhookRequest = async (
           "Authorization": `Session ${sessionId}`
         },
         mode: "no-cors",
-        body: JSON.stringify({ 
-          message: messageText
-        })
+        body: JSON.stringify(requestBody)
       });
       
       // Since we're using no-cors, response will be opaque and we can't read its content
