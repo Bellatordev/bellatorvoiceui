@@ -49,7 +49,6 @@ export const useWebhookCommunication = ({
       });
       
       // Send the user's message text and the session ID to the webhook
-      // Ensure the text is properly included in the request
       const webhookResponse = await sendWebhookRequest(
         webhookUrl, 
         text,
