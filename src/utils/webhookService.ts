@@ -19,7 +19,8 @@ interface WebhookResponse {
 export const sendWebhookRequest = async (
   webhookUrl: string, 
   message: string, 
-  sessionId: string
+  sessionId: string,
+  retryCount = 0
 ): Promise<WebhookResponse | null> => {
   if (!webhookUrl) {
     console.warn("No webhook URL provided");
@@ -79,6 +80,18 @@ export const sendWebhookRequest = async (
     };
   } catch (error) {
     console.error("Error sending webhook request:", error);
-    return null;
+    
+    // Implement retry logic (maximum 2 retries)
+    if (retryCount < 2) {
+      console.log(`Retrying webhook request (attempt ${retryCount + 1})...`);
+      // Wait 1 second before retry
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return sendWebhookRequest(webhookUrl, message, sessionId, retryCount + 1);
+    }
+    
+    // If all retries fail, return a descriptive error
+    return { 
+      message: "I'm sorry, I couldn't get a response from the service. Please try again in a moment." 
+    };
   }
 };
