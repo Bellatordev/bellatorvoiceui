@@ -41,6 +41,13 @@ export const useWebhookCommunication = ({
     try {
       console.log(`Processing user input: "${text}" with session ID: ${sessionId}`);
       
+      // Show a toast to inform the user that the message is being sent
+      toast({
+        title: "Sending message",
+        description: "Connecting to n8n webhook...",
+        duration: 3000
+      });
+      
       // Send the user's message text and the session ID to the webhook
       const webhookResponse = await sendWebhookRequest(
         webhookUrl, 
@@ -85,7 +92,7 @@ export const useWebhookCommunication = ({
           // Add a fallback message
           const fallbackMessage: Message = {
             id: uuidv4(),
-            text: "I received your message but couldn't generate a proper response. Please try again.",
+            text: "I received your message but couldn't generate a proper response. Please check your n8n webhook configuration.",
             sender: 'assistant',
             timestamp: new Date(),
           };
@@ -97,7 +104,7 @@ export const useWebhookCommunication = ({
         // Handle case where webhook didn't return a valid response
         toast({
           title: "Communication Error",
-          description: "Could not connect to the service. Please check your internet connection.",
+          description: "Could not connect to the n8n webhook. Please check your webhook URL.",
           variant: "destructive"
         });
         console.error("No webhook response received");
@@ -105,7 +112,7 @@ export const useWebhookCommunication = ({
         // Add a fallback message
         const fallbackMessage: Message = {
           id: uuidv4(),
-          text: "I'm sorry, I couldn't connect to the service. Please check your internet connection and try again.",
+          text: "I'm sorry, I couldn't connect to the n8n webhook. Please check that your webhook URL is correct and the service is running.",
           sender: 'assistant',
           timestamp: new Date(),
         };
@@ -124,7 +131,7 @@ export const useWebhookCommunication = ({
       // Add a fallback message
       const fallbackMessage: Message = {
         id: uuidv4(),
-        text: "I encountered an error while processing your request. Please try again.",
+        text: "I encountered an error while processing your request. This might be due to CORS restrictions or network issues. Please check your webhook URL and n8n configuration.",
         sender: 'assistant',
         timestamp: new Date(),
       };

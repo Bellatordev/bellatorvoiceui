@@ -77,12 +77,11 @@ export const useConversation = ({
       await sendMessageToWebhook(text, setMessages);
     } else {
       // Use fallback behavior when no webhook is configured
-      // Fix: Create a temporary state for processing instead of passing a boolean directly
-      const [localIsProcessing, setLocalIsProcessing] = useState(false);
-      setLocalIsProcessing(true); // Start processing
+      const [localProcessing, setLocalProcessing] = useState(false);
+      setLocalProcessing(true);
       
-      // Now pass the proper setState function to generateFallbackResponse
-      generateFallbackResponse(text, setMessages, setLocalIsProcessing);
+      // Pass the state setter, not a boolean
+      generateFallbackResponse(text, setMessages, setLocalProcessing);
     }
   }, [isProcessing, webhookUrl, sendMessageToWebhook, generateFallbackResponse]);
 
