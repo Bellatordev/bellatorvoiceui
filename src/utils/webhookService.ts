@@ -68,15 +68,7 @@ export const sendWebhookRequest = async (
     const result = await response.json();
     console.log("Webhook response received:", result);
     
-    // If n8n doesn't return a message property, create one with a default message
-    if (!result.message) {
-      console.warn("No message property in webhook response, using default");
-      return {
-        message: "I received your message and processed it through the workflow.",
-        ...result
-      };
-    }
-    
+    // Return the raw result from the webhook without adding default message
     return result;
   } catch (error) {
     console.error("Error sending webhook request:", error);
