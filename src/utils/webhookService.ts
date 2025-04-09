@@ -8,6 +8,11 @@ interface WebhookResponse {
   [key: string]: any; // Allow for additional properties
 }
 
+interface WebhookPayload {
+  message: string;
+  sessionId: string;
+}
+
 /**
  * Send data to a webhook URL and get a response
  * 
@@ -19,8 +24,7 @@ interface WebhookResponse {
 export const sendWebhookRequest = async (
   webhookUrl: string, 
   message: string, 
-  sessionId: string,
-  retryCount = 0
+  sessionId: string
 ): Promise<WebhookResponse | null> => {
   if (!webhookUrl) {
     console.warn("No webhook URL provided");
@@ -37,15 +41,15 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
-    // Send POST request with the message in the body and sessionId in the header
+    // Send POST request with the message and sessionId
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Session-ID": sessionId
       },
       body: JSON.stringify({ 
-        message: messageText
+        message: messageText,
+        sessionId: sessionId
       }),
     });
     
@@ -57,41 +61,9 @@ export const sendWebhookRequest = async (
     // Parse the response as JSON
     const result = await response.json();
     console.log("Webhook response received:", result);
-    
-    // Handle different response formats
-    if (Array.isArray(result) && result.length > 0) {
-      // Handle n8n response format: [{"output":"message text"}]
-      if (result[0].output) {
-        return { message: result[0].output };
-      }
-    }
-    
-    // For the original format with direct message property
-    if (result.message) {
-      return result;
-    }
-    
-    // Fallback for unexpected formats
-    console.warn("Unexpected webhook response format:", result);
-    return { 
-      message: Array.isArray(result) 
-        ? JSON.stringify(result) 
-        : (typeof result === 'string' ? result : JSON.stringify(result)) 
-    };
+    return result;
   } catch (error) {
     console.error("Error sending webhook request:", error);
-    
-    // Implement retry logic (maximum 2 retries)
-    if (retryCount < 2) {
-      console.log(`Retrying webhook request (attempt ${retryCount + 1})...`);
-      // Wait 1 second before retry
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return sendWebhookRequest(webhookUrl, message, sessionId, retryCount + 1);
-    }
-    
-    // If all retries fail, return a descriptive error
-    return { 
-      message: "I'm sorry, I couldn't get a response from the service. Please try again in a moment." 
-    };
+    return null;
   }
 };
