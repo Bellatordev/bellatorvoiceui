@@ -37,13 +37,9 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
-    // Send POST request with just the message in body and session ID in headers
-    // We'll try with and without no-cors mode if needed
-    let response;
-    
+    // First try with proper CORS handling to get full response
     try {
-      // First attempt: without no-cors mode to allow proper response handling
-      response = await fetch(webhookUrl, {
+      const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,14 +49,40 @@ export const sendWebhookRequest = async (
         },
         body: JSON.stringify({ 
           message: messageText
-        }),
-        // No mode: "no-cors" here to allow proper response handling
+        })
       });
-    } catch (initialError) {
-      console.warn("Initial fetch attempt failed, trying with no-cors mode:", initialError);
       
-      // Second attempt: with no-cors as fallback if the first attempt fails
-      response = await fetch(webhookUrl, {
+      // If the request was successful (no CORS error)
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Webhook response received:", result);
+        
+        // Handle different response formats
+        if (Array.isArray(result) && result.length > 0) {
+          // Handle n8n response format: [{"output":"message text"}]
+          if (result[0].output) {
+            return { message: result[0].output };
+          }
+        }
+        
+        // For the original format with direct message property
+        if (result.message) {
+          return result;
+        }
+        
+        // Fallback for unexpected formats
+        return { 
+          message: typeof result === 'string' ? result : JSON.stringify(result)
+        };
+      } else {
+        throw new Error(`Webhook returned status: ${response.status}`);
+      }
+    } catch (corsError) {
+      // If CORS error or any other error, try with no-cors mode
+      console.warn("Regular fetch failed, attempting with no-cors mode:", corsError);
+      
+      // This will allow the request to be sent but the response will be opaque
+      const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,52 +90,60 @@ export const sendWebhookRequest = async (
           "X-Session-ID": sessionId,
           "Authorization": `Session ${sessionId}`
         },
-        mode: "no-cors", // Fallback to no-cors mode
+        mode: "no-cors",
         body: JSON.stringify({ 
           message: messageText
-        }),
+        })
       });
-    }
-    
-    // Check if we got an opaque response (due to no-cors mode)
-    if (response.type === 'opaque') {
-      console.log("Received opaque response due to no-cors mode");
-      // For opaque responses, we'll assume success but can't parse the response
-      // The webhook probably worked, but we can't confirm the exact response
+      
+      // Since we're using no-cors, response will be opaque and we can't read its content
+      console.log("Using no-cors mode, response type:", response.type);
+      
+      // If we've made it this far, the request was sent, but we can't read the response
+      // We'll check if we've retried yet, and if not, try again after a short delay
+      if (retryCount < 2) {
+        console.log(`Waiting 1 second and trying to fetch the response directly (attempt ${retryCount + 1})`);
+        
+        // Wait a second for the webhook to potentially process the request
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        try {
+          // Try to get the result by making a direct GET request
+          // Some webhooks store the last response and can return it via GET
+          const checkResponse = await fetch(webhookUrl, {
+            method: "GET",
+            headers: {
+              "Session-ID": sessionId,
+              "X-Session-ID": sessionId
+            }
+          });
+          
+          if (checkResponse.ok) {
+            const checkResult = await checkResponse.json();
+            console.log("Retrieved response via GET:", checkResult);
+            
+            if (Array.isArray(checkResult) && checkResult.length > 0) {
+              if (checkResult[0].output) {
+                return { message: checkResult[0].output };
+              }
+            }
+            
+            if (checkResult.message) {
+              return checkResult;
+            }
+            
+            return { message: typeof checkResult === 'string' ? checkResult : JSON.stringify(checkResult) };
+          }
+        } catch (checkError) {
+          console.warn("Failed to check result via GET:", checkError);
+        }
+      }
+      
+      // If nothing else works, return a generic message
       return { 
-        message: "I received your message and I'm processing it. (Note: I'm unable to show the actual response due to cross-origin restrictions, but your message was sent.)"
+        message: "Your message was sent, but due to cross-origin restrictions, I couldn't retrieve the actual response. If this issue persists, you may need to enable CORS on your n8n server or use a CORS proxy."
       };
     }
-    
-    // Process the response (this will only happen if CORS is properly configured)
-    if (!response.ok) {
-      throw new Error(`Webhook returned status: ${response.status}`);
-    }
-    
-    // Parse the response as JSON
-    const result = await response.json();
-    console.log("Webhook response received:", result);
-    
-    // Handle different response formats
-    if (Array.isArray(result) && result.length > 0) {
-      // Handle n8n response format: [{"output":"message text"}]
-      if (result[0].output) {
-        return { message: result[0].output };
-      }
-    }
-    
-    // For the original format with direct message property
-    if (result.message) {
-      return result;
-    }
-    
-    // Fallback for unexpected formats
-    console.warn("Unexpected webhook response format:", result);
-    return { 
-      message: Array.isArray(result) 
-        ? JSON.stringify(result) 
-        : (typeof result === 'string' ? result : JSON.stringify(result)) 
-    };
   } catch (error) {
     console.error("Error sending webhook request:", error);
     
@@ -127,7 +157,7 @@ export const sendWebhookRequest = async (
     
     // If all retries fail, return a descriptive error
     return { 
-      message: "I'm sorry, I couldn't connect to the n8n webhook. This might be due to CORS restrictions or network issues. Please ensure your webhook URL is correct and accessible from a browser."
+      message: "I'm sorry, I couldn't connect to the n8n webhook. This might be due to CORS restrictions or network issues. Please ensure your webhook URL is correct and accessible."
     };
   }
 };
