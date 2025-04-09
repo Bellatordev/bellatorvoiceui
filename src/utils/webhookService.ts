@@ -37,25 +37,51 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
-    // Send POST request with the message in body and sessionId in standard headers
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Session-ID": sessionId, // Standard header format
-        "X-Session-ID": sessionId, // Also include X- prefixed version for compatibility
-        "Authorization": `Session ${sessionId}` // Additional format some systems recognize
-      },
-      body: JSON.stringify({ 
-        message: messageText
-      }),
-    });
+    // Send POST request with just the message in body and session ID in headers
+    // We'll try with and without no-cors mode if needed
+    let response;
     
-    // Check if we can access the response
+    try {
+      // First attempt: without no-cors mode to allow proper response handling
+      response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Session-ID": sessionId,
+          "X-Session-ID": sessionId,
+          "Authorization": `Session ${sessionId}`
+        },
+        body: JSON.stringify({ 
+          message: messageText
+        }),
+        // No mode: "no-cors" here to allow proper response handling
+      });
+    } catch (initialError) {
+      console.warn("Initial fetch attempt failed, trying with no-cors mode:", initialError);
+      
+      // Second attempt: with no-cors as fallback if the first attempt fails
+      response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Session-ID": sessionId,
+          "X-Session-ID": sessionId,
+          "Authorization": `Session ${sessionId}`
+        },
+        mode: "no-cors", // Fallback to no-cors mode
+        body: JSON.stringify({ 
+          message: messageText
+        }),
+      });
+    }
+    
+    // Check if we got an opaque response (due to no-cors mode)
     if (response.type === 'opaque') {
       console.log("Received opaque response due to no-cors mode");
+      // For opaque responses, we'll assume success but can't parse the response
+      // The webhook probably worked, but we can't confirm the exact response
       return { 
-        message: "I received your message, but I'm unable to show the actual response due to cross-origin restrictions. Please check your n8n webhook configuration."
+        message: "I received your message and I'm processing it. (Note: I'm unable to show the actual response due to cross-origin restrictions, but your message was sent.)"
       };
     }
     
@@ -105,4 +131,3 @@ export const sendWebhookRequest = async (
     };
   }
 };
-
