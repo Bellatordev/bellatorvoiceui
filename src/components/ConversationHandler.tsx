@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import useConversation from '@/hooks/useConversation';
-import { toast } from '@/components/ui/use-toast';
 
 interface ConversationHandlerProps {
   generateSpeech?: (text: string) => Promise<void>;
