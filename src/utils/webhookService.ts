@@ -38,52 +38,45 @@ export const sendWebhookRequest = async (
       : String(message);
     
     console.log(`Sending webhook request to: ${webhookUrl}`);
-    console.log('Webhook message:', messageText);
-    console.log('Session ID:', sessionId);
+    console.log('Webhook payload:', { message: messageText, sessionId });
     
-    // First try with POST request (which is more common for webhooks)
-    let response = await fetch(webhookUrl, {
+    // Prepare the payload for n8n webhook
+    const payload: WebhookPayload = {
+      message: messageText,
+      sessionId: sessionId
+    };
+    
+    // Make the POST request to n8n
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ 
-        message: messageText,
-        sessionId: sessionId
-      }),
+      body: JSON.stringify(payload),
     });
     
-    // If we get a 404 that mentions GET requests, try with GET
-    if (response.status === 404) {
-      const error = await response.json().catch(() => ({ message: "Not found" }));
-      
-      if (error && error.message && error.message.includes("GET request")) {
-        console.log("Webhook suggests using GET instead of POST, trying GET...");
-        
-        // Append parameters to URL for GET request
-        const urlWithParams = new URL(webhookUrl);
-        urlWithParams.searchParams.append("message", messageText);
-        urlWithParams.searchParams.append("sessionId", sessionId);
-        
-        response = await fetch(urlWithParams.toString(), {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          }
-        });
-      }
-    }
+    console.log(`Webhook response status: ${response.status}`);
     
     // Process the response
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.message || `Webhook returned status: ${response.status}`;
-      throw new Error(errorMessage);
+      const errorText = await response.text();
+      console.error(`Webhook error response: ${errorText}`);
+      throw new Error(`Webhook returned status: ${response.status}, message: ${errorText}`);
     }
     
     // Parse the response as JSON
     const result = await response.json();
     console.log("Webhook response received:", result);
+    
+    // If n8n doesn't return a message property, create one with a default message
+    if (!result.message) {
+      console.warn("No message property in webhook response, using default");
+      return {
+        message: "I received your message and processed it through the workflow.",
+        ...result
+      };
+    }
+    
     return result;
   } catch (error) {
     console.error("Error sending webhook request:", error);
@@ -93,7 +86,7 @@ export const sendWebhookRequest = async (
     
     // Return a structured error response that the UI can handle
     return {
-      message: `I received your message but there was an issue with the webhook: ${errorMessage}. Please check your webhook configuration - it may require using GET instead of POST, or the URL might be incorrect.`,
+      message: `I received your message but there was an issue with the webhook: ${errorMessage}. Please check your n8n webhook configuration and ensure it's properly set up to receive POST requests.`,
       error: errorMessage,
       success: false
     };
