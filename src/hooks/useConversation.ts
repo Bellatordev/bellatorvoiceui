@@ -1,10 +1,8 @@
-
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
-import { useWebhookCommunication } from './useWebhookCommunication';
-import { useFallbackResponses } from './useFallbackResponses';
-import { useConversationLifecycle } from './useConversationLifecycle';
+import { toast } from '@/components/ui/use-toast';
+import { sendWebhookRequest } from '@/utils/webhookService';
 
 interface UseConversationOptions {
   generateSpeech?: (text: string) => Promise<void>;
@@ -30,38 +28,20 @@ export const useConversation = ({
   agentName = 'Assistant'
 }: UseConversationOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const webhookUrlRef = useRef<string | undefined>(webhookUrl);
   const sessionIdRef = useRef<string>(uuidv4()); // Create a unique session ID when the hook initializes
   
-  // Use our smaller hooks
-  const { isProcessing, sendMessageToWebhook } = useWebhookCommunication({
-    webhookUrl,
-    sessionId: sessionIdRef.current,
-    generateSpeech,
-    isMuted,
-    autoStartMic,
-    isPlaying,
-    isGenerating,
-    startListening
-  });
-  
-  const { generateFallbackResponse } = useFallbackResponses({
-    generateSpeech,
-    isMuted,
-    autoStartMic,
-    isPlaying,
-    isGenerating,
-    startListening
-  });
-  
-  const { isInitialized, initializeConversation, restartConversation } = useConversationLifecycle({
-    generateSpeech,
-    isMuted,
-    sessionIdRef
-  });
+  // Update the webhook URL ref when it changes
+  useEffect(() => {
+    webhookUrlRef.current = webhookUrl;
+  }, [webhookUrl]);
 
-  // Process user input and get a response
   const processUserInput = useCallback(async (text: string) => {
     if (!text.trim() || isProcessing) return;
+    
+    setIsProcessing(true);
     
     const userMessage: Message = {
       id: uuidv4(),
@@ -73,34 +53,190 @@ export const useConversation = ({
     setMessages(prev => [...prev, userMessage]);
     
     // Send user message to webhook if configured and wait for response
-    if (webhookUrl) {
-      await sendMessageToWebhook(text, setMessages);
+    if (webhookUrlRef.current) {
+      try {
+        console.log(`Processing user input: "${text}" with session ID: ${sessionIdRef.current}`);
+        
+        // Send the user's message text and the session ID to the webhook
+        const webhookResponse = await sendWebhookRequest(
+          webhookUrlRef.current, 
+          text,
+          sessionIdRef.current
+        );
+        
+        if (webhookResponse) {
+          if (webhookResponse.message) {
+            // Use the response from the webhook
+            const assistantMessage: Message = {
+              id: uuidv4(),
+              text: webhookResponse.message,
+              sender: 'assistant',
+              timestamp: new Date(),
+            };
+            
+            console.log('Adding assistant message:', assistantMessage.text);
+            setMessages(prev => [...prev, assistantMessage]);
+            
+            // Generate speech for the response if not muted
+            if (!isMuted && generateSpeech) {
+              try {
+                generateSpeech(assistantMessage.text);
+              } catch (err) {
+                console.error("Failed to generate speech:", err);
+              }
+            } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
+              setTimeout(startListening, 1500);
+            }
+          } else {
+            // Handle case where response doesn't have a message property
+            console.error("Webhook response missing message property:", webhookResponse);
+            toast({
+              title: "Unexpected Response",
+              description: "The service response didn't contain a message",
+              variant: "destructive"
+            });
+            
+            // Add a fallback message
+            const fallbackMessage: Message = {
+              id: uuidv4(),
+              text: "I received your message but couldn't generate a proper response. Please try again.",
+              sender: 'assistant',
+              timestamp: new Date(),
+            };
+            
+            setMessages(prev => [...prev, fallbackMessage]);
+          }
+        } else {
+          // Handle case where webhook didn't return a valid response
+          toast({
+            title: "Communication Error",
+            description: "Could not connect to the service. Please check your internet connection.",
+            variant: "destructive"
+          });
+          console.error("No webhook response received");
+          
+          // Add a fallback message
+          const fallbackMessage: Message = {
+            id: uuidv4(),
+            text: "I'm sorry, I couldn't connect to the service. Please check your internet connection and try again.",
+            sender: 'assistant',
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, fallbackMessage]);
+        }
+      } catch (error) {
+        console.error("Error processing webhook request:", error);
+        toast({
+          title: "Error",
+          description: "Failed to get response from webhook",
+          variant: "destructive"
+        });
+        
+        // Add a fallback message
+        const fallbackMessage: Message = {
+          id: uuidv4(),
+          text: "I encountered an error while processing your request. Please try again.",
+          sender: 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, fallbackMessage]);
+      } finally {
+        setIsProcessing(false);
+      }
     } else {
-      // Use fallback behavior when no webhook is configured
-      const [localProcessing, setLocalProcessing] = useState(false);
-      setLocalProcessing(true);
-      
-      // Pass the state setter, not a boolean
-      generateFallbackResponse(text, setMessages, setLocalProcessing);
+      // Fallback behavior when no webhook is configured
+      setTimeout(() => {
+        const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
+        const assistantMessage: Message = {
+          id: uuidv4(),
+          text: assistantResponse,
+          sender: 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Always generate speech for assistant responses unless muted
+        if (!isMuted && generateSpeech) {
+          try {
+            generateSpeech(assistantResponse);
+          } catch (err) {
+            console.error("Failed to generate speech:", err);
+          }
+        } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
+          setTimeout(startListening, 1500);
+        }
+        
+        setIsProcessing(false);
+      }, 1000);
     }
-  }, [isProcessing, webhookUrl, sendMessageToWebhook, generateFallbackResponse]);
+  }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, agentName]);
 
-  // Initialize the conversation wrapper for compatibility
-  const initialize = useCallback(() => {
-    initializeConversation(setMessages);
+  // Initialize with welcome message - now a memoized function
+  const initializeConversation = useCallback(async () => {
+    console.log("Initializing conversation with welcome message");
+    
+    // Generate a new session ID for each new conversation
+    sessionIdRef.current = uuidv4();
+    console.log("New session initialized with ID:", sessionIdRef.current);
+    
+    // Clear existing messages
+    setMessages([]);
+    
+    const welcomeMessage: Message = {
+      id: uuidv4(),
+      text: "Hello! How can I help you today?",
+      sender: 'assistant',
+      timestamp: new Date(),
+    };
+    
+    setMessages([welcomeMessage]);
+    setIsInitialized(true);
+    
+    // Don't send welcome message to webhook since we're only sending user messages now
+    
+    // Generate speech for welcome message unless muted
+    if (!isMuted && generateSpeech) {
+      console.log("Generating speech for welcome message");
+      setTimeout(() => {
+        try {
+          generateSpeech(welcomeMessage.text).catch(err => {
+            console.error("Error generating welcome speech:", err);
+          });
+        } catch (err) {
+          console.error("Failed to generate speech for welcome message:", err);
+        }
+      }, 300); // Small delay to ensure message is rendered first
+    }
+  }, [generateSpeech, isMuted]);
+
+  // Function to restart the conversation
+  const restartConversation = useCallback(async () => {
+    console.log("Restarting conversation");
+    
+    // Generate a new session ID for the restarted conversation
+    sessionIdRef.current = uuidv4();
+    console.log("Conversation restarted with new session ID:", sessionIdRef.current);
+    
+    // No need to send restart event to webhook since we're only sending user messages
+    
+    setIsInitialized(false);
+    setMessages([]);
+    
+    // Re-initialize with a slight delay to ensure clean state
+    setTimeout(() => {
+      initializeConversation();
+    }, 300);
   }, [initializeConversation]);
-
-  // Restart the conversation wrapper for compatibility
-  const restart = useCallback(() => {
-    restartConversation(setMessages);
-  }, [restartConversation]);
 
   return {
     messages,
     setMessages,
     processUserInput,
-    initializeConversation: initialize,
-    restartConversation: restart,
+    initializeConversation,
+    restartConversation,
     isProcessing,
     sessionId: sessionIdRef.current // Expose session ID in case it's needed elsewhere
   };

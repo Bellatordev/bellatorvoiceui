@@ -38,29 +38,18 @@ export const sendWebhookRequest = async (
     console.log('Session ID:', sessionId);
     
     // Send POST request with the message in the body and sessionId in the header
-    // Using 'no-cors' mode to help with CORS issues
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Session-ID": sessionId
       },
-      mode: "no-cors", // Add no-cors mode to handle CORS issues
       body: JSON.stringify({ 
         message: messageText
       }),
     });
     
-    // With no-cors mode, we can't access the response details directly
-    // So we'll provide a more generic response
-    if (response.type === 'opaque') {
-      console.log("Received opaque response due to no-cors mode");
-      return { 
-        message: "I received your message, but I'm unable to show the actual response due to cross-origin restrictions. Please check your n8n webhook configuration."
-      };
-    }
-    
-    // Process the response (this will only happen if CORS is properly configured)
+    // Process the response
     if (!response.ok) {
       throw new Error(`Webhook returned status: ${response.status}`);
     }
@@ -102,7 +91,7 @@ export const sendWebhookRequest = async (
     
     // If all retries fail, return a descriptive error
     return { 
-      message: "I'm sorry, I couldn't connect to the n8n webhook. This might be due to CORS restrictions or network issues. Please ensure your webhook URL is correct and accessible from a browser."
+      message: "I'm sorry, I couldn't get a response from the service. Please try again in a moment." 
     };
   }
 };

@@ -1,12 +1,12 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
 import ConversationHandler from './ConversationHandler';
 import ErrorHandler from './ErrorHandler';
+import AudioSettings from './AudioSettings';
 import useElevenLabs from '@/hooks/useElevenLabs';
-import useAudioSettings from '@/hooks/useAudioSettings';
-import ConversationManager from './conversation/ConversationManager';
-import AudioControlsContainer from './audio/AudioControlsContainer';
+import { toast } from '@/components/ui/use-toast';
+import ConversationContainer from './conversation/ConversationContainer';
 
 interface ConversationInterfaceProps {
   apiKey: string;
@@ -23,6 +23,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   webhookUrl,
   agentName
 }) => {
+  const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
+  const [isMuted, setIsMuted] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [volume, setVolume] = useState(0.8);
+  const [autoStartMic, setAutoStartMic] = useState(true);
   const [ttsError, setTtsError] = useState<string | null>(null);
   
   const { 
@@ -37,19 +42,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     voiceId: agentId,
   });
 
-  const {
-    inputMode,
-    isMuted,
-    isMicMuted,
-    volume,
-    autoStartMic,
-    handleMuteToggle,
-    handleVolumeChange,
-    handleSwitchToTextMode,
-    handleSwitchToVoiceMode,
-    handleMicMuteToggle
-  } = useAudioSettings({ stopAudio });
-
   useEffect(() => {
     return () => {
       console.log('ConversationInterface unmounting, cleaning up resources');
@@ -57,6 +49,69 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       cleanup();
     };
   }, [stopAudio, cleanup]);
+
+  const handleMuteToggle = () => {
+    setIsMuted(!isMuted);
+    if (isPlaying) {
+      stopAudio();
+    }
+  };
+
+  const handleVolumeChange = (value: number) => {
+    console.log('Setting audio volume to', value);
+    setVolume(value);
+  };
+
+  const handleSwitchToTextMode = () => {
+    setIsMicMuted(true);
+    setInputMode('text');
+  };
+
+  const handleSwitchToVoiceMode = () => {
+    setIsMicMuted(false);
+    setInputMode('voice');
+  };
+
+  const handleMicMuteToggle = () => {
+    const newMuteState = !isMicMuted;
+    console.log(`Microphone mute toggled to: ${newMuteState ? 'muted' : 'unmuted'}`);
+    setIsMicMuted(newMuteState);
+  };
+
+  const handleEndConversation = (resetSpeech: () => void, endConversation: () => void, stopListening: () => void) => {
+    console.log("Ending conversation and shutting down all audio services");
+    stopAudio();
+    setIsMicMuted(true);
+    resetSpeech();
+    stopListening();
+    endConversation();
+    cleanup();
+    toast({
+      title: "Conversation Ended",
+      description: "The conversation has been reset. You can start a new one."
+    });
+  };
+
+  const handleRestartConversation = (resetSpeech: () => void, restartConversation: () => void) => {
+    console.log("Restarting conversation");
+    stopAudio();
+    setIsMicMuted(true);
+    resetSpeech();
+    restartConversation();
+    setTimeout(() => {
+      if (inputMode === 'voice') {
+        setIsMicMuted(false);
+      }
+    }, 1000);
+    toast({
+      title: "Conversation Restarted",
+      description: "Starting a new conversation."
+    });
+  };
+
+  useEffect(() => {
+    console.log(`Microphone mute state changed to: ${isMicMuted ? 'muted' : 'unmuted'}`);
+  }, [isMicMuted]);
 
   const handleLogout = () => {
     if (onLogout) {
@@ -97,41 +152,46 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 messages={messages}
                 setMessages={setMessages}
               >
-                <ConversationManager 
+                <ConversationContainer 
                   messages={messages}
                   isGenerating={isGenerating}
                   isPlaying={isPlaying}
-                  generateSpeech={generateSpeech}
-                  stopAudio={stopAudio}
-                  cleanup={cleanup}
-                  resetSpeech={resetSpeech}
-                  stopListening={stopListening}
-                  restartConversation={restartConversation}
+                  onToggleAudio={generateSpeech}
+                  onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
+                  onEndConversation={() => handleEndConversation(resetSpeech, () => {
+                    setMessages([]);
+                    stopListening();
+                  }, stopListening)}
                   onLogout={handleLogout}
                 />
                 
-                <AudioControlsContainer 
+                <TranscriptDisplay 
                   transcript={transcript}
+                  isMicMuted={isMicMuted}
                   isListening={isListening}
                   isGeneratingVoice={isGenerating || isPlaying}
                   inputMode={inputMode}
+                />
+                
+                <AudioSettings
+                  inputMode={inputMode}
+                  isListening={isListening}
                   isMuted={isMuted}
                   isMicMuted={isMicMuted}
                   volume={volume}
-                  toggleListening={async () => {
+                  onToggleListening={async () => {
                     if (isPlaying || isGenerating) {
                       stopAudio();
                       await new Promise(resolve => setTimeout(resolve, 300));
                     }
                     await toggleListening();
                   }}
-                  stopListening={stopListening}
-                  handleMuteToggle={handleMuteToggle}
-                  handleMicMuteToggle={handleMicMuteToggle}
-                  handleVolumeChange={handleVolumeChange}
-                  handleSwitchToTextMode={handleSwitchToTextMode}
-                  handleSwitchToVoiceMode={handleSwitchToVoiceMode}
-                  processUserInput={processUserInput}
+                  onMuteToggle={handleMuteToggle}
+                  onMicMuteToggle={handleMicMuteToggle}
+                  onVolumeChange={handleVolumeChange}
+                  onSwitchToTextMode={handleSwitchToTextMode}
+                  onSwitchToVoiceMode={handleSwitchToVoiceMode}
+                  onTextInputSubmit={processUserInput}
                 />
               </ErrorHandler>
             )}
