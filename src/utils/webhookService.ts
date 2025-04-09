@@ -8,11 +8,6 @@ interface WebhookResponse {
   [key: string]: any; // Allow for additional properties
 }
 
-interface WebhookPayload {
-  message: string;
-  sessionId: string;
-}
-
 /**
  * Send data to a webhook URL and get a response
  * 
@@ -41,15 +36,15 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
-    // Send POST request with the message and sessionId
+    // Send POST request with the message in the body and sessionId in the header
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-Session-ID": sessionId
       },
       body: JSON.stringify({ 
-        message: messageText,
-        sessionId: sessionId
+        message: messageText
       }),
     });
     
