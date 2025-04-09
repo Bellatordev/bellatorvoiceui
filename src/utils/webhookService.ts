@@ -37,21 +37,22 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
-    // Send POST request with the message in body and sessionId in standard headers
+    // Send POST request with the message in the body and sessionId in the header
+    // Using 'no-cors' mode to help with CORS issues
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Session-ID": sessionId, // Standard header format
-        "X-Session-ID": sessionId, // Also include X- prefixed version for compatibility
-        "Authorization": `Session ${sessionId}` // Additional format some systems recognize
+        "X-Session-ID": sessionId
       },
+      mode: "no-cors", // Add no-cors mode to handle CORS issues
       body: JSON.stringify({ 
         message: messageText
       }),
     });
     
-    // Check if we can access the response
+    // With no-cors mode, we can't access the response details directly
+    // So we'll provide a more generic response
     if (response.type === 'opaque') {
       console.log("Received opaque response due to no-cors mode");
       return { 
@@ -105,4 +106,3 @@ export const sendWebhookRequest = async (
     };
   }
 };
-
