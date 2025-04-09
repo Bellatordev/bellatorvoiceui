@@ -63,11 +63,11 @@ export const useConversation = ({
           sessionIdRef.current
         );
         
-        if (webhookResponse && webhookResponse.message) {
-          // Use the response from the webhook
+        if (webhookResponse) {
+          // Use the response from the webhook exactly as received
           const assistantMessage: Message = {
             id: uuidv4(),
-            text: webhookResponse.message,
+            text: webhookResponse.message || JSON.stringify(webhookResponse),
             sender: 'assistant',
             timestamp: new Date(),
           };
