@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -64,10 +63,29 @@ export const useConversation = ({
         );
         
         if (webhookResponse) {
-          // Use the response from the webhook exactly as received
+          // Parse the webhook response and extract the actual output content
+          let responseText = '';
+          
+          if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
+            // Handle array response with output property
+            responseText = webhookResponse[0].output;
+          } else if (webhookResponse.output) {
+            // Handle direct object with output property
+            responseText = webhookResponse.output;
+          } else if (webhookResponse.message) {
+            // Fallback to message property if output doesn't exist
+            responseText = webhookResponse.message;
+          } else {
+            // Last resort: stringify the response but with a warning
+            responseText = typeof webhookResponse === 'string' 
+              ? webhookResponse 
+              : JSON.stringify(webhookResponse);
+            console.warn("Response format not recognized, displaying raw response:", webhookResponse);
+          }
+          
           const assistantMessage: Message = {
             id: uuidv4(),
-            text: webhookResponse.message || JSON.stringify(webhookResponse),
+            text: responseText,
             sender: 'assistant',
             timestamp: new Date(),
           };
