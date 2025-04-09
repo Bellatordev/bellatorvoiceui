@@ -35,7 +35,7 @@ export const useConversation = ({
   // Use our smaller hooks
   const { isProcessing, sendMessageToWebhook } = useWebhookCommunication({
     webhookUrl,
-    sessionId: sessionIdRef.current,
+    sessionId: sessionIdRef.current, // Always use the current session ID
     generateSpeech,
     isMuted,
     autoStartMic,
@@ -63,6 +63,9 @@ export const useConversation = ({
   const processUserInput = useCallback(async (text: string) => {
     if (!text.trim() || isProcessing) return;
     
+    // Log the current session ID with each message for debugging
+    console.log(`Processing message with session ID: ${sessionIdRef.current}`);
+    
     const userMessage: Message = {
       id: uuidv4(),
       text: text,
@@ -83,7 +86,7 @@ export const useConversation = ({
       // Pass the state setter, not a boolean
       generateFallbackResponse(text, setMessages, setLocalProcessing);
     }
-  }, [isProcessing, webhookUrl, sendMessageToWebhook, generateFallbackResponse]);
+  }, [isProcessing, webhookUrl, sendMessageToWebhook, generateFallbackResponse, sessionIdRef]);
 
   // Initialize the conversation wrapper for compatibility
   const initialize = useCallback(() => {

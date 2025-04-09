@@ -37,17 +37,18 @@ export const sendWebhookRequest = async (
     console.log('Webhook message:', messageText);
     console.log('Session ID:', sessionId);
     
-    // Send POST request with the message in the body and sessionId in the header
+    // Send POST request with the message and sessionId in the body
     // Using 'no-cors' mode to help with CORS issues
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Session-ID": sessionId
+        "X-Session-ID": sessionId // Keep in header for backward compatibility
       },
       mode: "no-cors", // Add no-cors mode to handle CORS issues
       body: JSON.stringify({ 
-        message: messageText
+        message: messageText,
+        sessionId: sessionId // Also include in the body for better accessibility in n8n
       }),
     });
     
