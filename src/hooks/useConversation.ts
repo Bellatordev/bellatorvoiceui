@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -87,10 +86,11 @@ export const useConversation = ({
         } else {
           // Handle case where webhook didn't return a valid response
           toast({
-            title: "Error",
-            description: "No valid response received from the webhook",
+            title: "Webhook Response Issue",
+            description: "Could not process the response from the connected service",
             variant: "destructive"
           });
+          console.error("Invalid webhook response:", webhookResponse);
         }
       } catch (error) {
         console.error("Error processing webhook request:", error);

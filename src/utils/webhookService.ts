@@ -56,7 +56,27 @@ export const sendWebhookRequest = async (
     // Parse the response as JSON
     const result = await response.json();
     console.log("Webhook response received:", result);
-    return result;
+    
+    // Handle different response formats
+    if (Array.isArray(result) && result.length > 0) {
+      // Handle n8n response format: [{"output":"message text"}]
+      if (result[0].output) {
+        return { message: result[0].output };
+      }
+    }
+    
+    // For the original format with direct message property
+    if (result.message) {
+      return result;
+    }
+    
+    // Fallback for unexpected formats
+    console.warn("Unexpected webhook response format:", result);
+    return { 
+      message: Array.isArray(result) 
+        ? JSON.stringify(result) 
+        : (typeof result === 'string' ? result : JSON.stringify(result)) 
+    };
   } catch (error) {
     console.error("Error sending webhook request:", error);
     return null;
