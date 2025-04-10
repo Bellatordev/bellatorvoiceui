@@ -4,14 +4,18 @@ import ConversationPage from '../components/conversation/ConversationPage';
 import ElevenLabsService from '@/services/elevenLabsService';
 
 const Conversation = () => {
-  // Ensure cleanup of any existing ElevenLabs service when navigating to this page
+  // Ensure thorough cleanup of any existing ElevenLabs service
   useEffect(() => {
     return () => {
-      console.log('Conversation page unmounting, cleaning up resources');
+      console.log('Conversation page unmounting, performing thorough cleanup');
       try {
+        // Get instance first to avoid errors if it doesn't exist
         const elevenLabsInstance = ElevenLabsService.getInstance();
+        // Stop any audio playback
         elevenLabsInstance.stopAudio();
+        // Clean up any other resources
         elevenLabsInstance.cleanup();
+        // Finally destroy the instance
         ElevenLabsService.destroyInstance();
       } catch (err) {
         console.error('Error during cleanup:', err);

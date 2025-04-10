@@ -26,11 +26,10 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     error: null as string | null
   });
   
-  // Track whether we've shown an error for this voice ID
-  const hasDisplayedVoiceError = useRef(false);
+  // Track whether we've shown an error for this session
+  const hasDisplayedErrorThisSession = useRef(false);
   const lastVoiceIdRef = useRef<string | null>(null);
-  const errorDisplayTimestamp = useRef<number | null>(null);
-
+  
   useEffect(() => {
     if (!apiKey || !voiceId) {
       setState(prev => ({ ...prev, error: "Missing API key or voice ID" }));
@@ -46,9 +45,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     // Only reset error flag when voice ID changes
     if (lastVoiceIdRef.current !== voiceId) {
       console.log(`Voice ID changed from ${lastVoiceIdRef.current} to ${voiceId}, resetting error state`);
-      hasDisplayedVoiceError.current = false;
       lastVoiceIdRef.current = voiceId;
-      errorDisplayTimestamp.current = null;
     }
     
     return () => {
@@ -63,16 +60,9 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       return;
     }
     
-    // Skip voice generation if we've already had an error with this voice ID
-    if (hasDisplayedVoiceError.current) {
-      console.log('Skipping speech generation due to previous voice error');
-      return;
-    }
-    
-    // Prevent showing errors too frequently (at most once every 10 seconds)
-    const now = Date.now();
-    if (errorDisplayTimestamp.current && now - errorDisplayTimestamp.current < 10000) {
-      console.log('Suppressing potential error, last one shown recently');
+    // Skip voice generation if we've already had an error in this session
+    if (hasDisplayedErrorThisSession.current) {
+      console.log('Skipping speech generation due to previous error this session');
       return;
     }
     
@@ -83,52 +73,35 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     } catch (error) {
       console.error('Error generating speech:', error);
       
-      // Only show the error toast once for this voice ID
-      if (!hasDisplayedVoiceError.current) {
-        errorDisplayTimestamp.current = Date.now();
+      // Only show the error toast once for this entire session
+      if (!hasDisplayedErrorThisSession.current) {
+        hasDisplayedErrorThisSession.current = true;
         
-        if (error instanceof Error && error.message.includes('voice_not_found')) {
+        if (error instanceof Error) {
+          let errorMessage = "Speech generation issue";
+          let variant: "default" | "destructive" = "default";
+          
+          if (error.message.includes('voice_not_found')) {
+            errorMessage = "Voice ID not found. Speech generation has been disabled.";
+            variant = "destructive";
+          } else if (error.message.includes('quota')) {
+            errorMessage = "Voice generation has been disabled due to API quota limits.";
+            variant = "destructive";
+          }
+          
           toast({
             title: "Speech Generation Error",
-            description: "Voice ID not found. Speech generation has been disabled.",
-            variant: "destructive"
+            description: errorMessage,
+            variant: variant,
+            duration: 3000, // Short duration to prevent UI blocking
           });
-          
-          // Mark that we've shown the error for this voice ID
-          hasDisplayedVoiceError.current = true;
-        } else if (error instanceof Error && !error.message.includes('quota')) {
-          toast({
-            title: "Speech Generation Issue",
-            description: error.message,
-            variant: "default"
-          });
-          
-          // For fatal errors, also mark as shown
-          if (error instanceof Error && (
-            error.message.includes('not found') || 
-            error.message.includes('invalid')
-          )) {
-            hasDisplayedVoiceError.current = true;
-          }
-        } else if (error instanceof Error && error.message.includes('quota')) {
-          console.log('TTS quota exceeded, continuing without voice output');
-          toast({
-            title: "API Quota Exceeded",
-            description: "Voice generation has been disabled due to API quota limits.",
-            variant: "destructive"
-          });
-          
-          // Mark that we've shown the quota error
-          hasDisplayedVoiceError.current = true;
         }
       }
       
       // Set error state
       setState(prev => ({ 
         ...prev, 
-        error: error instanceof Error 
-          ? error.message 
-          : "Issue with speech generation" 
+        error: error instanceof Error ? error.message : "Issue with speech generation" 
       }));
     }
   };

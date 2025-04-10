@@ -17,12 +17,11 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
   const hasAddedErrorMessage = useRef(false);
   const lastErrorRef = useRef<string | null>(null);
   
-  // Only add an error message if we have a new error and haven't already shown it
+  // Only add an error message once for the entire session
   useEffect(() => {
     if (error && 
         !hasAddedErrorMessage.current && 
-        lastErrorRef.current !== error && 
-        !messages.some(msg => msg.text.includes("I'm having trouble with my voice output"))) {
+        !messages.some(msg => msg.text && msg.text.includes("I'm having trouble with my voice output"))) {
       
       const errorMessage = {
         id: crypto.randomUUID(),
@@ -36,17 +35,12 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
       lastErrorRef.current = error;
       
       // Log error for debugging
-      console.log('Error message added to conversation:', error);
+      console.log('Error message added to conversation - will not show again:', error);
     }
   }, [error, messages, setMessages]);
 
-  // Only reset the flag if the error is cleared
-  useEffect(() => {
-    if (!error) {
-      hasAddedErrorMessage.current = false;
-      lastErrorRef.current = null;
-    }
-  }, [error]);
+  // We never reset the flag - show error only once per session
+  // This ensures errors don't repeatedly block the UI
 
   return <>{children}</>;
 };

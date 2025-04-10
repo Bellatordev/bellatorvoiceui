@@ -38,31 +38,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setLocalAgents(agents);
   }, [agents]);
 
-  const handleSave = () => {
-    // Clean up any existing audio before saving changes
+  // Safely clean up audio resources
+  const safelyCleanupAudio = () => {
     try {
       const elevenLabsInstance = ElevenLabsService.getInstance();
       elevenLabsInstance.stopAudio();
     } catch (err) {
-      console.error('Error stopping audio when saving settings:', err);
+      console.error('Error stopping audio in settings:', err);
     }
+  };
+
+  const handleSave = () => {
+    // Clean up any existing audio before saving changes
+    safelyCleanupAudio();
     
-    onSaveApiKey(inputApiKey);
-    toast({
-      title: "Settings Saved",
-      description: "Your ElevenLabs API key has been updated"
-    });
-    onClose();
+    // Use setTimeout to prevent UI freezing
+    setTimeout(() => {
+      onSaveApiKey(inputApiKey);
+      toast({
+        title: "Settings Saved",
+        description: "Your ElevenLabs API key has been updated",
+        duration: 3000,
+      });
+      onClose();
+    }, 10);
   };
   
   const handleUpdateAgent = (updatedAgent: VoiceAgent) => {
     // Clean up any existing audio before updating agent
-    try {
-      const elevenLabsInstance = ElevenLabsService.getInstance();
-      elevenLabsInstance.stopAudio();
-    } catch (err) {
-      console.error('Error stopping audio when updating agent:', err);
-    }
+    safelyCleanupAudio();
     
     // Update the local list of agents
     const updatedAgents = localAgents.map(agent => 
@@ -72,9 +76,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     
     // If the updated agent is currently selected, notify parent
     if (updatedAgent.id === selectedAgentId) {
+      // Use setTimeout to prevent UI freezing
       setTimeout(() => {
         onSelectAgent(updatedAgent);
-      }, 100);
+      }, 10);
     }
   };
 
@@ -82,12 +87,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
         // Clean up any existing audio before closing
-        try {
-          const elevenLabsInstance = ElevenLabsService.getInstance();
-          elevenLabsInstance.stopAudio();
-        } catch (err) {
-          console.error('Error stopping audio when closing settings:', err);
-        }
+        safelyCleanupAudio();
         onClose();
       }
     }}>
@@ -116,29 +116,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             selectedAgentId={selectedAgentId} 
             onSelectAgent={(agent) => {
               // Clean up any existing audio before selecting agent
-              try {
-                const elevenLabsInstance = ElevenLabsService.getInstance();
-                elevenLabsInstance.stopAudio();
-              } catch (err) {
-                console.error('Error stopping audio when selecting agent:', err);
-              }
+              safelyCleanupAudio();
               
+              // Use setTimeout to prevent UI freezing
               setTimeout(() => {
                 onSelectAgent(agent);
-              }, 100);
+              }, 10);
             }} 
             onAddAgent={(agent) => {
               // Clean up any existing audio before adding agent
-              try {
-                const elevenLabsInstance = ElevenLabsService.getInstance();
-                elevenLabsInstance.stopAudio();
-              } catch (err) {
-                console.error('Error stopping audio when adding agent:', err);
-              }
+              safelyCleanupAudio();
               
+              // Use setTimeout to prevent UI freezing
               setTimeout(() => {
                 onAddAgent(agent);
-              }, 100);
+              }, 10);
             }}
             onUpdateAgent={handleUpdateAgent}
           />
