@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import { Card, CardContent } from '@/components/ui/card';
-import { Check, X } from 'lucide-react';
+import { Check, X, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
