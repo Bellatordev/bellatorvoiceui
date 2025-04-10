@@ -159,6 +159,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
               onClick={() => setSelectedAgent(agent)}
               onUpdate={handleUpdateAgent}
               onDelete={agents.length > 1 ? handleDeleteAgent : undefined}
+              hideControls={true} // Hide the edit and delete buttons on the login screen
             />
           ))
         )}

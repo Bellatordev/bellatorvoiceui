@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import { Card, CardContent } from '@/components/ui/card';
-import { Pencil, Check, X, Trash2 } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -24,6 +23,7 @@ interface VoiceAgentCardProps {
   onClick: () => void;
   onUpdate?: (agent: VoiceAgent) => void;
   onDelete?: (agentId: string) => void;
+  hideControls?: boolean;
 }
 
 const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
@@ -31,7 +31,8 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   isSelected,
   onClick,
   onUpdate,
-  onDelete
+  onDelete,
+  hideControls = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedAgent, setEditedAgent] = useState<VoiceAgent>(agent);
@@ -166,17 +167,17 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
               <div className="flex justify-between items-start">
                 <h3 className="font-medium">{agent.name}</h3>
                 
-                <div className="flex">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleEditClick}
-                    className="h-8 w-8"
-                  >
-                    <Pencil size={16} />
-                  </Button>
-                  
-                  {onDelete && (
+                {!hideControls && onUpdate && onDelete && (
+                  <div className="flex">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleEditClick}
+                      className="h-8 w-8"
+                    >
+                      <Pencil size={16} />
+                    </Button>
+                    
                     <Button
                       variant="ghost"
                       size="icon"
@@ -185,8 +186,8 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
                     >
                       <Trash2 size={16} />
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
               
               {agent.description && (
