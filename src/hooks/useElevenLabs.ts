@@ -46,6 +46,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     if (lastVoiceIdRef.current !== voiceId) {
       console.log(`Voice ID changed from ${lastVoiceIdRef.current} to ${voiceId}, resetting error state`);
       lastVoiceIdRef.current = voiceId;
+      hasDisplayedErrorThisSession.current = false; // Reset error flag for new voice ID
     }
     
     return () => {
@@ -79,20 +80,16 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
         
         if (error instanceof Error) {
           let errorMessage = "Speech generation issue";
-          let variant: "default" | "destructive" = "default";
           
           if (error.message.includes('voice_not_found')) {
             errorMessage = "Voice ID not found. Speech generation has been disabled.";
-            variant = "destructive";
           } else if (error.message.includes('quota')) {
             errorMessage = "Voice generation has been disabled due to API quota limits.";
-            variant = "destructive";
           }
           
           toast({
             title: "Speech Generation Error",
             description: errorMessage,
-            variant: variant,
             duration: 3000, // Short duration to prevent UI blocking
           });
         }

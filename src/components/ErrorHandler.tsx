@@ -39,9 +39,6 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
     }
   }, [error, messages, setMessages]);
 
-  // We never reset the flag - show error only once per session
-  // This ensures errors don't repeatedly block the UI
-
   return <>{children}</>;
 };
 

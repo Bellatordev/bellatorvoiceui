@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import ConversationInterface from '../ConversationInterface';
+import ElevenLabsService from '@/services/elevenLabsService';
 
 interface VoiceAgentContentProps {
   apiKey: string;
@@ -17,12 +18,31 @@ const VoiceAgentContent: React.FC<VoiceAgentContentProps> = ({
   webhookUrl,
   agentName 
 }) => {
-  // Log agent changes for debugging purposes
+  // Cleanup and reinitialize when voice ID changes
   useEffect(() => {
+    // Clean up previous voice resources when changing agents
+    try {
+      const service = ElevenLabsService.getInstance();
+      service.stopAudio();
+    } catch (err) {
+      console.error('Error stopping audio when agent changed:', err);
+    }
+    
+    // Log agent changes for debugging purposes
     console.log('VoiceAgentContent received new agent configuration:');
     console.log('- Voice ID:', voiceId);
     console.log('- Agent Name:', agentName);
     console.log('- Webhook URL:', webhookUrl || 'None');
+    
+    return () => {
+      // Clean up on unmount
+      try {
+        const service = ElevenLabsService.getInstance();
+        service.stopAudio();
+      } catch (err) {
+        console.error('Error during VoiceAgentContent cleanup:', err);
+      }
+    };
   }, [voiceId, agentName, webhookUrl]);
 
   return (

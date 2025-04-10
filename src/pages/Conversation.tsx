@@ -6,6 +6,7 @@ import ElevenLabsService from '@/services/elevenLabsService';
 const Conversation = () => {
   // Ensure thorough cleanup of any existing ElevenLabs service
   useEffect(() => {
+    // Cleanup function that runs when component unmounts
     return () => {
       console.log('Conversation page unmounting, performing thorough cleanup');
       try {

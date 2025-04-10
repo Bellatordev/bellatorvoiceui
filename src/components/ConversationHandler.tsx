@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import useConversation from '@/hooks/useConversation';
 import { toast } from '@/components/ui/use-toast';
+import ElevenLabsService from '@/services/elevenLabsService';
 
 interface ConversationHandlerProps {
   generateSpeech?: (text: string) => Promise<void>;
@@ -37,6 +38,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
 }) => {
   const previousWebhookUrlRef = useRef<string | undefined>(webhookUrl);
   const previousAgentNameRef = useRef<string | undefined>(agentName);
+  const restartingRef = useRef(false);
   
   const {
     messages,
@@ -57,6 +59,17 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     agentName
   });
 
+  // Cleanup function to ensure all resources are properly released
+  const cleanupResources = () => {
+    try {
+      console.log("Cleaning up audio resources in ConversationHandler");
+      const elevenLabsInstance = ElevenLabsService.getInstance();
+      elevenLabsInstance.stopAudio();
+    } catch (err) {
+      console.error('Error during ConversationHandler cleanup:', err);
+    }
+  };
+
   // Initialize the conversation when the component mounts
   useEffect(() => {
     // Clean up the storage to force initialization on page refresh
@@ -73,7 +86,10 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       initializeConversation();
     }, 300);
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      cleanupResources();
+    };
   }, [initializeConversation]);
 
   // Restart the conversation when the webhook URL or agent name changes
@@ -88,10 +104,19 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
         console.log("Previous agent:", previousAgentNameRef.current);
         console.log("New agent:", agentName);
         
-        // Restart the conversation with the new agent configuration
-        setTimeout(() => {
-          restartConversation();
-        }, 100);
+        // Prevent duplicate restarts
+        if (!restartingRef.current) {
+          restartingRef.current = true;
+          
+          // Clean up existing resources first
+          cleanupResources();
+          
+          // Restart the conversation with the new agent configuration
+          setTimeout(() => {
+            restartConversation();
+            restartingRef.current = false;
+          }, 500);
+        }
       }
       
       // Update refs
