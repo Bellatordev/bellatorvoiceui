@@ -181,7 +181,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={handleDeleteClick}
-                      className="h-8 w-8 text-red-500 hover:text-red-700"
+                      className="h-8 w-8 text-rose-300 hover:text-rose-400 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/30"
                     >
                       <Trash2 size={16} />
                     </Button>
@@ -225,7 +225,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleConfirmDelete}>
+            <AlertDialogAction className="bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:bg-rose-900/50" onClick={handleConfirmDelete}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
