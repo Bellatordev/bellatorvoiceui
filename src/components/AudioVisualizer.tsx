@@ -5,7 +5,7 @@ import { Play, Pause, Loader2 } from 'lucide-react';
 interface AudioVisualizerProps {
   isPlaying: boolean;
   isGenerating: boolean;
-  onTogglePlayback: () => void;
+  onTogglePlayback: (e: React.MouseEvent) => void;
   className?: string;
 }
 
@@ -19,7 +19,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     // Ensure the event doesn't bubble up to parent elements
     e.preventDefault();
     e.stopPropagation();
-    onTogglePlayback();
+    onTogglePlayback(e);
   };
 
   return (

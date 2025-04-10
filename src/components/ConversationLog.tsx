@@ -128,7 +128,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                       <AudioVisualizer 
                         isPlaying={isPlayingAudio && lastAssistantMessage?.id === message.id} 
                         isGenerating={isGeneratingAudio && lastAssistantMessage?.id === message.id} 
-                        onTogglePlayback={(e: any) => handleToggleAudio(message.text, e)}
+                        onTogglePlayback={(e) => handleToggleAudio(message.text, e)}
                         className="ml-2" 
                       />
                     )}
