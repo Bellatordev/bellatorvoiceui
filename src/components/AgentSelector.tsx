@@ -16,6 +16,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AgentSelectorProps {
   agents: VoiceAgent[];
@@ -72,50 +78,57 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
               >
                 {agent.name}
               </DropdownMenuItem>
-              <Popover>
-                <PopoverTrigger asChild onClick={(e) => {
-                  e.stopPropagation();
-                  setInfoAgent(agent);
-                }}>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              <TooltipProvider>
+                <Popover>
+                  <PopoverTrigger asChild onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoAgent(agent);
+                  }}>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      >
+                        <Info size={14} />
+                      </Button>
+                    </TooltipTrigger>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-80 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg"
+                    side="right"
+                    align="start"
+                    sideOffset={5}
                   >
-                    <Info size={14} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg"
-                  side="right"
-                  align="start"
-                  sideOffset={5}
-                >
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-gradient">{agent.name}</h4>
-                    {agent.description && (
-                      <p className="text-xs text-muted-foreground font-light">{agent.description}</p>
-                    )}
-                    <div className="pt-1 space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="font-medium text-agent-primary">Voice ID:</div>
-                        <div className="text-muted-foreground truncate font-light" title={agent.voiceId}>
-                          {agent.voiceId}
-                        </div>
-                      </div>
-                      
-                      {agent.webhookUrl && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <div className="font-medium text-agent-primary">Webhook:</div>
-                          <div className="text-muted-foreground truncate font-light" title={agent.webhookUrl}>
-                            {agent.webhookUrl}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-gradient">{agent.name}</h4>
+                      {agent.description && (
+                        <p className="text-xs text-muted-foreground font-light">{agent.description}</p>
+                      )}
+                      <div className="pt-1 space-y-2">
+                        <div className="flex flex-col gap-1 text-xs">
+                          <div className="font-medium text-agent-primary">Voice ID:</div>
+                          <div className="text-muted-foreground font-light break-all">
+                            {agent.voiceId}
                           </div>
                         </div>
-                      )}
+                        
+                        {agent.webhookUrl && (
+                          <div className="flex flex-col gap-1 text-xs">
+                            <div className="font-medium text-agent-primary">Webhook:</div>
+                            <div className="text-muted-foreground font-light break-all">
+                              {agent.webhookUrl}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                  <TooltipContent side="bottom">
+                    View agent details
+                  </TooltipContent>
+                </Popover>
+              </TooltipProvider>
             </div>
           ))}
         </DropdownMenuContent>
