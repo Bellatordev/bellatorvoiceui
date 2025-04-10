@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentManager from './VoiceAgentManager';
 import ElevenLabsService from '@/services/elevenLabsService';
+import { getVoiceAgents } from '@/utils/voiceAgentStorage';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -33,10 +34,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [localAgents, setLocalAgents] = useState<VoiceAgent[]>(agents);
   const { toast } = useToast();
   
-  // Update local agents when props change
+  // Function to refresh agents from storage
+  const refreshAgents = () => {
+    const currentAgents = getVoiceAgents();
+    setLocalAgents(currentAgents);
+  };
+  
+  // Update local agents when modal opens or when storage events happen
   useEffect(() => {
-    setLocalAgents(agents);
-  }, [agents]);
+    if (isOpen) {
+      refreshAgents();
+    }
+    
+    // Listen for storage events (for cross-component communication)
+    const handleStorageChange = () => {
+      refreshAgents();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [isOpen]);
+
+  // Update input API key when prop changes
+  useEffect(() => {
+    setInputApiKey(apiKey);
+  }, [apiKey]);
 
   // Safely clean up audio resources
   const safelyCleanupAudio = () => {
@@ -55,11 +80,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     // Use setTimeout to prevent UI freezing
     setTimeout(() => {
       onSaveApiKey(inputApiKey);
+      // Save API key to localStorage
+      localStorage.setItem('voiceAgent_apiKey', inputApiKey);
+      
       toast({
         title: "Settings Saved",
         description: "Your ElevenLabs API key has been updated",
         duration: 3000,
       });
+      
+      // Force refresh parent components
+      window.dispatchEvent(new Event('storage'));
       onClose();
     }, 10);
   };
@@ -68,11 +99,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     // Clean up any existing audio before updating agent
     safelyCleanupAudio();
     
-    // Update the local list of agents
-    const updatedAgents = localAgents.map(agent => 
-      agent.id === updatedAgent.id ? updatedAgent : agent
-    );
-    setLocalAgents(updatedAgents);
+    // Force refresh parent components
+    window.dispatchEvent(new Event('storage'));
     
     // If the updated agent is currently selected, notify parent
     if (updatedAgent.id === selectedAgentId) {
@@ -121,6 +149,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               // Use setTimeout to prevent UI freezing
               setTimeout(() => {
                 onSelectAgent(agent);
+                // Force refresh parent components
+                window.dispatchEvent(new Event('storage'));
               }, 10);
             }} 
             onAddAgent={(agent) => {
@@ -130,6 +160,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               // Use setTimeout to prevent UI freezing
               setTimeout(() => {
                 onAddAgent(agent);
+                // Force refresh parent components
+                window.dispatchEvent(new Event('storage'));
               }, 10);
             }}
             onUpdateAgent={handleUpdateAgent}

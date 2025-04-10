@@ -24,13 +24,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   const [selectedAgent, setSelectedAgent] = useState<VoiceAgent | null>(null);
   const { toast } = useToast();
 
-  // Load saved agents on mount
-  useEffect(() => {
+  // Function to refresh agents from storage
+  const refreshAgents = () => {
     const savedAgents = getVoiceAgents();
     setAgents(savedAgents);
     
+    // If no agents are selected yet but we have agents, select the first one
+    if (!selectedAgent && savedAgents.length > 0) {
+      setSelectedAgent(savedAgents[0]);
+    }
+    // If current selected agent was deleted, select the first available one
+    else if (selectedAgent && !savedAgents.find(a => a.id === selectedAgent.id) && savedAgents.length > 0) {
+      setSelectedAgent(savedAgents[0]);
+    }
+  };
+
+  // Load saved agents on mount
+  useEffect(() => {
+    refreshAgents();
+    
     // If there are no agents, create a default one
-    if (savedAgents.length === 0) {
+    if (agents.length === 0) {
       const defaultAgent: VoiceAgent = {
         id: uuidv4(),
         name: 'Assistant',
@@ -41,9 +55,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       const updatedAgents = addVoiceAgent(defaultAgent);
       setAgents(updatedAgents);
       setSelectedAgent(defaultAgent);
-    } else {
-      // Select the first agent by default
-      setSelectedAgent(savedAgents[0]);
     }
     
     // If API key is in storage, retrieve it
@@ -51,6 +62,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     if (storedApiKey) {
       setApiKey(storedApiKey);
     }
+    
+    // Listen for storage events (for cross-component communication)
+    const handleStorageChange = () => {
+      refreshAgents();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -106,6 +128,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     
     // Delete the agent
     const updatedAgents = deleteVoiceAgent(agentId);
+    
+    // Update local state
     setAgents(updatedAgents);
     
     // If the deleted agent was selected, select another one

@@ -52,6 +52,12 @@ const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
     if (agentId === selectedAgentId && updatedAgents.length > 0) {
       onSelectAgent(updatedAgents[0]);
     }
+    
+    // Force a refresh of the parent component by passing an empty event
+    // This ensures the agents state in parent components gets updated
+    setTimeout(() => {
+      window.dispatchEvent(new Event('storage'));
+    }, 100);
   };
 
   return (

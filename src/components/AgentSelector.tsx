@@ -23,10 +23,19 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
   selectedAgent,
   onSelectAgent
 }) => {
-  if (!selectedAgent) {
+  if (!agents || agents.length === 0) {
     return (
       <Button variant="outline">
         No Agents Available
+      </Button>
+    );
+  }
+
+  // If the selected agent is not in the list, select the first one
+  if (!selectedAgent || !agents.find(a => a.id === selectedAgent.id)) {
+    return (
+      <Button variant="outline" onClick={() => onSelectAgent(agents[0])}>
+        Select Agent
       </Button>
     );
   }
