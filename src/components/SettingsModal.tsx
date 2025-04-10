@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentManager from './VoiceAgentManager';
-import { addVoiceAgent, updateVoiceAgent } from '@/utils/voiceAgentStorage';
 
 interface SettingsModalProps {
   isOpen: boolean;
