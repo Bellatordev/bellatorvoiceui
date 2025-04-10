@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
@@ -31,6 +32,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [ttsError, setTtsError] = useState<string | null>(null);
   const [currentAudioMessageId, setCurrentAudioMessageId] = useState<string | null>(null);
   
+  // Initialize the ElevenLabs TTS service with the current agent's voice ID
   const { 
     generateSpeech, 
     isGenerating, 
