@@ -15,9 +15,14 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
   children,
 }) => {
   const hasAddedErrorMessage = useRef(false);
+  const lastErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (error && !hasAddedErrorMessage.current) {
+    // Only add an error message if:
+    // 1. There is an error
+    // 2. We haven't already added this specific error
+    // 3. The message doesn't already exist in the conversation
+    if (error && !hasAddedErrorMessage.current && lastErrorRef.current !== error) {
       if (!messages.some(msg => msg.text.includes("I'm having trouble with my voice output"))) {
         const errorMessage = {
           id: crypto.randomUUID(),
@@ -28,14 +33,16 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
         
         setMessages(prev => [...prev, errorMessage]);
         hasAddedErrorMessage.current = true;
+        lastErrorRef.current = error;
       }
     }
   }, [error, messages, setMessages]);
 
-  // Reset the flag if the error changes
+  // Only reset the flag if the error changes to null
   useEffect(() => {
     if (!error) {
       hasAddedErrorMessage.current = false;
+      lastErrorRef.current = null;
     }
   }, [error]);
 

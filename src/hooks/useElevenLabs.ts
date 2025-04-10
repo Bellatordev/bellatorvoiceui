@@ -26,6 +26,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     error: null as string | null
   });
   const hasDisplayedVoiceError = useRef(false);
+  const lastVoiceIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!apiKey || !voiceId) {
@@ -40,8 +41,11 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     
     const unsubscribe = service.subscribe(setState);
     
-    // Reset error flag when voice ID changes
-    hasDisplayedVoiceError.current = false;
+    // Only reset error flag when voice ID changes
+    if (lastVoiceIdRef.current !== voiceId) {
+      hasDisplayedVoiceError.current = false;
+      lastVoiceIdRef.current = voiceId;
+    }
     
     return () => {
       console.log('useElevenLabs hook unmounting, cleaning up subscription');
@@ -55,7 +59,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       return;
     }
     
-    // Skip voice generation if we've already had a voice error
+    // Skip voice generation if we've already had a voice error with this voice ID
     if (hasDisplayedVoiceError.current) {
       console.log('Skipping speech generation due to previous voice error');
       return;
@@ -68,7 +72,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     } catch (error) {
       console.error('Error generating speech:', error);
       
-      // Only show the error toast once per voice ID
+      // Only show the error toast once
       if (!hasDisplayedVoiceError.current) {
         if (error instanceof Error && error.message.includes('voice_not_found')) {
           toast({
@@ -85,6 +89,14 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
             description: error.message,
             variant: "default"
           });
+          
+          // For non-quota errors that are fatal, also mark as shown
+          if (error instanceof Error && (
+            error.message.includes('not found') || 
+            error.message.includes('invalid')
+          )) {
+            hasDisplayedVoiceError.current = true;
+          }
         } else if (error instanceof Error && error.message.includes('quota')) {
           console.log('TTS quota exceeded, continuing without voice output');
           toast({
