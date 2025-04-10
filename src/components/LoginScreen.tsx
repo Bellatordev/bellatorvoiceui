@@ -43,8 +43,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   useEffect(() => {
     refreshAgents();
     
-    // If there are no agents, create a default one
-    if (agents.length === 0) {
+    // Only create a default agent if there are absolutely no agents in storage
+    if (agents.length === 0 && getVoiceAgents().length === 0) {
       const defaultAgent: VoiceAgent = {
         id: uuidv4(),
         name: 'Assistant',
