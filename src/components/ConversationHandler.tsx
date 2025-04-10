@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import useConversation from '@/hooks/useConversation';
 import { toast } from '@/components/ui/use-toast';
 
@@ -35,6 +35,9 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   agentName,
   children,
 }) => {
+  const previousWebhookUrlRef = useRef<string | undefined>(webhookUrl);
+  const previousAgentNameRef = useRef<string | undefined>(agentName);
+  
   const {
     messages,
     setMessages,
@@ -72,6 +75,30 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
     
     return () => clearTimeout(timer);
   }, [initializeConversation]);
+
+  // Restart the conversation when the webhook URL or agent name changes
+  useEffect(() => {
+    if (previousWebhookUrlRef.current !== webhookUrl || 
+        previousAgentNameRef.current !== agentName) {
+      // Only restart if this isn't the initial load
+      if (previousWebhookUrlRef.current !== undefined) {
+        console.log("Agent configuration changed, restarting conversation:");
+        console.log("Previous webhook:", previousWebhookUrlRef.current);
+        console.log("New webhook:", webhookUrl);
+        console.log("Previous agent:", previousAgentNameRef.current);
+        console.log("New agent:", agentName);
+        
+        // Restart the conversation with the new agent configuration
+        setTimeout(() => {
+          restartConversation();
+        }, 100);
+      }
+      
+      // Update refs
+      previousWebhookUrlRef.current = webhookUrl;
+      previousAgentNameRef.current = agentName;
+    }
+  }, [webhookUrl, agentName, restartConversation]);
 
   return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation })}</>;
 };

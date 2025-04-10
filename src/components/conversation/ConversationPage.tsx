@@ -16,6 +16,7 @@ const ConversationPage = () => {
   const [voiceId, setVoiceId] = useState('');
   const [agentId, setAgentId] = useState('');
   const [agentName, setAgentName] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState<string | undefined>(undefined);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [agents, setAgents] = useState<VoiceAgent[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<VoiceAgent | null>(null);
@@ -51,10 +52,12 @@ const ConversationPage = () => {
     if (currentAgent) {
       setSelectedAgent(currentAgent);
       setVoiceId(currentAgent.voiceId);
+      setWebhookUrl(currentAgent.webhookUrl);
     } else if (savedAgents.length > 0) {
       // Fallback to first agent if the stored one isn't found
       setSelectedAgent(savedAgents[0]);
       setVoiceId(savedAgents[0].voiceId);
+      setWebhookUrl(savedAgents[0].webhookUrl);
     }
     
     // Cleanup function to ensure all resources are released when component unmounts
@@ -110,9 +113,19 @@ const ConversationPage = () => {
   };
 
   const handleChangeAgent = (agent: VoiceAgent) => {
+    // Reset the ElevenLabs service to cleanly switch to the new voice
+    try {
+      const elevenLabsInstance = ElevenLabsService.getInstance();
+      elevenLabsInstance.stopAudio();
+    } catch (err) {
+      console.error('Error stopping audio when changing agent:', err);
+    }
+    
+    // Update all relevant state with the new agent information
     setSelectedAgent(agent);
     setVoiceId(agent.voiceId);
     setAgentName(agent.name);
+    setWebhookUrl(agent.webhookUrl);
     
     // Store the new agent ID
     localStorage.setItem('voiceAgent_agentId', agent.id);
@@ -120,7 +133,7 @@ const ConversationPage = () => {
     
     toast({
       title: "Agent Changed",
-      description: `Now talking to ${agent.name}`
+      description: `Now talking to ${agent.name}${agent.webhookUrl ? ' with custom webhook' : ''}`
     });
   };
 
@@ -141,6 +154,7 @@ const ConversationPage = () => {
       setSelectedAgent(updatedAgent);
       setVoiceId(updatedAgent.voiceId);
       setAgentName(updatedAgent.name);
+      setWebhookUrl(updatedAgent.webhookUrl);
       
       // Update localStorage
       localStorage.setItem('voiceAgent_agentName', updatedAgent.name);
@@ -168,7 +182,7 @@ const ConversationPage = () => {
             apiKey={apiKey} 
             voiceId={voiceId} 
             onLogout={handleLogout}
-            webhookUrl={selectedAgent?.webhookUrl}
+            webhookUrl={webhookUrl}
             agentName={agentName}
           />
         </main>

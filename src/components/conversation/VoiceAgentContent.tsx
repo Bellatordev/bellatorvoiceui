@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import ConversationInterface from '../ConversationInterface';
 
 interface VoiceAgentContentProps {
@@ -17,6 +17,14 @@ const VoiceAgentContent: React.FC<VoiceAgentContentProps> = ({
   webhookUrl,
   agentName 
 }) => {
+  // Log agent changes for debugging purposes
+  useEffect(() => {
+    console.log('VoiceAgentContent received new agent configuration:');
+    console.log('- Voice ID:', voiceId);
+    console.log('- Agent Name:', agentName);
+    console.log('- Webhook URL:', webhookUrl || 'None');
+  }, [voiceId, agentName, webhookUrl]);
+
   return (
     <div className="agent-card mb-4 overflow-hidden">
       <ConversationInterface 
