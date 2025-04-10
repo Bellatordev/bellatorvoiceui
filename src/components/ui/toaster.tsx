@@ -28,7 +28,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport className="fixed bottom-0 left-0 flex-col pointer-events-none max-w-[300px] p-4 max-h-screen z-[100] overflow-hidden" />
+      <ToastViewport className="fixed bottom-0 left-0 flex-col pointer-events-none max-w-[300px] p-4 max-h-screen z-[100] overflow-hidden gap-2" />
     </ToastProvider>
   )
 }

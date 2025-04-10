@@ -25,8 +25,11 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     isPlaying: false,
     error: null as string | null
   });
+  
+  // Track whether we've shown an error for this voice ID
   const hasDisplayedVoiceError = useRef(false);
   const lastVoiceIdRef = useRef<string | null>(null);
+  const errorDisplayTimestamp = useRef<number | null>(null);
 
   useEffect(() => {
     if (!apiKey || !voiceId) {
@@ -36,15 +39,16 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
 
     const service = ElevenLabsService.getInstance();
     
-    // Log voice ID for debugging
     console.log(`useElevenLabs initialized with voice ID: ${voiceId}`);
     
     const unsubscribe = service.subscribe(setState);
     
     // Only reset error flag when voice ID changes
     if (lastVoiceIdRef.current !== voiceId) {
+      console.log(`Voice ID changed from ${lastVoiceIdRef.current} to ${voiceId}, resetting error state`);
       hasDisplayedVoiceError.current = false;
       lastVoiceIdRef.current = voiceId;
+      errorDisplayTimestamp.current = null;
     }
     
     return () => {
@@ -59,9 +63,16 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       return;
     }
     
-    // Skip voice generation if we've already had a voice error with this voice ID
+    // Skip voice generation if we've already had an error with this voice ID
     if (hasDisplayedVoiceError.current) {
       console.log('Skipping speech generation due to previous voice error');
+      return;
+    }
+    
+    // Prevent showing errors too frequently (at most once every 10 seconds)
+    const now = Date.now();
+    if (errorDisplayTimestamp.current && now - errorDisplayTimestamp.current < 10000) {
+      console.log('Suppressing potential error, last one shown recently');
       return;
     }
     
@@ -72,8 +83,10 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     } catch (error) {
       console.error('Error generating speech:', error);
       
-      // Only show the error toast once
+      // Only show the error toast once for this voice ID
       if (!hasDisplayedVoiceError.current) {
+        errorDisplayTimestamp.current = Date.now();
+        
         if (error instanceof Error && error.message.includes('voice_not_found')) {
           toast({
             title: "Speech Generation Error",
@@ -90,7 +103,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
             variant: "default"
           });
           
-          // For non-quota errors that are fatal, also mark as shown
+          // For fatal errors, also mark as shown
           if (error instanceof Error && (
             error.message.includes('not found') || 
             error.message.includes('invalid')
@@ -136,7 +149,6 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
   const cleanup = (): void => {
     console.log('Cleaning up ElevenLabs service from hook');
     
-    // First stop any playing audio
     try {
       const service = ElevenLabsService.getInstance();
       service.stopAudio();

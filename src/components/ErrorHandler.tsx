@@ -16,29 +16,31 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
 }) => {
   const hasAddedErrorMessage = useRef(false);
   const lastErrorRef = useRef<string | null>(null);
-
+  
+  // Only add an error message if we have a new error and haven't already shown it
   useEffect(() => {
-    // Only add an error message if:
-    // 1. There is an error
-    // 2. We haven't already added this specific error
-    // 3. The message doesn't already exist in the conversation
-    if (error && !hasAddedErrorMessage.current && lastErrorRef.current !== error) {
-      if (!messages.some(msg => msg.text.includes("I'm having trouble with my voice output"))) {
-        const errorMessage = {
-          id: crypto.randomUUID(),
-          text: `I'm having trouble with my voice output. ${error.includes("quota") ? "The API quota has been exceeded." : "Please check if the Voice ID is correct."}`,
-          sender: 'assistant' as const,
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, errorMessage]);
-        hasAddedErrorMessage.current = true;
-        lastErrorRef.current = error;
-      }
+    if (error && 
+        !hasAddedErrorMessage.current && 
+        lastErrorRef.current !== error && 
+        !messages.some(msg => msg.text.includes("I'm having trouble with my voice output"))) {
+      
+      const errorMessage = {
+        id: crypto.randomUUID(),
+        text: `I'm having trouble with my voice output. ${error.includes("quota") ? "The API quota has been exceeded." : "Please check if the Voice ID is correct."}`,
+        sender: 'assistant' as const,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      hasAddedErrorMessage.current = true;
+      lastErrorRef.current = error;
+      
+      // Log error for debugging
+      console.log('Error message added to conversation:', error);
     }
   }, [error, messages, setMessages]);
 
-  // Only reset the flag if the error changes to null
+  // Only reset the flag if the error is cleared
   useEffect(() => {
     if (!error) {
       hasAddedErrorMessage.current = false;
