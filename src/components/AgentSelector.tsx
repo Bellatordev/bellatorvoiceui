@@ -53,63 +53,69 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <div className="relative">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                {selectedAgent.name}
-                <ChevronDown size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Select Agent</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {agents.map(agent => (
-                <DropdownMenuItem 
-                  key={agent.id}
-                  onClick={() => onSelectAgent(agent)}
-                  className={agent.id === selectedAgent.id ? "bg-accent text-accent-foreground" : ""}
-                >
-                  {agent.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg animate-fade-in z-50"
-        side="top"
-        align="center"
-        sideOffset={5}
-      >
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-gradient">{selectedAgent.name}</h4>
-          {selectedAgent.description && (
-            <p className="text-xs text-muted-foreground font-light">{selectedAgent.description}</p>
-          )}
-          <div className="pt-1 space-y-2">
-            <div className="flex items-center gap-2 text-xs">
-              <div className="font-medium text-agent-primary">Voice ID:</div>
-              <div className="text-muted-foreground truncate font-light" title={selectedAgent.voiceId}>
-                {selectedAgent.voiceId}
-              </div>
-            </div>
-            
-            {selectedAgent.webhookUrl && (
+    <div className="relative">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 z-10"
+          >
+            {selectedAgent.name}
+            <ChevronDown size={16} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg animate-fade-in"
+          side="top"
+          align="center"
+          sideOffset={5}
+          style={{ zIndex: 100 }}
+        >
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold text-gradient">{selectedAgent.name}</h4>
+            {selectedAgent.description && (
+              <p className="text-xs text-muted-foreground font-light">{selectedAgent.description}</p>
+            )}
+            <div className="pt-1 space-y-2">
               <div className="flex items-center gap-2 text-xs">
-                <div className="font-medium text-agent-primary">Webhook:</div>
-                <div className="text-muted-foreground truncate font-light" title={selectedAgent.webhookUrl}>
-                  {selectedAgent.webhookUrl}
+                <div className="font-medium text-agent-primary">Voice ID:</div>
+                <div className="text-muted-foreground truncate font-light" title={selectedAgent.voiceId}>
+                  {selectedAgent.voiceId}
                 </div>
               </div>
-            )}
+              
+              {selectedAgent.webhookUrl && (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="font-medium text-agent-primary">Webhook:</div>
+                  <div className="text-muted-foreground truncate font-light" title={selectedAgent.webhookUrl}>
+                    {selectedAgent.webhookUrl}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="absolute inset-0 opacity-0 cursor-pointer" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[200px]">
+          <DropdownMenuLabel>Select Agent</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {agents.map(agent => (
+            <DropdownMenuItem 
+              key={agent.id}
+              onClick={() => onSelectAgent(agent)}
+              className={agent.id === selectedAgent.id ? "bg-accent text-accent-foreground" : ""}
+            >
+              {agent.name}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 
