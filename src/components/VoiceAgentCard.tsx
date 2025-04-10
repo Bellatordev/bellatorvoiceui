@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pencil } from 'lucide-react';
@@ -24,7 +24,13 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   onEdit
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentAgent, setCurrentAgent] = useState<VoiceAgent>(agent);
   const { toast } = useToast();
+  
+  // Update the currentAgent when the agent prop changes
+  useEffect(() => {
+    setCurrentAgent(agent);
+  }, [agent]);
 
   const handleEditClick = (e: React.MouseEvent) => {
     // Prevent the card click event from firing
@@ -41,6 +47,9 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   const handleSaveEditedAgent = (updatedAgent: VoiceAgent) => {
     // Update the agent in storage
     updateVoiceAgent(updatedAgent);
+    
+    // Update the local state to immediately reflect changes
+    setCurrentAgent(updatedAgent);
     
     // Notify parent component if callback provided
     if (onUpdate) {
@@ -65,7 +74,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
       >
         <CardContent className="p-4">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium">{agent.name}</h3>
+            <h3 className="font-medium">{currentAgent.name}</h3>
             
             <Button
               variant="ghost"
@@ -77,8 +86,8 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
             </Button>
           </div>
           
-          {agent.description && (
-            <p className="text-sm text-muted-foreground mt-1">{agent.description}</p>
+          {currentAgent.description && (
+            <p className="text-sm text-muted-foreground mt-1">{currentAgent.description}</p>
           )}
           
           {isSelected && (
@@ -86,13 +95,13 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
               <div className="flex flex-col gap-2">
                 <div>
                   <span className="font-medium">Voice ID:</span> 
-                  <span className="text-muted-foreground ml-2">{agent.voiceId}</span>
+                  <span className="text-muted-foreground ml-2">{currentAgent.voiceId}</span>
                 </div>
                 
-                {agent.webhookUrl && (
+                {currentAgent.webhookUrl && (
                   <div>
                     <span className="font-medium">Webhook:</span> 
-                    <span className="text-muted-foreground ml-2 break-all">{agent.webhookUrl}</span>
+                    <span className="text-muted-foreground ml-2 break-all">{currentAgent.webhookUrl}</span>
                   </div>
                 )}
               </div>
@@ -105,7 +114,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSaveAgent={handleSaveEditedAgent}
-        agent={agent}
+        agent={currentAgent}
       />
     </>
   );
