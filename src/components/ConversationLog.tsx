@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
@@ -61,8 +60,6 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  // Get the last assistant message for audio controls
-  // Using a loop instead of findLast for compatibility
   let lastAssistantMessage: Message | undefined = undefined;
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].sender === 'assistant') {
@@ -71,9 +68,9 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     }
   }
   
-  const handleToggleAudio = () => {
-    if (onToggleAudio && lastAssistantMessage) {
-      onToggleAudio(lastAssistantMessage.text);
+  const handleToggleAudio = (messageText: string) => {
+    if (onToggleAudio) {
+      onToggleAudio(messageText);
     }
   };
   
@@ -118,14 +115,11 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                       {formatTimestamp(message.timestamp)}
                     </span>
                     
-                    {message.sender === 'assistant' && 
-                     lastAssistantMessage && 
-                     message.id === lastAssistantMessage.id && 
-                     onToggleAudio && (
+                    {message.sender === 'assistant' && onToggleAudio && (
                       <AudioVisualizer 
-                        isPlaying={isPlayingAudio} 
-                        isGenerating={isGeneratingAudio} 
-                        onTogglePlayback={handleToggleAudio} 
+                        isPlaying={isPlayingAudio && lastAssistantMessage?.id === message.id} 
+                        isGenerating={isGeneratingAudio && lastAssistantMessage?.id === message.id} 
+                        onTogglePlayback={() => handleToggleAudio(message.text)} 
                         className="ml-2" 
                       />
                     )}

@@ -33,6 +33,10 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     }
 
     const service = ElevenLabsService.getInstance();
+    
+    // Log voice ID for debugging
+    console.log(`useElevenLabs initialized with voice ID: ${voiceId}`);
+    
     const unsubscribe = service.subscribe(setState);
     
     return () => {
@@ -48,7 +52,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     }
     
     try {
-      console.log(`Generating speech for text: "${text.substring(0, 30)}..."`);
+      console.log(`Generating speech for text: "${text.substring(0, 30)}..."`, `using voice ID: ${voiceId}`);
       const service = ElevenLabsService.getInstance();
       await service.generateSpeech({ text, voiceId, apiKey, modelId });
     } catch (error) {
@@ -82,6 +86,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
   };
 
   const togglePlayback = (): void => {
+    console.log('Toggling audio playback from hook');
     const service = ElevenLabsService.getInstance();
     service.togglePlayback();
   };

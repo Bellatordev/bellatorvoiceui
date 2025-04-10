@@ -29,6 +29,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [volume, setVolume] = useState(0.8);
   const [autoStartMic, setAutoStartMic] = useState(true);
   const [ttsError, setTtsError] = useState<string | null>(null);
+  const [currentAudioMessageId, setCurrentAudioMessageId] = useState<string | null>(null);
   
   const { 
     generateSpeech, 
@@ -36,7 +37,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     isPlaying, 
     error,
     stopAudio,
-    cleanup 
+    cleanup,
+    togglePlayback 
   } = useElevenLabs({
     apiKey,
     voiceId: agentId,
@@ -113,6 +115,22 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     });
   };
 
+  const handleToggleAudio = (text: string) => {
+    console.log('Toggle audio playback for:', text.substring(0, 30) + '...');
+    if (isPlaying) {
+      stopAudio();
+    } else {
+      generateSpeech(text).catch(err => {
+        console.error('Failed to generate speech:', err);
+        toast({
+          title: "Speech Generation Issue",
+          description: "There was a problem generating speech from the text",
+          variant: "destructive"
+        });
+      });
+    }
+  };
+
   useEffect(() => {
     console.log(`Microphone mute state changed to: ${isMicMuted ? 'muted' : 'unmuted'}`);
   }, [isMicMuted]);
@@ -160,7 +178,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   messages={messages}
                   isGenerating={isGenerating}
                   isPlaying={isPlaying}
-                  onToggleAudio={generateSpeech}
+                  onToggleAudio={handleToggleAudio}
                   onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
                   onEndConversation={() => {
                     handleEndConversation(

@@ -15,10 +15,15 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   onTogglePlayback,
   className = '',
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onTogglePlayback();
+  };
+
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <button
-        onClick={onTogglePlayback}
+        onClick={handleClick}
         disabled={isGenerating}
         className={`p-2 rounded-full transition-colors focus-ring ${
           isPlaying 

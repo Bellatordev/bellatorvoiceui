@@ -17,6 +17,8 @@ interface ElevenLabsState {
 class ElevenLabsService {
   private static instance: ElevenLabsService;
   private audioElement: HTMLAudioElement | null = null;
+  private currentVoiceId: string | null = null;
+  private currentApiKey: string | null = null;
   private state: ElevenLabsState = {
     isGenerating: false,
     isPlaying: false,
@@ -86,12 +88,16 @@ class ElevenLabsService {
       return;
     }
 
+    // Store current voice and API key
+    this.currentVoiceId = voiceId;
+    this.currentApiKey = apiKey;
+
     // Stop any currently playing audio first
     this.stopAudio();
 
     try {
       this.updateState({ isGenerating: true, error: null });
-      console.log(`Attempting to generate speech with voice ID: ${voiceId}`);
+      console.log(`Generating speech with voice ID: ${voiceId}`);
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
@@ -117,6 +123,11 @@ class ElevenLabsService {
           const errorData = await response.json();
           errorMessage += errorData.detail?.message || JSON.stringify(errorData);
           console.error('Response error data:', errorData);
+          
+          // Specific handling for voice not found errors
+          if (errorData.detail?.status === 'voice_not_found') {
+            errorMessage = `Voice ID "${voiceId}" was not found. Please check your voice configuration.`;
+          }
         } catch (parseError) {
           errorMessage += await response.text() || 'Unknown error';
         }
@@ -157,6 +168,8 @@ class ElevenLabsService {
         isGenerating: false, 
         error: errorMsg
       });
+      
+      throw error; // Re-throw to let callers handle the error
     }
   }
 
@@ -192,10 +205,14 @@ class ElevenLabsService {
     
     if (this.audioElement.paused) {
       console.log('Resuming audio playback');
-      this.audioElement.play().catch(error => {
-        console.error('Error playing audio:', error);
-        this.updateState({ error: 'Failed to play audio' });
-      });
+      if (this.audioElement.src) {
+        this.audioElement.play().catch(error => {
+          console.error('Error playing audio:', error);
+          this.updateState({ error: 'Failed to play audio' });
+        });
+      } else {
+        console.warn('Cannot resume playback - no audio source set');
+      }
     } else {
       console.log('Pausing audio playback');
       this.audioElement.pause();
@@ -204,6 +221,10 @@ class ElevenLabsService {
 
   public getState(): ElevenLabsState {
     return { ...this.state };
+  }
+
+  public getCurrentVoiceId(): string | null {
+    return this.currentVoiceId;
   }
 
   // Add a cleanup method to properly dispose of the service
@@ -245,6 +266,10 @@ class ElevenLabsService {
       isPlaying: false,
       error: null
     });
+    
+    // Reset voice details
+    this.currentVoiceId = null;
+    this.currentApiKey = null;
   }
   
   // Method to destroy the singleton instance
