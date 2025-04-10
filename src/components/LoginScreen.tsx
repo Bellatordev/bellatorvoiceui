@@ -93,6 +93,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     if (selectedAgent && selectedAgent.id === updatedAgent.id) {
       setSelectedAgent(updatedAgent);
     }
+    
+    toast({
+      title: "Voice Agent Updated",
+      description: `${updatedAgent.name} has been updated`
+    });
   };
 
   const handleSaveApiKey = (newApiKey: string) => {
@@ -128,7 +133,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
               agent={agent}
               isSelected={selectedAgent?.id === agent.id}
               onClick={() => setSelectedAgent(agent)}
-              onEdit={() => setIsSettingsOpen(true)}
+              onUpdate={handleUpdateAgent}
             />
           ))
         )}

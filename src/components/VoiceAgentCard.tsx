@@ -4,7 +4,6 @@ import { VoiceAgent } from '@/types/voiceAgent';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { updateVoiceAgent } from '@/utils/voiceAgentStorage';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,67 +13,44 @@ interface VoiceAgentCardProps {
   isSelected: boolean;
   onClick: () => void;
   onUpdate?: (agent: VoiceAgent) => void;
-  onEdit?: () => void;
 }
 
 const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   agent,
   isSelected,
   onClick,
-  onUpdate,
-  onEdit
+  onUpdate
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<VoiceAgent>(agent);
   const [editedAgent, setEditedAgent] = useState<VoiceAgent>(agent);
   const { toast } = useToast();
   
-  // Update the currentAgent when the agent prop changes
+  // Update the editedAgent when the agent prop changes
   useEffect(() => {
-    setCurrentAgent(agent);
     setEditedAgent(agent);
   }, [agent]);
 
   const handleEditClick = (e: React.MouseEvent) => {
-    // Prevent the card click event from firing
-    e.stopPropagation();
-    
-    // If an onEdit callback is provided, use it, otherwise toggle edit mode
-    if (onEdit) {
-      onEdit();
-    } else {
-      setIsEditing(true);
-    }
+    e.stopPropagation(); // Prevent the card click event from firing
+    setIsEditing(true);
   };
 
   const handleSaveClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     
-    // Update the agent in storage
-    updateVoiceAgent(editedAgent);
-    
-    // Update the local state to immediately reflect changes
-    setCurrentAgent(editedAgent);
-    
-    // Notify parent component if callback provided
     if (onUpdate) {
       onUpdate(editedAgent);
     }
     
     // Exit edit mode
     setIsEditing(false);
-    
-    toast({
-      title: "Voice Agent Updated",
-      description: `${editedAgent.name} has been updated`
-    });
   };
 
   const handleCancelClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     
-    // Reset edited agent to current agent
-    setEditedAgent(currentAgent);
+    // Reset edited agent to original agent
+    setEditedAgent(agent);
     
     // Exit edit mode
     setIsEditing(false);
@@ -162,7 +138,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
         ) : (
           <>
             <div className="flex justify-between items-start">
-              <h3 className="font-medium">{currentAgent.name}</h3>
+              <h3 className="font-medium">{agent.name}</h3>
               
               <Button
                 variant="ghost"
@@ -174,8 +150,8 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
               </Button>
             </div>
             
-            {currentAgent.description && (
-              <p className="text-sm text-muted-foreground mt-1">{currentAgent.description}</p>
+            {agent.description && (
+              <p className="text-sm text-muted-foreground mt-1">{agent.description}</p>
             )}
             
             {isSelected && (
@@ -183,13 +159,13 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
                 <div className="flex flex-col gap-2">
                   <div>
                     <span className="font-medium">Voice ID:</span> 
-                    <span className="text-muted-foreground ml-2">{currentAgent.voiceId}</span>
+                    <span className="text-muted-foreground ml-2">{agent.voiceId}</span>
                   </div>
                   
-                  {currentAgent.webhookUrl && (
+                  {agent.webhookUrl && (
                     <div>
                       <span className="font-medium">Webhook:</span> 
-                      <span className="text-muted-foreground ml-2 break-all">{currentAgent.webhookUrl}</span>
+                      <span className="text-muted-foreground ml-2 break-all">{agent.webhookUrl}</span>
                     </div>
                   )}
                 </div>
