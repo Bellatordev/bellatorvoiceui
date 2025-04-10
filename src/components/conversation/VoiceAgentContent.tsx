@@ -26,7 +26,7 @@ const VoiceAgentContent: React.FC<VoiceAgentContentProps> = ({
   }, [voiceId, agentName, webhookUrl]);
 
   return (
-    <div className="agent-card mb-4 overflow-hidden">
+    <div className="agent-card mb-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
       <ConversationInterface 
         apiKey={apiKey} 
         agentId={voiceId} 

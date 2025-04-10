@@ -25,6 +25,7 @@ const ConversationControls: React.FC<ConversationControlsProps> = ({
             e.stopPropagation();
             onRestartConversation();
           }}
+          type="button"
         >
           <RefreshCw size={16} />
           Restart
@@ -40,6 +41,7 @@ const ConversationControls: React.FC<ConversationControlsProps> = ({
           e.stopPropagation();
           onEndConversation();
         }}
+        type="button"
       >
         <X size={16} />
         End Conversation

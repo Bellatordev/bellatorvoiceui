@@ -39,8 +39,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         <Button 
           variant="ghost" 
           size="icon"
-          onClick={onLogout}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onLogout();
+          }}
           className="text-foreground"
+          type="button"
         >
           <LogOut className="h-5 w-5" />
         </Button>

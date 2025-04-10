@@ -23,7 +23,7 @@ const ConversationContainer: React.FC<ConversationContainerProps> = ({
   onLogout
 }) => {
   return (
-    <div className="flex-1 agent-card mb-6 overflow-hidden">
+    <div className="flex-1 agent-card mb-6 overflow-hidden" onClick={(e) => e.stopPropagation()}>
       <ConversationControls 
         onRestartConversation={onRestartConversation}
         onEndConversation={onEndConversation}
