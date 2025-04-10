@@ -13,13 +13,15 @@ interface VoiceAgentCardProps {
   isSelected: boolean;
   onClick: () => void;
   onUpdate?: (agent: VoiceAgent) => void;
+  onEdit?: () => void; // Add the onEdit prop that's expected in LoginScreen.tsx
 }
 
 const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   agent,
   isSelected,
   onClick,
-  onUpdate
+  onUpdate,
+  onEdit
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
@@ -27,7 +29,13 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   const handleEditClick = (e: React.MouseEvent) => {
     // Prevent the card click event from firing
     e.stopPropagation();
-    setIsEditModalOpen(true);
+    
+    // If an onEdit callback is provided, use it, otherwise open the edit modal directly
+    if (onEdit) {
+      onEdit();
+    } else {
+      setIsEditModalOpen(true);
+    }
   };
 
   const handleSaveEditedAgent = (updatedAgent: VoiceAgent) => {
