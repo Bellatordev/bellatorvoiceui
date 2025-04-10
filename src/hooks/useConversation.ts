@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -170,8 +171,6 @@ export const useConversation = ({
     setMessages([welcomeMessage]);
     setIsInitialized(true);
     
-    // Don't send welcome message to webhook since we're only sending user messages now
-    
     // Generate speech for welcome message unless muted
     if (!isMuted && generateSpeech) {
       console.log("Generating speech for welcome message");
@@ -194,8 +193,6 @@ export const useConversation = ({
     // Generate a new session ID for the restarted conversation
     sessionIdRef.current = uuidv4();
     console.log("Conversation restarted with new session ID:", sessionIdRef.current);
-    
-    // No need to send restart event to webhook since we're only sending user messages
     
     setIsInitialized(false);
     setMessages([]);
