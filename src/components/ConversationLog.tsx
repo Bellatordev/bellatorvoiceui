@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { DownloadIcon, LogOut } from 'lucide-react';
+import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
 
 export type Message = {
@@ -83,15 +83,6 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
         <h2 className="text-lg font-semibold text-foreground">Conversation</h2>
         
         <div className="flex space-x-2">
-          {onLogout && (
-            <button 
-              onClick={onLogout} 
-              className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors focus-ring" 
-              aria-label="Log out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          )}
           <button 
             onClick={downloadConversation} 
             className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors focus-ring" 
