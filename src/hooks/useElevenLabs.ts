@@ -49,6 +49,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       hasDisplayedErrorThisSession.current = false; // Reset error flag for new voice ID
     }
     
+    // Cleanup function
     return () => {
       console.log('useElevenLabs hook unmounting, cleaning up subscription');
       unsubscribe();
@@ -85,12 +86,15 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
             errorMessage = "Voice ID not found. Speech generation has been disabled.";
           } else if (error.message.includes('quota')) {
             errorMessage = "Voice generation has been disabled due to API quota limits.";
+          } else if (error.message.includes('401')) {
+            errorMessage = "Invalid API key. Please check your ElevenLabs API key.";
           }
           
           toast({
             title: "Speech Generation Error",
             description: errorMessage,
             duration: 3000, // Short duration to prevent UI blocking
+            variant: "destructive"
           });
         }
       }

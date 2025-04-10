@@ -44,7 +44,16 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   } = useElevenLabs({
     apiKey,
     voiceId: agentId,
+    modelId: "eleven_multilingual_v2", // Explicitly set to use the high-quality model
   });
+
+  // Sync errors between ElevenLabs service and local state
+  useEffect(() => {
+    if (error) {
+      console.log('ElevenLabs service reported error:', error);
+      setTtsError(error);
+    }
+  }, [error]);
 
   useEffect(() => {
     return () => {
@@ -122,6 +131,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (isPlaying) {
       stopAudio();
     } else {
+      // Add a confirmation toast when starting speech generation
+      toast({
+        title: "Generating Speech",
+        description: "Preparing to play audio response...",
+        duration: 2000,
+      });
+      
       generateSpeech(text).catch(err => {
         console.error('Failed to generate speech:', err);
         toast({

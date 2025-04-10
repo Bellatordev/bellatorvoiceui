@@ -27,6 +27,7 @@ class ElevenLabsService {
   private stateListeners: ((state: ElevenLabsState) => void)[] = [];
 
   private constructor() {
+    console.log('Creating new ElevenLabsService instance');
     this.audioElement = new Audio();
     this.setupAudioEventListeners();
   }
@@ -56,6 +57,11 @@ class ElevenLabsService {
         isPlaying: false, 
         error: 'Error playing audio' 
       });
+    });
+    
+    // Add a canplaythrough event to ensure audio can play
+    this.audioElement.addEventListener('canplaythrough', () => {
+      console.log('Audio can play through without buffering');
     });
   }
 
@@ -128,6 +134,10 @@ class ElevenLabsService {
           if (errorData.detail?.status === 'voice_not_found') {
             errorMessage = `Voice ID "${voiceId}" was not found. Please check your voice configuration.`;
           }
+          // Add specific handling for quota errors
+          else if (errorData.detail?.message?.includes('quota')) {
+            errorMessage = `API quota exceeded. Voice generation is temporarily unavailable.`;
+          }
         } catch (parseError) {
           errorMessage += await response.text() || 'Unknown error';
         }
@@ -136,6 +146,13 @@ class ElevenLabsService {
       }
 
       const audioBlob = await response.blob();
+      console.log('Audio blob received:', audioBlob.size, 'bytes');
+      
+      // Test if blob is valid
+      if (audioBlob.size === 0) {
+        throw new Error('Received empty audio data from API');
+      }
+      
       const audioUrl = URL.createObjectURL(audioBlob);
       
       if (this.audioElement) {
@@ -153,11 +170,35 @@ class ElevenLabsService {
           }
         }
         
+        console.log('Setting audio source and attempting to play');
         this.audioElement.src = audioUrl;
-        this.audioElement.play().catch(error => {
-          console.error('Error playing audio:', error);
-          this.updateState({ error: 'Failed to play audio' });
-        });
+        
+        try {
+          // Add explicit loading
+          this.audioElement.load();
+          
+          // Set volume to ensure it's audible
+          this.audioElement.volume = 1.0;
+          
+          // Use the play() promise to catch any autoplay issues
+          const playPromise = this.audioElement.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error('Error playing audio:', error);
+              this.updateState({ 
+                isGenerating: false,
+                error: 'Failed to play audio: ' + error.message 
+              });
+            });
+          }
+        } catch (playError) {
+          console.error('Exception during audio playback:', playError);
+          this.updateState({ 
+            isGenerating: false,
+            error: 'Exception during playback: ' + playError.message
+          });
+        }
       }
       
       this.updateState({ isGenerating: false });
@@ -206,10 +247,14 @@ class ElevenLabsService {
     if (this.audioElement.paused) {
       console.log('Resuming audio playback');
       if (this.audioElement.src) {
-        this.audioElement.play().catch(error => {
-          console.error('Error playing audio:', error);
-          this.updateState({ error: 'Failed to play audio' });
-        });
+        try {
+          this.audioElement.play().catch(error => {
+            console.error('Error playing audio:', error);
+            this.updateState({ error: 'Failed to play audio: ' + error.message });
+          });
+        } catch (e) {
+          console.error('Exception during play:', e);
+        }
       } else {
         console.warn('Cannot resume playback - no audio source set');
       }
@@ -242,6 +287,7 @@ class ElevenLabsService {
         element.onpause = null;
         element.onended = null;
         element.onerror = null;
+        element.oncanplaythrough = null;
         
         // Release audio resources
         const src = element.src;
