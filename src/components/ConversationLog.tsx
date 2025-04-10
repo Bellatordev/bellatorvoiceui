@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
@@ -24,7 +25,6 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   isPlayingAudio = false,
   onToggleAudio,
   className = '',
-  onLogout
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -45,7 +45,11 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     });
   };
   
-  const downloadConversation = () => {
+  const downloadConversation = (e: React.MouseEvent) => {
+    // Prevent event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
     const text = messages.map(msg => `${formatTimestamp(msg.timestamp)} - ${msg.sender === 'user' ? 'You' : 'Assistant'}: ${msg.text}`).join('\n\n');
     const blob = new Blob([text], {
       type: 'text/plain'
@@ -68,7 +72,11 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     }
   }
   
-  const handleToggleAudio = (messageText: string) => {
+  const handleToggleAudio = (messageText: string, e: React.MouseEvent) => {
+    // Prevent event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (onToggleAudio) {
       onToggleAudio(messageText);
     }
@@ -84,6 +92,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
             onClick={downloadConversation} 
             className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors focus-ring" 
             aria-label="Download conversation"
+            type="button"
           >
             <DownloadIcon className="w-4 h-4" />
           </button>
@@ -119,7 +128,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                       <AudioVisualizer 
                         isPlaying={isPlayingAudio && lastAssistantMessage?.id === message.id} 
                         isGenerating={isGeneratingAudio && lastAssistantMessage?.id === message.id} 
-                        onTogglePlayback={() => handleToggleAudio(message.text)} 
+                        onTogglePlayback={(e: any) => handleToggleAudio(message.text, e)}
                         className="ml-2" 
                       />
                     )}

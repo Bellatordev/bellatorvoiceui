@@ -19,7 +19,12 @@ const ConversationControls: React.FC<ConversationControlsProps> = ({
           variant="outline" 
           size="sm" 
           className="flex gap-2 items-center"
-          onClick={onRestartConversation}
+          onClick={(e) => {
+            // Prevent any event bubbling or multiple triggers
+            e.preventDefault();
+            e.stopPropagation();
+            onRestartConversation();
+          }}
         >
           <RefreshCw size={16} />
           Restart

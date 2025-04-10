@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Play, Pause, Volume, Loader2 } from 'lucide-react';
+import { Play, Pause, Loader2 } from 'lucide-react';
 
 interface AudioVisualizerProps {
   isPlaying: boolean;
@@ -16,6 +16,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   className = '',
 }) => {
   const handleClick = (e: React.MouseEvent) => {
+    // Ensure the event doesn't bubble up to parent elements
+    e.preventDefault();
     e.stopPropagation();
     onTogglePlayback();
   };
@@ -31,6 +33,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         }`}
         aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+        type="button" // Explicitly set type to prevent form submission
       >
         {isGenerating ? (
           <Loader2 className="w-4 h-4 animate-spin" />
