@@ -40,10 +40,17 @@ export default function ThemeToggle() {
   return (
     <button 
       onClick={toggleTheme} 
-      className="p-3 rounded-full bg-[#2b2a3d] hover:bg-[#3a3952] text-gray-300 transition-colors duration-200 shadow-lg border border-gray-700/50 dark:bg-[#2b2a3d] light:bg-gray-200 light:text-gray-700 light:hover:bg-gray-300 light:border-gray-300/50"
+      className={`p-3 rounded-full transition-all duration-300 shadow-md border
+        ${theme === 'light' 
+          ? 'bg-white text-agent-primary border-agent-primary/20 hover:bg-gray-50' 
+          : 'bg-gray-800 text-yellow-300 border-gray-700 hover:bg-gray-700'
+        }`}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
-      {theme === 'light' ? <Moon size={20} className="text-yellow-400" /> : <Sun size={20} className="text-yellow-400" />}
+      {theme === 'light' 
+        ? <Moon size={20} className="text-agent-primary" /> 
+        : <Sun size={20} className="text-yellow-300" />
+      }
     </button>
   );
 }

@@ -38,7 +38,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
 
   if (!agents || agents.length === 0) {
     return (
-      <Button variant="outline">
+      <Button variant="outline" className="bg-white/80 dark:bg-gray-800 text-foreground border-border">
         No Agents Available
       </Button>
     );
@@ -47,7 +47,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
   // If the selected agent is not in the list, select the first one
   if (!selectedAgent || !agents.find(a => a.id === selectedAgent.id)) {
     return (
-      <Button variant="outline" onClick={() => onSelectAgent(agents[0])}>
+      <Button variant="outline" onClick={() => onSelectAgent(agents[0])} className="bg-white/80 dark:bg-gray-800 text-foreground border-border">
         Select Agent
       </Button>
     );
@@ -57,7 +57,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
     <div className="relative">
       <Button 
         variant="outline" 
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 bg-white/80 dark:bg-gray-800 text-foreground border-border"
       >
         {selectedAgent.name}
         <ChevronDown size={16} />
@@ -67,14 +67,14 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
         <DropdownMenuTrigger asChild>
           <div className="absolute inset-0 opacity-0 cursor-pointer" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[240px]">
-          <DropdownMenuLabel>Select Agent</DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="w-[240px] bg-white/95 dark:bg-gray-800/95 border-border shadow-lg">
+          <DropdownMenuLabel className="text-foreground">Select Agent</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {agents.map(agent => (
             <div key={agent.id} className="flex items-center justify-between pr-2">
               <DropdownMenuItem 
                 onClick={() => onSelectAgent(agent)}
-                className={`flex-grow ${agent.id === selectedAgent.id ? "bg-accent text-accent-foreground" : ""}`}
+                className={`flex-grow ${agent.id === selectedAgent.id ? "bg-accent text-accent-foreground" : "text-foreground hover:text-foreground"}`}
               >
                 {agent.name}
               </DropdownMenuItem>
@@ -95,7 +95,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent
-                        className="w-80 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg"
+                        className="w-80 p-3 shadow-lg backdrop-blur-md bg-white/95 dark:bg-gray-800/95 border border-agent-primary/10 rounded-lg"
                         side="right"
                         align="start"
                         sideOffset={5}
@@ -103,12 +103,12 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
                         <div className="space-y-2">
                           <h4 className="text-sm font-semibold text-gradient">{agent.name}</h4>
                           {agent.description && (
-                            <p className="text-xs text-muted-foreground font-light">{agent.description}</p>
+                            <p className="text-xs text-foreground dark:text-gray-300 font-light">{agent.description}</p>
                           )}
                           <div className="pt-1 space-y-2">
                             <div className="flex flex-col gap-1 text-xs">
                               <div className="font-medium text-agent-primary">Voice ID:</div>
-                              <div className="text-muted-foreground font-light break-all">
+                              <div className="text-foreground dark:text-gray-300 font-light break-all">
                                 {agent.voiceId}
                               </div>
                             </div>
@@ -116,7 +116,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
                             {agent.webhookUrl && (
                               <div className="flex flex-col gap-1 text-xs">
                                 <div className="font-medium text-agent-primary">Webhook:</div>
-                                <div className="text-muted-foreground font-light break-all">
+                                <div className="text-foreground dark:text-gray-300 font-light break-all">
                                   {agent.webhookUrl}
                                 </div>
                               </div>
@@ -126,7 +126,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
                       </PopoverContent>
                     </Popover>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">
+                  <TooltipContent side="bottom" className="bg-white/95 dark:bg-gray-800/95 text-foreground">
                     View agent details
                   </TooltipContent>
                 </Tooltip>

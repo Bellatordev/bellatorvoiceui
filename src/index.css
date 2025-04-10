@@ -7,42 +7,43 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light mode with improved contrast */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 15%;
 
-    --primary: 262 80% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 262 75% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 262 70% 92%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 262 65% 95%;
+    --secondary-foreground: 262 50% 30%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 5% 92%;
+    --muted-foreground: 240 20% 40%;
 
     --accent: 262 70% 92%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent-foreground: 262 50% 30%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 80% 50%;
+    --border: 240 10% 85%;
+    --input: 240 10% 85%;
+    --ring: 262 75% 50%;
 
     --radius: 0.75rem;
 
-    --agent-background: 0 0% 100%;
-    --agent-foreground: 240 6% 10%;
-    --agent-primary: 262 80% 50%;
-    --agent-secondary: 262 70% 92%;
+    --agent-background: 0 0% 98%;
+    --agent-foreground: 240 10% 15%;
+    --agent-primary: 262 75% 55%;
+    --agent-secondary: 262 65% 95%;
     --agent-accent: 262 70% 92%;
-    --agent-yellow: 45 100% 60%;
+    --agent-yellow: 45 95% 60%;
 
     /* Rainbow button colors */
     --color-1: 280 60% 55%;
@@ -69,7 +70,7 @@
     --secondary-foreground: 0 0% 98%;
 
     --muted: 240 6% 15%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted-foreground: 240 5% 70%;
 
     --accent: 262 60% 60%;
     --accent-foreground: 0 0% 98%;
@@ -108,7 +109,7 @@
 
   /* Custom utility classes */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm dark:bg-black/40 dark:border-white/10;
+    @apply bg-white/90 backdrop-blur-md border border-white/30 shadow-sm dark:bg-black/40 dark:border-white/10;
   }
 
   .focus-ring {
@@ -122,7 +123,7 @@
   }
   
   .agent-button-secondary {
-    @apply flex items-center justify-center rounded-full bg-agent-secondary/20 text-agent-primary px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-secondary/30 active:scale-95 focus-ring dark:bg-agent-secondary/30 dark:text-agent-primary dark:hover:bg-agent-secondary/40;
+    @apply flex items-center justify-center rounded-full bg-agent-secondary text-agent-primary px-4 py-2 font-medium transition-all duration-200 hover:bg-agent-secondary/80 active:scale-95 focus-ring dark:bg-agent-secondary/30 dark:text-agent-primary dark:hover:bg-agent-secondary/40;
   }
   
   .agent-card {
@@ -152,7 +153,7 @@
 
   /* Theme toggle styles */
   .theme-toggle {
-    @apply p-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 transition-colors focus-ring dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700;
+    @apply p-2 rounded-full bg-white text-gray-700 hover:bg-gray-100 transition-colors focus-ring dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700;
   }
 }
 
@@ -265,5 +266,9 @@
 
   .text-gradient-yellow {
     @apply bg-gradient-to-r from-agent-yellow via-agent-yellow/90 to-agent-yellow/70 bg-clip-text text-transparent;
+  }
+  
+  .card-shadow {
+    @apply shadow-md dark:shadow-lg dark:shadow-primary/5;
   }
 }
