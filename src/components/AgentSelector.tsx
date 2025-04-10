@@ -54,8 +54,8 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
 
   return (
     <div className="relative">
-      <Popover>
-        <PopoverTrigger asChild>
+      <HoverCard openDelay={200} closeDelay={100}>
+        <HoverCardTrigger asChild>
           <Button 
             variant="outline" 
             className="flex items-center gap-2 z-10"
@@ -63,13 +63,12 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
             {selectedAgent.name}
             <ChevronDown size={16} />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg animate-fade-in"
+        </HoverCardTrigger>
+        <HoverCardContent
+          className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg"
           side="top"
           align="center"
           sideOffset={5}
-          style={{ zIndex: 100 }}
         >
           <div className="space-y-2">
             <h4 className="text-sm font-semibold text-gradient">{selectedAgent.name}</h4>
@@ -94,8 +93,8 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
               )}
             </div>
           </div>
-        </PopoverContent>
-      </Popover>
+        </HoverCardContent>
+      </HoverCard>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
