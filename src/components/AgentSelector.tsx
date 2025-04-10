@@ -22,6 +22,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface AgentSelectorProps {
   agents: VoiceAgent[];
@@ -52,9 +53,9 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
   }
 
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <div className="relative">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
@@ -77,33 +78,38 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80">
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg animate-fade-in z-50"
+        side="top"
+        align="center"
+        sideOffset={5}
+      >
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold">{selectedAgent.name}</h4>
+          <h4 className="text-sm font-semibold text-gradient">{selectedAgent.name}</h4>
           {selectedAgent.description && (
-            <p className="text-sm text-muted-foreground">{selectedAgent.description}</p>
+            <p className="text-xs text-muted-foreground font-light">{selectedAgent.description}</p>
           )}
-          <div className="pt-2">
-            <div className="grid grid-cols-[1fr_2fr] gap-2 text-sm">
-              <div className="font-medium">Voice ID:</div>
-              <div className="text-muted-foreground truncate" title={selectedAgent.voiceId}>
+          <div className="pt-1 space-y-2">
+            <div className="flex items-center gap-2 text-xs">
+              <div className="font-medium text-agent-primary">Voice ID:</div>
+              <div className="text-muted-foreground truncate font-light" title={selectedAgent.voiceId}>
                 {selectedAgent.voiceId}
               </div>
-              
-              {selectedAgent.webhookUrl && (
-                <>
-                  <div className="font-medium">Webhook:</div>
-                  <div className="text-muted-foreground truncate" title={selectedAgent.webhookUrl}>
-                    {selectedAgent.webhookUrl}
-                  </div>
-                </>
-              )}
             </div>
+            
+            {selectedAgent.webhookUrl && (
+              <div className="flex items-center gap-2 text-xs">
+                <div className="font-medium text-agent-primary">Webhook:</div>
+                <div className="text-muted-foreground truncate font-light" title={selectedAgent.webhookUrl}>
+                  {selectedAgent.webhookUrl}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </HoverCardContent>
-    </HoverCard>
+      </PopoverContent>
+    </Popover>
   );
 };
 
