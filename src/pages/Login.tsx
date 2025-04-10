@@ -68,8 +68,8 @@ const Login = () => {
         
         {/* Login Form */}
         <div className="w-full flex-grow flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md bg-[#1b1b2e] dark:bg-[#1b1b2e] light:bg-white rounded-xl p-8 border border-gray-800 dark:border-gray-800 light:border-gray-200 shadow-xl">
-            <h3 className="text-xl text-center font-serif text-gray-200 dark:text-gray-200 light:text-gray-800 mb-8">Enter your credentials to start</h3>
+          <div className="w-full max-w-md dark:bg-[#1b1b2e] light:bg-white rounded-xl p-8 border dark:border-gray-800 light:border-gray-200 shadow-xl">
+            <h3 className="text-xl text-center font-serif dark:text-gray-200 light:text-gray-800 mb-8">Enter your credentials to start</h3>
             <LoginScreen onLogin={handleLogin} />
           </div>
         </div>

@@ -22,10 +22,10 @@ export function LampDemo() {
           duration: 0.8,
           ease: "easeInOut"
         }} 
-        className="mt-8 bg-gradient-to-br from-[#a8a0f0] to-[#9b87f5] py-4 bg-clip-text text-center tracking-tight text-transparent md:text-7xl text-5xl dark:from-[#a8a0f0] dark:to-[#9b87f5] light:from-[#FEF7CD] light:to-[#FFC700]"
+        className="mt-8 bg-gradient-to-br from-[#a8a0f0] to-[#9b87f5] py-4 bg-clip-text text-center tracking-tight text-transparent md:text-7xl text-5xl dark:from-[#a8a0f0] dark:to-[#9b87f5] light:from-amber-400 light:to-yellow-500"
       >
         <span className="font-serif font-extrabold">Bellator</span>
-        <span className="text-yellow-400 font-serif font-extrabold dark:text-yellow-400 light:text-amber-500">.ai</span>
+        <span className="text-yellow-400 font-serif font-extrabold dark:text-yellow-400 light:text-amber-600">.ai</span>
       </motion.h1>
     </LampContainer>
   );
