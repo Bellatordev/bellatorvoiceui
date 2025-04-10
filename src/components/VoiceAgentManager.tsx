@@ -5,22 +5,28 @@ import VoiceAgentCard from './VoiceAgentCard';
 import { Button } from '@/components/ui/button';
 import { Plus, Settings } from 'lucide-react';
 import AddVoiceAgentModal from './AddVoiceAgentModal';
+import EditVoiceAgentModal from './EditVoiceAgentModal';
 import { useToast } from '@/hooks/use-toast';
+import { updateVoiceAgent } from '@/utils/voiceAgentStorage';
 
 interface VoiceAgentManagerProps {
   agents: VoiceAgent[];
   selectedAgentId: string | null;
   onSelectAgent: (agent: VoiceAgent) => void;
   onAddAgent: (agent: VoiceAgent) => void;
+  onUpdateAgent?: (agent: VoiceAgent) => void;
 }
 
 const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
   agents,
   selectedAgentId,
   onSelectAgent,
-  onAddAgent
+  onAddAgent,
+  onUpdateAgent
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [agentToEdit, setAgentToEdit] = useState<VoiceAgent | null>(null);
   const { toast } = useToast();
 
   const handleAddAgent = (agent: VoiceAgent) => {
@@ -29,6 +35,26 @@ const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
     toast({
       title: "Voice Agent Added",
       description: `${agent.name} has been added to your agents`
+    });
+  };
+
+  const handleEditAgent = (agent: VoiceAgent) => {
+    setAgentToEdit(agent);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditedAgent = (updatedAgent: VoiceAgent) => {
+    // Update the agent in storage
+    updateVoiceAgent(updatedAgent);
+    
+    // Notify parent component if callback provided
+    if (onUpdateAgent) {
+      onUpdateAgent(updatedAgent);
+    }
+    
+    toast({
+      title: "Voice Agent Updated",
+      description: `${updatedAgent.name} has been updated`
     });
   };
 
@@ -61,6 +87,7 @@ const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
               agent={agent}
               isSelected={agent.id === selectedAgentId}
               onClick={() => onSelectAgent(agent)}
+              onEdit={handleEditAgent}
             />
           ))}
         </div>
@@ -70,6 +97,13 @@ const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onAddAgent={handleAddAgent} 
+      />
+      
+      <EditVoiceAgentModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSaveAgent={handleSaveEditedAgent}
+        agent={agentToEdit}
       />
     </div>
   );

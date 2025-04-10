@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
-import { getVoiceAgents } from '@/utils/voiceAgentStorage';
+import { getVoiceAgents, updateVoiceAgent } from '@/utils/voiceAgentStorage';
 import ElevenLabsService from '@/services/elevenLabsService';
 import VoiceAgentContent from './VoiceAgentContent';
 import PageHeader from './PageHeader';
@@ -127,6 +127,24 @@ const ConversationPage = () => {
   const handleSaveApiKey = (newApiKey: string) => {
     setApiKey(newApiKey);
     localStorage.setItem('voiceAgent_apiKey', newApiKey);
+  };
+  
+  const handleUpdateAgent = (updatedAgent: VoiceAgent) => {
+    // Update agents list
+    const updatedAgents = agents.map(agent => 
+      agent.id === updatedAgent.id ? updatedAgent : agent
+    );
+    setAgents(updatedAgents);
+    
+    // If the updated agent is the currently selected one, update it
+    if (selectedAgent && selectedAgent.id === updatedAgent.id) {
+      setSelectedAgent(updatedAgent);
+      setVoiceId(updatedAgent.voiceId);
+      setAgentName(updatedAgent.name);
+      
+      // Update localStorage
+      localStorage.setItem('voiceAgent_agentName', updatedAgent.name);
+    }
   };
 
   // Show loading state if necessary data is missing

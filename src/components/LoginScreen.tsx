@@ -6,7 +6,7 @@ import { Settings, Plus } from 'lucide-react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentCard from './VoiceAgentCard';
 import SettingsModal from './SettingsModal';
-import { getVoiceAgents, addVoiceAgent, getDefaultVoiceId } from '@/utils/voiceAgentStorage';
+import { getVoiceAgents, addVoiceAgent, updateVoiceAgent, getDefaultVoiceId } from '@/utils/voiceAgentStorage';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -85,6 +85,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
+  const handleUpdateAgent = (updatedAgent: VoiceAgent) => {
+    const updatedAgents = updateVoiceAgent(updatedAgent);
+    setAgents(updatedAgents);
+    
+    // If the updated agent is currently selected, update the selection
+    if (selectedAgent && selectedAgent.id === updatedAgent.id) {
+      setSelectedAgent(updatedAgent);
+    }
+  };
+
   const handleSaveApiKey = (newApiKey: string) => {
     setApiKey(newApiKey);
   };
@@ -118,6 +128,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
               agent={agent}
               isSelected={selectedAgent?.id === agent.id}
               onClick={() => setSelectedAgent(agent)}
+              onEdit={() => setIsSettingsOpen(true)}
             />
           ))
         )}
