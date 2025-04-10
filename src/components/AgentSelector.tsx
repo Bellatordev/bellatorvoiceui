@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -12,17 +12,10 @@ import {
 import { ChevronDown, Info } from 'lucide-react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface AgentSelectorProps {
   agents: VoiceAgent[];
@@ -35,6 +28,8 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
   selectedAgent,
   onSelectAgent
 }) => {
+  const [infoAgent, setInfoAgent] = useState<VoiceAgent | null>(null);
+
   if (!agents || agents.length === 0) {
     return (
       <Button variant="outline">
@@ -54,63 +49,74 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
 
   return (
     <div className="relative">
-      <HoverCard openDelay={200} closeDelay={100}>
-        <HoverCardTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2 z-10"
-          >
-            {selectedAgent.name}
-            <ChevronDown size={16} />
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent
-          className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg"
-          side="top"
-          align="center"
-          sideOffset={5}
-        >
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-gradient">{selectedAgent.name}</h4>
-            {selectedAgent.description && (
-              <p className="text-xs text-muted-foreground font-light">{selectedAgent.description}</p>
-            )}
-            <div className="pt-1 space-y-2">
-              <div className="flex items-center gap-2 text-xs">
-                <div className="font-medium text-agent-primary">Voice ID:</div>
-                <div className="text-muted-foreground truncate font-light" title={selectedAgent.voiceId}>
-                  {selectedAgent.voiceId}
-                </div>
-              </div>
-              
-              {selectedAgent.webhookUrl && (
-                <div className="flex items-center gap-2 text-xs">
-                  <div className="font-medium text-agent-primary">Webhook:</div>
-                  <div className="text-muted-foreground truncate font-light" title={selectedAgent.webhookUrl}>
-                    {selectedAgent.webhookUrl}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
+      <Button 
+        variant="outline" 
+        className="flex items-center gap-2"
+      >
+        {selectedAgent.name}
+        <ChevronDown size={16} />
+      </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div className="absolute inset-0 opacity-0 cursor-pointer" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[200px]">
+        <DropdownMenuContent align="end" className="w-[240px]">
           <DropdownMenuLabel>Select Agent</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {agents.map(agent => (
-            <DropdownMenuItem 
-              key={agent.id}
-              onClick={() => onSelectAgent(agent)}
-              className={agent.id === selectedAgent.id ? "bg-accent text-accent-foreground" : ""}
-            >
-              {agent.name}
-            </DropdownMenuItem>
+            <div key={agent.id} className="flex items-center justify-between pr-2">
+              <DropdownMenuItem 
+                onClick={() => onSelectAgent(agent)}
+                className={`flex-grow ${agent.id === selectedAgent.id ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                {agent.name}
+              </DropdownMenuItem>
+              <Popover>
+                <PopoverTrigger asChild onClick={(e) => {
+                  e.stopPropagation();
+                  setInfoAgent(agent);
+                }}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  >
+                    <Info size={14} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-64 p-3 shadow-lg backdrop-blur-md bg-popover/90 border border-agent-primary/10 rounded-lg"
+                  side="right"
+                  align="start"
+                  sideOffset={5}
+                >
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-gradient">{agent.name}</h4>
+                    {agent.description && (
+                      <p className="text-xs text-muted-foreground font-light">{agent.description}</p>
+                    )}
+                    <div className="pt-1 space-y-2">
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="font-medium text-agent-primary">Voice ID:</div>
+                        <div className="text-muted-foreground truncate font-light" title={agent.voiceId}>
+                          {agent.voiceId}
+                        </div>
+                      </div>
+                      
+                      {agent.webhookUrl && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <div className="font-medium text-agent-primary">Webhook:</div>
+                          <div className="text-muted-foreground truncate font-light" title={agent.webhookUrl}>
+                            {agent.webhookUrl}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
