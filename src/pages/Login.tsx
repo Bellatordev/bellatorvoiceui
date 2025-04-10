@@ -41,13 +41,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] text-white dark:text-white light:text-gray-800">
+    <div className="min-h-screen flex flex-col bg-[#f5f5fa] dark:bg-[#1a1a24] text-gray-800 dark:text-white">
       {/* Back to Home Button in top left */}
       <div className="absolute top-6 left-6 z-10">
         <Button 
           variant="ghost" 
           onClick={handleBackToHome}
-          className="flex items-center gap-2 text-gray-300 hover:text-white dark:text-gray-300 dark:hover:text-white light:text-gray-700 light:hover:text-black"
+          className="flex items-center gap-2 text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"
         >
           <ArrowLeft size={18} />
           <span>Back to Home</span>
@@ -68,8 +68,8 @@ const Login = () => {
         
         {/* Login Form */}
         <div className="w-full flex-grow flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md dark:bg-[#1b1b2e] light:bg-white rounded-xl p-8 border dark:border-gray-800 light:border-gray-200 shadow-xl">
-            <h3 className="text-xl text-center font-serif dark:text-gray-200 light:text-gray-800 mb-8">Enter your credentials to start</h3>
+          <div className="w-full max-w-md bg-white dark:bg-[#1b1b2e] rounded-xl p-8 border border-gray-200 dark:border-gray-800 shadow-xl">
+            <h3 className="text-xl text-center font-serif text-gray-800 dark:text-gray-200 mb-8">Enter your credentials to start</h3>
             <LoginScreen onLogin={handleLogin} />
           </div>
         </div>

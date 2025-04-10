@@ -155,12 +155,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-medium text-white">Select Voice Agent</h2>
+        <h2 className="text-xl font-medium text-gray-800 dark:text-white">Select Voice Agent</h2>
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={() => setIsSettingsOpen(true)}
-          className="text-gray-300 hover:text-white"
+          className="text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white"
         >
           <Settings size={20} />
         </Button>
@@ -168,8 +168,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       
       <div className="grid gap-3 mb-6">
         {agents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-[#282838]">
-            <p className="text-gray-400 mb-3">No voice agents configured yet</p>
+          <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-gray-100 dark:bg-[#282838]">
+            <p className="text-gray-600 dark:text-gray-400 mb-3">No voice agents configured yet</p>
             <Button onClick={() => setIsSettingsOpen(true)}>
               <Plus size={16} className="mr-2" /> Add Your First Agent
             </Button>
@@ -191,13 +191,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="apiKey" className="block text-gray-300 text-sm font-medium font-sans">
+          <label htmlFor="apiKey" className="block text-gray-700 dark:text-gray-300 text-sm font-medium font-sans">
             Eleven Labs API Key
           </label>
-          <Input id="apiKey" type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="Enter your Eleven Labs API Key" className="bg-[#282838] border-gray-700 text-white font-sans placeholder:text-gray-500 rounded-md" required />
+          <Input 
+            id="apiKey" 
+            type="password" 
+            value={apiKey} 
+            onChange={e => setApiKey(e.target.value)} 
+            placeholder="Enter your Eleven Labs API Key" 
+            className="bg-white border-gray-300 text-gray-800 dark:bg-[#282838] dark:border-gray-700 dark:text-white font-sans placeholder:text-gray-500 rounded-md" 
+            required 
+          />
         </div>
         
-        <Button type="submit" className="w-full py-6 rounded-md bg-[#9583f4] hover:bg-[#8070e6] text-white font-medium font-sans text-lg" disabled={isLoading || !selectedAgent}>
+        <Button 
+          type="submit" 
+          className="w-full py-6 rounded-md bg-amber-500 hover:bg-amber-600 dark:bg-[#9583f4] dark:hover:bg-[#8070e6] text-white font-medium font-sans text-lg" 
+          disabled={isLoading || !selectedAgent}
+        >
           {isLoading ? 'Connecting...' : `Connect to ${selectedAgent?.name || 'Voice Agent'}`}
         </Button>
       </form>
