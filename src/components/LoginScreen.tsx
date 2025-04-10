@@ -6,7 +6,7 @@ import { Settings, Plus } from 'lucide-react';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentCard from './VoiceAgentCard';
 import SettingsModal from './SettingsModal';
-import { getVoiceAgents, addVoiceAgent, updateVoiceAgent, getDefaultVoiceId } from '@/utils/voiceAgentStorage';
+import { getVoiceAgents, addVoiceAgent, updateVoiceAgent, deleteVoiceAgent, getDefaultVoiceId } from '@/utils/voiceAgentStorage';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -100,6 +100,30 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     });
   };
 
+  const handleDeleteAgent = (agentId: string) => {
+    // Get the agent being deleted
+    const agentToDelete = agents.find(agent => agent.id === agentId);
+    
+    // Delete the agent
+    const updatedAgents = deleteVoiceAgent(agentId);
+    setAgents(updatedAgents);
+    
+    // If the deleted agent was selected, select another one
+    if (selectedAgent && selectedAgent.id === agentId) {
+      if (updatedAgents.length > 0) {
+        setSelectedAgent(updatedAgents[0]);
+      } else {
+        setSelectedAgent(null);
+      }
+    }
+    
+    toast({
+      title: "Voice Agent Deleted",
+      description: agentToDelete ? `${agentToDelete.name} has been deleted` : "Agent has been deleted",
+      variant: "default"
+    });
+  };
+
   const handleSaveApiKey = (newApiKey: string) => {
     setApiKey(newApiKey);
   };
@@ -134,6 +158,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
               isSelected={selectedAgent?.id === agent.id}
               onClick={() => setSelectedAgent(agent)}
               onUpdate={handleUpdateAgent}
+              onDelete={agents.length > 1 ? handleDeleteAgent : undefined}
             />
           ))
         )}

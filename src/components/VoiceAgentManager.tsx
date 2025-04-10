@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import AddVoiceAgentModal from './AddVoiceAgentModal';
 import { useToast } from '@/hooks/use-toast';
+import { deleteVoiceAgent } from '@/utils/voiceAgentStorage';
 
 interface VoiceAgentManagerProps {
   agents: VoiceAgent[];
@@ -32,6 +33,25 @@ const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
       title: "Voice Agent Added",
       description: `${agent.name} has been added to your agents`
     });
+  };
+  
+  const handleDeleteAgent = (agentId: string) => {
+    // Get agent details before deletion for the toast
+    const agentToDelete = agents.find(agent => agent.id === agentId);
+    
+    // Delete from storage
+    const updatedAgents = deleteVoiceAgent(agentId);
+    
+    // Notify the user
+    toast({
+      title: "Voice Agent Deleted",
+      description: agentToDelete ? `${agentToDelete.name} has been deleted` : "Agent has been deleted"
+    });
+    
+    // If the deleted agent was selected, select another one
+    if (agentId === selectedAgentId && updatedAgents.length > 0) {
+      onSelectAgent(updatedAgents[0]);
+    }
   };
 
   return (
@@ -64,6 +84,7 @@ const VoiceAgentManager: React.FC<VoiceAgentManagerProps> = ({
               isSelected={agent.id === selectedAgentId}
               onClick={() => onSelectAgent(agent)}
               onUpdate={onUpdateAgent}
+              onDelete={agents.length > 1 ? handleDeleteAgent : undefined}
             />
           ))}
         </div>
