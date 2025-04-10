@@ -16,7 +16,7 @@ export const LampContainer = ({
   return (
     <div
       className={cn(
-        "relative flex min-h-[40vh] flex-col items-center justify-center overflow-hidden bg-[#1a1a24] w-full rounded-md z-0",
+        "relative flex min-h-[40vh] flex-col items-center justify-center overflow-hidden bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] w-full rounded-md z-0",
         className
       )}
       onMouseEnter={() => setHover(true)}
@@ -36,10 +36,10 @@ export const LampContainer = ({
           style={{
             backgroundImage: `conic-gradient(var(--conic-position), var(--tw-gradient-stops))`,
           }}
-          className="absolute inset-auto right-1/2 h-56 overflow-visible w-[30rem] bg-gradient-conic from-[#9b87f5] via-transparent to-transparent text-white [--conic-position:from_70deg_at_center_top]"
+          className="absolute inset-auto right-1/2 h-56 overflow-visible w-[30rem] bg-gradient-conic from-[#9b87f5] via-transparent to-transparent dark:from-[#9b87f5] light:from-[#FFC700] text-white [--conic-position:from_70deg_at_center_top]"
         >
-          <div className="absolute w-[100%] left-0 bg-[#1a1a24] h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)]" />
-          <div className="absolute w-40 h-[100%] left-0 bg-[#1a1a24] bottom-0 z-20 [mask-image:linear-gradient(to_right,white,transparent)]" />
+          <div className="absolute w-[100%] left-0 bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)]" />
+          <div className="absolute w-40 h-[100%] left-0 bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] bottom-0 z-20 [mask-image:linear-gradient(to_right,white,transparent)]" />
         </motion.div>
         <motion.div
           initial={{ opacity: 0.5, width: "15rem" }}
@@ -54,15 +54,15 @@ export const LampContainer = ({
           style={{
             backgroundImage: `conic-gradient(var(--conic-position), var(--tw-gradient-stops))`,
           }}
-          className="absolute inset-auto left-1/2 h-56 w-[30rem] bg-gradient-conic from-transparent via-transparent to-[#9b87f5] text-white [--conic-position:from_290deg_at_center_top]"
+          className="absolute inset-auto left-1/2 h-56 w-[30rem] bg-gradient-conic from-transparent via-transparent to-[#9b87f5] dark:to-[#9b87f5] light:to-[#FFC700] text-white [--conic-position:from_290deg_at_center_top]"
         >
-          <div className="absolute w-40 h-[100%] right-0 bg-[#1a1a24] bottom-0 z-20 [mask-image:linear-gradient(to_left,white,transparent)]" />
-          <div className="absolute w-[100%] right-0 bg-[#1a1a24] h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)]" />
+          <div className="absolute w-40 h-[100%] right-0 bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] bottom-0 z-20 [mask-image:linear-gradient(to_left,white,transparent)]" />
+          <div className="absolute w-[100%] right-0 bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] h-40 bottom-0 z-20 [mask-image:linear-gradient(to_top,white,transparent)]" />
         </motion.div>
-        <motion.div className="absolute top-1/2 h-48 w-full translate-y-12 scale-x-150 bg-[#1a1a24] blur-2xl" />
+        <motion.div className="absolute top-1/2 h-48 w-full translate-y-12 scale-x-150 bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa] blur-2xl" />
         <motion.div className="absolute top-1/2 z-50 h-48 w-full bg-transparent opacity-10 backdrop-blur-md" />
         <motion.div
-          className="absolute inset-auto z-50 h-36 w-[28rem] -translate-y-1/2 rounded-full bg-[#9b87f5] opacity-50 blur-3xl"
+          className="absolute inset-auto z-50 h-36 w-[28rem] -translate-y-1/2 rounded-full bg-[#9b87f5] dark:bg-[#9b87f5] light:bg-[#FFC700] opacity-50 blur-3xl"
         />
         <motion.div
           initial={{ width: "8rem" }}
@@ -74,7 +74,7 @@ export const LampContainer = ({
             duration: 0.8,
             ease: "easeInOut",
           }}
-          className="absolute inset-auto z-30 h-36 w-64 -translate-y-[6rem] rounded-full bg-[#a8a0f0] blur-2xl"
+          className="absolute inset-auto z-30 h-36 w-64 -translate-y-[6rem] rounded-full bg-[#a8a0f0] dark:bg-[#a8a0f0] light:bg-[#FFDD66] blur-2xl"
         />
         <motion.div
           initial={{ width: "15rem" }}
@@ -86,10 +86,10 @@ export const LampContainer = ({
             duration: 0.8,
             ease: "easeInOut",
           }}
-          className="absolute inset-auto z-50 h-0.5 w-[30rem] -translate-y-[7rem] bg-[#a8a0f0]"
+          className="absolute inset-auto z-50 h-0.5 w-[30rem] -translate-y-[7rem] bg-[#a8a0f0] dark:bg-[#a8a0f0] light:bg-[#FFDD66]"
         />
 
-        <div className="absolute inset-auto z-40 h-44 w-full -translate-y-[12.5rem] bg-[#1a1a24]" />
+        <div className="absolute inset-auto z-40 h-44 w-full -translate-y-[12.5rem] bg-[#1a1a24] dark:bg-[#1a1a24] light:bg-[#f5f5fa]" />
       </div>
 
       <div className="relative z-50 flex -translate-y-20 flex-col items-center px-5">

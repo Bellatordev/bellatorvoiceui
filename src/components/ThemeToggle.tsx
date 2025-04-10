@@ -13,6 +13,7 @@ export default function ThemeToggle() {
     if (storedTheme) {
       setTheme(storedTheme);
       document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+      document.documentElement.classList.toggle('light', storedTheme === 'light');
     } else {
       // Default to dark mode for this design
       setTheme('dark');
@@ -26,13 +27,8 @@ export default function ThemeToggle() {
     setTheme(newTheme);
     
     // Apply theme to the document element
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(newTheme);
     
     localStorage.setItem('theme', newTheme);
   };
