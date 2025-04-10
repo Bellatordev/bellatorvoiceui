@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,13 +98,13 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
           isSelected 
             ? 'bg-primary/10 border-primary/60' 
             : 'hover:bg-muted/50'
-        }`}
+        } ${isEditing ? 'h-[350px]' : ''}`}
         onClick={isEditing ? undefined : onClick}
       >
-        <CardContent className="p-4">
+        <CardContent className={`p-4 ${isEditing ? 'h-full' : ''}`}>
           {isEditing ? (
-            <div className="space-y-3" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center">
+            <div className="h-full" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
                 <h3 className="font-medium">Edit Agent</h3>
                 <div className="flex space-x-1">
                   <Button
@@ -125,43 +126,47 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
-                <Input 
-                  value={editedAgent.name} 
-                  onChange={e => handleChange('name', e.target.value)}
-                  placeholder="Assistant"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Description (Optional)</label>
-                <Textarea 
-                  value={editedAgent.description || ''} 
-                  onChange={e => handleChange('description', e.target.value)}
-                  placeholder="A helpful AI assistant"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Voice ID</label>
-                <Input 
-                  value={editedAgent.voiceId} 
-                  onChange={e => handleChange('voiceId', e.target.value)}
-                  placeholder="EXAVITQu4vr4xnSDxMaL"
-                />
-                <p className="text-xs text-muted-foreground">Use a voice ID from your ElevenLabs account</p>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Webhook URL (Optional)</label>
-                <Input 
-                  value={editedAgent.webhookUrl || ''} 
-                  onChange={e => handleChange('webhookUrl', e.target.value)}
-                  placeholder="https://your-n8n-webhook-url.com"
-                />
-                <p className="text-xs text-muted-foreground">URL of your n8n webhook for processing messages</p>
-              </div>
+              <ScrollArea className="h-[280px] pr-4">
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Name</label>
+                    <Input 
+                      value={editedAgent.name} 
+                      onChange={e => handleChange('name', e.target.value)}
+                      placeholder="Assistant"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Description (Optional)</label>
+                    <Textarea 
+                      value={editedAgent.description || ''} 
+                      onChange={e => handleChange('description', e.target.value)}
+                      placeholder="A helpful AI assistant"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Voice ID</label>
+                    <Input 
+                      value={editedAgent.voiceId} 
+                      onChange={e => handleChange('voiceId', e.target.value)}
+                      placeholder="EXAVITQu4vr4xnSDxMaL"
+                    />
+                    <p className="text-xs text-muted-foreground">Use a voice ID from your ElevenLabs account</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Webhook URL (Optional)</label>
+                    <Input 
+                      value={editedAgent.webhookUrl || ''} 
+                      onChange={e => handleChange('webhookUrl', e.target.value)}
+                      placeholder="https://your-n8n-webhook-url.com"
+                    />
+                    <p className="text-xs text-muted-foreground">URL of your n8n webhook for processing messages</p>
+                  </div>
+                </div>
+              </ScrollArea>
             </div>
           ) : (
             <>
