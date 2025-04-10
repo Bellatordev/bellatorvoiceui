@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
@@ -86,7 +85,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     resetSpeech();
     stopListening();
     
-    // Simply clear messages without initializing a new conversation
     endConversation();
     
     toast({
@@ -101,10 +99,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     setIsMicMuted(true);
     resetSpeech();
     
-    // Restart with welcome message
     restartConversation();
     
-    // After restart, unmute mic if in voice mode
     setTimeout(() => {
       if (inputMode === 'voice') {
         setIsMicMuted(false);
@@ -166,9 +162,13 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   isPlaying={isPlaying}
                   onToggleAudio={generateSpeech}
                   onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
-                  onEndConversation={() => handleEndConversation(resetSpeech, () => {
-                    setMessages([]);
-                  }, stopListening)}
+                  onEndConversation={() => {
+                    handleEndConversation(
+                      resetSpeech, 
+                      () => setMessages([]), 
+                      stopListening
+                    );
+                  }}
                   onLogout={handleLogout}
                 />
                 

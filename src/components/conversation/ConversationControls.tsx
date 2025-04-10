@@ -29,7 +29,12 @@ const ConversationControls: React.FC<ConversationControlsProps> = ({
         variant="destructive" 
         size="sm" 
         className="flex gap-2 items-center"
-        onClick={onEndConversation}
+        onClick={(e) => {
+          // Prevent any event bubbling or multiple triggers
+          e.preventDefault();
+          e.stopPropagation();
+          onEndConversation();
+        }}
       >
         <X size={16} />
         End Conversation
