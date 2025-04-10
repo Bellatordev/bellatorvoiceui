@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ElevenLabsService from '../services/elevenLabsService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -25,6 +25,7 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     isPlaying: false,
     error: null as string | null
   });
+  const hasDisplayedVoiceError = useRef(false);
 
   useEffect(() => {
     if (!apiKey || !voiceId) {
@@ -39,6 +40,9 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     
     const unsubscribe = service.subscribe(setState);
     
+    // Reset error flag when voice ID changes
+    hasDisplayedVoiceError.current = false;
+    
     return () => {
       console.log('useElevenLabs hook unmounting, cleaning up subscription');
       unsubscribe();
@@ -51,6 +55,12 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       return;
     }
     
+    // Skip voice generation if we've already had a voice error
+    if (hasDisplayedVoiceError.current) {
+      console.log('Skipping speech generation due to previous voice error');
+      return;
+    }
+    
     try {
       console.log(`Generating speech for text: "${text.substring(0, 30)}..."`, `using voice ID: ${voiceId}`);
       const service = ElevenLabsService.getInstance();
@@ -58,15 +68,34 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
     } catch (error) {
       console.error('Error generating speech:', error);
       
-      // Don't show toast for quota errors 
-      if (error instanceof Error && !error.message.includes('quota')) {
-        toast({
-          title: "Speech Generation Note",
-          description: error instanceof Error ? error.message : "An issue occurred with speech generation",
-          variant: "default"
-        });
-      } else if (error instanceof Error && error.message.includes('quota')) {
-        console.log('TTS quota exceeded, continuing without voice output');
+      // Only show the error toast once per voice ID
+      if (!hasDisplayedVoiceError.current) {
+        if (error instanceof Error && error.message.includes('voice_not_found')) {
+          toast({
+            title: "Speech Generation Error",
+            description: "Voice ID not found. Speech generation has been disabled.",
+            variant: "destructive"
+          });
+          
+          // Mark that we've shown the error for this voice ID
+          hasDisplayedVoiceError.current = true;
+        } else if (error instanceof Error && !error.message.includes('quota')) {
+          toast({
+            title: "Speech Generation Issue",
+            description: error.message,
+            variant: "default"
+          });
+        } else if (error instanceof Error && error.message.includes('quota')) {
+          console.log('TTS quota exceeded, continuing without voice output');
+          toast({
+            title: "API Quota Exceeded",
+            description: "Voice generation has been disabled due to API quota limits.",
+            variant: "destructive"
+          });
+          
+          // Mark that we've shown the quota error
+          hasDisplayedVoiceError.current = true;
+        }
       }
       
       // Set error state

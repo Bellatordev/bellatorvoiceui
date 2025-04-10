@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface ErrorHandlerProps {
   error: string | null;
@@ -14,8 +14,10 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
   setMessages,
   children,
 }) => {
+  const hasAddedErrorMessage = useRef(false);
+
   useEffect(() => {
-    if (error) {
+    if (error && !hasAddedErrorMessage.current) {
       if (!messages.some(msg => msg.text.includes("I'm having trouble with my voice output"))) {
         const errorMessage = {
           id: crypto.randomUUID(),
@@ -25,9 +27,17 @@ const ErrorHandler: React.FC<ErrorHandlerProps> = ({
         };
         
         setMessages(prev => [...prev, errorMessage]);
+        hasAddedErrorMessage.current = true;
       }
     }
   }, [error, messages, setMessages]);
+
+  // Reset the flag if the error changes
+  useEffect(() => {
+    if (!error) {
+      hasAddedErrorMessage.current = false;
+    }
+  }, [error]);
 
   return <>{children}</>;
 };
