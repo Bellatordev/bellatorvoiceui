@@ -10,7 +10,6 @@ interface PageHeaderProps {
   agents: VoiceAgent[];
   selectedAgent: VoiceAgent | null;
   onSelectAgent: (agent: VoiceAgent) => void;
-  onOpenSettings: () => void;
   onLogout: () => void;
 }
 
@@ -18,7 +17,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   agents,
   selectedAgent,
   onSelectAgent,
-  onOpenSettings,
   onLogout
 }) => {
   return (
@@ -33,7 +31,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           agents={agents}
           selectedAgent={selectedAgent}
           onSelectAgent={onSelectAgent}
-          onOpenSettings={onOpenSettings}
         />
         
         <Button 

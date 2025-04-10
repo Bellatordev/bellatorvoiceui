@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -9,31 +9,24 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Settings, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { VoiceAgent } from '@/types/voiceAgent';
 
 interface AgentSelectorProps {
   agents: VoiceAgent[];
   selectedAgent: VoiceAgent | null;
   onSelectAgent: (agent: VoiceAgent) => void;
-  onOpenSettings: () => void;
 }
 
 const AgentSelector: React.FC<AgentSelectorProps> = ({
   agents,
   selectedAgent,
-  onSelectAgent,
-  onOpenSettings
+  onSelectAgent
 }) => {
   if (!selectedAgent) {
     return (
-      <Button 
-        variant="outline" 
-        onClick={onOpenSettings}
-        className="flex items-center gap-2"
-      >
-        <Settings size={16} />
-        Configure Agents
+      <Button variant="outline">
+        No Agents Available
       </Button>
     );
   }
@@ -58,11 +51,6 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({
             {agent.name}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onOpenSettings}>
-          <Settings size={16} className="mr-2" />
-          Settings
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

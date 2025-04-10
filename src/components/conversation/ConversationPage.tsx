@@ -3,13 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
-import { getVoiceAgents, updateVoiceAgent } from '@/utils/voiceAgentStorage';
+import { getVoiceAgents } from '@/utils/voiceAgentStorage';
 import ElevenLabsService from '@/services/elevenLabsService';
 import VoiceAgentContent from './VoiceAgentContent';
 import PageHeader from './PageHeader';
 import PageFooter from './PageFooter';
 import ConversationLoading from './ConversationLoading';
-import SettingsModal from '@/components/SettingsModal';
 
 const ConversationPage = () => {
   const [apiKey, setApiKey] = useState('');
@@ -17,7 +16,6 @@ const ConversationPage = () => {
   const [agentId, setAgentId] = useState('');
   const [agentName, setAgentName] = useState('');
   const [webhookUrl, setWebhookUrl] = useState<string | undefined>(undefined);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [agents, setAgents] = useState<VoiceAgent[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<VoiceAgent | null>(null);
   const navigate = useNavigate();
@@ -137,30 +135,6 @@ const ConversationPage = () => {
     });
   };
 
-  const handleSaveApiKey = (newApiKey: string) => {
-    setApiKey(newApiKey);
-    localStorage.setItem('voiceAgent_apiKey', newApiKey);
-  };
-  
-  const handleUpdateAgent = (updatedAgent: VoiceAgent) => {
-    // Update agents list
-    const updatedAgents = agents.map(agent => 
-      agent.id === updatedAgent.id ? updatedAgent : agent
-    );
-    setAgents(updatedAgents);
-    
-    // If the updated agent is the currently selected one, update it
-    if (selectedAgent && selectedAgent.id === updatedAgent.id) {
-      setSelectedAgent(updatedAgent);
-      setVoiceId(updatedAgent.voiceId);
-      setAgentName(updatedAgent.name);
-      setWebhookUrl(updatedAgent.webhookUrl);
-      
-      // Update localStorage
-      localStorage.setItem('voiceAgent_agentName', updatedAgent.name);
-    }
-  };
-
   // Show loading state if necessary data is missing
   if (!apiKey || !voiceId) {
     return <ConversationLoading />;
@@ -173,7 +147,6 @@ const ConversationPage = () => {
           agents={agents}
           selectedAgent={selectedAgent}
           onSelectAgent={handleChangeAgent}
-          onOpenSettings={() => setIsSettingsOpen(true)}
           onLogout={handleLogout}
         />
         
@@ -189,19 +162,6 @@ const ConversationPage = () => {
         
         <PageFooter />
       </div>
-      
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        apiKey={apiKey}
-        onSaveApiKey={handleSaveApiKey}
-        agents={agents}
-        selectedAgentId={selectedAgent?.id || null}
-        onSelectAgent={handleChangeAgent}
-        onAddAgent={(agent) => {
-          setAgents(prev => [...prev, agent]);
-        }}
-      />
     </div>
   );
 };
