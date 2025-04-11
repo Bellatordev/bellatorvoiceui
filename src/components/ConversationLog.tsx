@@ -1,7 +1,8 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { DownloadIcon } from 'lucide-react';
+import { DownloadIcon, InfoIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export type Message = {
   id: string;
@@ -9,7 +10,7 @@ export type Message = {
   sender: 'user' | 'assistant';
   timestamp: Date;
   audioElement?: HTMLAudioElement | null;
-  debugInfo?: string; // Add debug info field for webhooks
+  debugInfo?: string; // Debug info field for webhooks
   rawWebhookResponse?: any; // Store the raw webhook response
 };
 
@@ -34,6 +35,8 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
   const [audioPlaybackStates, setAudioPlaybackStates] = useState<Record<string, boolean>>({});
+  const [debugModalOpen, setDebugModalOpen] = useState<boolean>(false);
+  const [selectedDebugMessage, setSelectedDebugMessage] = useState<Message | null>(null);
   
   // Add event listeners to each audio element to detect when playback ends or pauses
   useEffect(() => {
@@ -138,6 +141,13 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
       onToggleAudio(message.id, message.text, message.audioElement);
     }
   };
+
+  const openDebugModal = (message: Message, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedDebugMessage(message);
+    setDebugModalOpen(true);
+  };
   
   return (
     <div className={`flex flex-col ${className}`}>
@@ -190,16 +200,28 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                         {formatTimestamp(message.timestamp)}
                       </span>
                       
-                      {message.sender === 'assistant' && onToggleAudio && message.audioElement && (
-                        <AudioVisualizer 
-                          isPlaying={isThisMessagePlaying} 
-                          isGenerating={isGeneratingAudio && currentlyPlayingId === message.id} 
-                          onTogglePlayback={(e) => handleToggleAudio(message, e)}
-                          className="ml-2"
-                          hasAttachedAudio={!!message.audioElement}
-                          showCompactUI={true}
-                        />
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {message.sender === 'assistant' && message.debugInfo && (
+                          <button
+                            onClick={(e) => openDebugModal(message, e)}
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="View debug info"
+                          >
+                            <InfoIcon className="w-3 h-3" />
+                          </button>
+                        )}
+                        
+                        {message.sender === 'assistant' && onToggleAudio && message.audioElement && (
+                          <AudioVisualizer 
+                            isPlaying={isThisMessagePlaying} 
+                            isGenerating={isGeneratingAudio && currentlyPlayingId === message.id} 
+                            onTogglePlayback={(e) => handleToggleAudio(message, e)}
+                            className="ml-2"
+                            hasAttachedAudio={!!message.audioElement}
+                            showCompactUI={true}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -209,8 +231,43 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
         )}
         <div ref={messagesEndRef} />
       </div>
+      
+      {/* Debug Info Modal */}
+      <Dialog open={debugModalOpen} onOpenChange={setDebugModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Webhook Debug Information</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto mt-4">
+            {selectedDebugMessage && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">Raw Webhook Response:</h3>
+                  <pre className="bg-muted p-4 rounded-md text-xs overflow-auto max-h-[300px]">
+                    {JSON.stringify(selectedDebugMessage.rawWebhookResponse, null, 2)}
+                  </pre>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">Time Received:</h3>
+                  <p className="text-sm">{selectedDebugMessage.timestamp.toLocaleString()}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">Response Format:</h3>
+                  <p className="text-sm">
+                    {selectedDebugMessage.audioElement ? "Audio + Text Response" : "Text Only Response"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default ConversationLog;
+
