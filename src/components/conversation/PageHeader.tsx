@@ -21,7 +21,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   return (
     <header className="mb-8 flex justify-between items-center">
-      <h1 className="text-2xl font-serif font-bold text-foreground">
+      <h1 className="text-3xl font-serif font-bold text-foreground">
         <span className="text-gradient">Bellator</span>
         <span className="text-gradient-yellow">.ai</span>
       </h1>
