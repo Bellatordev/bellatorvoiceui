@@ -68,8 +68,14 @@ export const useConversation = ({
           // Create debug info with the complete webhook response
           const debugInfo = JSON.stringify(webhookResponse, null, 2);
           
-          // Process binary files (including audio)
-          if (webhookResponse.binaryFile) {
+          // Check for content in kwargs first (based on your n8n setup)
+          if (webhookResponse.kwargs && webhookResponse.kwargs.content) {
+            responseText = webhookResponse.kwargs.content;
+            responseMode = 'kwargs.content';
+            console.log("Using kwargs.content for response:", responseText);
+          }
+          // Then process binary files if available
+          else if (webhookResponse.binaryFile) {
             const fileInfo = processBinaryFile(webhookResponse.binaryFile);
             
             // If it's an audio file, create an audio element
@@ -96,15 +102,17 @@ export const useConversation = ({
                 : fileInfo;
               responseMode = 'binary-only';
             }
-          } else if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
-            responseText = webhookResponse[0].output;
-            responseMode = 'array.output';
-          } else if (webhookResponse.output) {
+          } 
+          // Then try other response formats
+          else if (webhookResponse.output) {
             responseText = webhookResponse.output;
             responseMode = 'object.output';
           } else if (webhookResponse.message) {
             responseText = webhookResponse.message;
             responseMode = 'object.message';
+          } else if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
+            responseText = webhookResponse[0].output;
+            responseMode = 'array.output';
           } else {
             responseText = typeof webhookResponse === 'string' 
               ? webhookResponse 
@@ -112,6 +120,8 @@ export const useConversation = ({
             responseMode = 'last-resort';
             console.warn("Response format not recognized, displaying raw response:", webhookResponse);
           }
+          
+          console.log(`Final response text (${responseMode}):`, responseText);
           
           // Create the assistant message
           const assistantMessage: Message = {

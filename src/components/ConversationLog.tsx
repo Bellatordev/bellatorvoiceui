@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
@@ -140,6 +141,23 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                                   </li>
                                 ))}
                               </ul>
+                              
+                              {/* Display kwargs content if available */}
+                              {message.rawWebhookResponse?.kwargs && (
+                                <div className="mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
+                                  <h4 className="text-xs font-semibold mb-1">kwargs:</h4>
+                                  <ul className="list-disc pl-4 space-y-1">
+                                    {Object.keys(message.rawWebhookResponse.kwargs).map(key => (
+                                      <li key={key} className="text-xs">
+                                        <span className="font-medium">{key}:</span> 
+                                        {typeof message.rawWebhookResponse.kwargs[key] === 'object' ? 
+                                          ' [Object]' : 
+                                          ` ${String(message.rawWebhookResponse.kwargs[key]).substring(0, 100)}${String(message.rawWebhookResponse.kwargs[key]).length > 100 ? '...' : ''}`}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

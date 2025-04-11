@@ -5,6 +5,10 @@
 interface WebhookResponse {
   message?: string;
   output?: string;
+  kwargs?: {
+    content?: string;
+    [key: string]: any;
+  };
   binaryFile?: {
     data: string; // Base64 encoded binary data
     mimeType: string;
@@ -87,6 +91,13 @@ export const sendWebhookRequest = async (
       
       // Log the raw response
       console.log("Raw JSON response: ", JSON.stringify(result, null, 2));
+      
+      // Check for kwargs.content in the response
+      if (result.kwargs && result.kwargs.content) {
+        console.log("Found kwargs.content in response:", result.kwargs.content);
+        // Add or update the output field with kwargs.content
+        result.output = result.kwargs.content;
+      }
       
       // Try to detect if there's an output field in the header
       const outputHeader = response.headers.get('output');
@@ -195,6 +206,13 @@ export const sendWebhookRequest = async (
       try {
         const jsonData = JSON.parse(textResponse);
         result = jsonData;
+        
+        // Check for kwargs.content in the response
+        if (result.kwargs && result.kwargs.content) {
+          console.log("Found kwargs.content in response:", result.kwargs.content);
+          // Add or update the output field with kwargs.content
+          result.output = result.kwargs.content;
+        }
         
         if (outputHeader && !result.output) {
           console.log("Found output in header:", outputHeader);
