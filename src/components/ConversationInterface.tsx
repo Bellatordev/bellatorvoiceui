@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
@@ -31,8 +32,8 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [ttsError, setTtsError] = useState<string | null>(null);
   const [currentAudioMessageId, setCurrentAudioMessageId] = useState<string | null>(null);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
-  const [shouldActivateMic, setShouldActivateMic] = useState(false);
   
+  // Initialize the ElevenLabs TTS service with the current agent's voice ID
   const { 
     generateSpeech, 
     isGenerating, 
@@ -47,6 +48,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     modelId: "eleven_multilingual_v2", // Explicitly set to use the high-quality model
   });
 
+  // Sync errors between ElevenLabs service and local state
   useEffect(() => {
     if (error) {
       console.log('ElevenLabs service reported error:', error);
@@ -65,20 +67,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       }
     };
   }, [stopAudio, cleanup]);
-
-  useEffect(() => {
-    if (shouldActivateMic && !isPlaying && !isGenerating && 
-        audioPlayer === null || (audioPlayer && audioPlayer.paused)) {
-      console.log('Auto-activating microphone after audio playback');
-      setShouldActivateMic(false);
-      
-      setTimeout(() => {
-        if (inputMode === 'voice') {
-          setIsMicMuted(false);
-        }
-      }, 800);
-    }
-  }, [shouldActivateMic, isPlaying, isGenerating, audioPlayer, inputMode]);
 
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
@@ -157,59 +145,63 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     });
   };
 
-  const handlePlaybackEnd = () => {
-    console.log('Audio playback has ended, preparing to activate microphone');
-    setShouldActivateMic(true);
-  };
-
   const handleToggleAudio = (messageId: string, text: string, attachedAudio?: HTMLAudioElement | null) => {
     console.log('Toggle audio playback for message:', messageId);
     
+    // First stop any currently playing audio
     if (isPlaying) {
       stopAudio();
     }
     
+    // If there's a currently playing audio that's different from the one we want to play,
+    // stop it first
     if (audioPlayer && (!attachedAudio || audioPlayer !== attachedAudio)) {
       audioPlayer.pause();
       setAudioPlayer(null);
     }
     
+    // If we're clicking on the currently playing message, just toggle playback state
     if (currentAudioMessageId === messageId) {
       if (attachedAudio && attachedAudio === audioPlayer) {
         if (audioPlayer.paused) {
+          // Resume playback
           audioPlayer.play()
             .then(() => {
               console.log('Resumed playback of attached audio');
-              setIsMicMuted(true);
             })
             .catch(err => {
               console.error('Error resuming audio playback:', err);
             });
         } else {
+          // Pause playback
           audioPlayer.pause();
           console.log('Paused playback of attached audio');
-          handlePlaybackEnd();
         }
         return;
       } else if (isPlaying) {
+        // Toggle ElevenLabs audio
         togglePlayback();
         return;
       }
     }
     
+    // Set the current message ID for playback tracking
     setCurrentAudioMessageId(messageId);
     
+    // If we have an attached audio file, prioritize playing that
     if (attachedAudio) {
-      setIsMicMuted(true);
-      
+      console.log('Playing attached audio file');
       attachedAudio.volume = volume;
       setAudioPlayer(attachedAudio);
       
+      // Add event listeners to handle playback state
       attachedAudio.onended = () => {
         console.log('Audio playback ended');
-        handlePlaybackEnd();
+        // Don't reset the message ID or player - just mark as ended
+        // This way the UI can still show which message was just played
       };
       
+      // Start playback
       attachedAudio.play()
         .then(() => {
           toast({
@@ -225,29 +217,23 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             description: "There was a problem playing the audio file",
             variant: "destructive"
           });
-          handlePlaybackEnd();
         });
     } else {
-      setIsMicMuted(true);
-      
+      // No attached audio, use ElevenLabs to generate speech
       toast({
         title: "Generating Speech",
         description: "Preparing to play audio response...",
         duration: 2000,
       });
       
-      generateSpeech(text)
-        .then(() => {
-        })
-        .catch(err => {
-          console.error('Failed to generate speech:', err);
-          toast({
-            title: "Speech Generation Issue",
-            description: "There was a problem generating speech from the text",
-            variant: "destructive"
-          });
-          handlePlaybackEnd();
+      generateSpeech(text).catch(err => {
+        console.error('Failed to generate speech:', err);
+        toast({
+          title: "Speech Generation Issue",
+          description: "There was a problem generating speech from the text",
+          variant: "destructive"
         });
+      });
     }
   };
 
@@ -292,7 +278,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
             inputMode={inputMode}
             onFinalTranscript={processUserInput}
           >
-            {({ isListening, transcript, toggleListening, stopListening, resetSpeech, startListening }) => (
+            {({ isListening, transcript, toggleListening, stopListening, resetSpeech }) => (
               <ErrorHandler
                 error={error}
                 messages={messages}
@@ -312,7 +298,6 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                     );
                   }}
                   onLogout={handleLogout}
-                  onPlaybackEnd={handlePlaybackEnd}
                 />
                 
                 <TranscriptDisplay 

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Play, Pause, Loader2, Music } from 'lucide-react';
 
 interface AudioVisualizerProps {
@@ -9,7 +9,6 @@ interface AudioVisualizerProps {
   className?: string;
   hasAttachedAudio?: boolean;
   showCompactUI?: boolean;
-  onPlaybackEnd?: () => void;
 }
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
@@ -19,7 +18,6 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   className = '',
   hasAttachedAudio = false,
   showCompactUI = false,
-  onPlaybackEnd,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     // Ensure the event doesn't bubble up to parent elements
@@ -27,17 +25,6 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     e.stopPropagation();
     onTogglePlayback(e);
   };
-
-  // Call onPlaybackEnd when isPlaying goes from true to false (playback ends)
-  useEffect(() => {
-    if (!isPlaying && onPlaybackEnd) {
-      // Add a small delay to ensure all audio processing is complete
-      const timer = setTimeout(() => {
-        onPlaybackEnd();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isPlaying, onPlaybackEnd]);
 
   if (showCompactUI) {
     return (

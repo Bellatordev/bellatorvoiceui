@@ -11,7 +11,6 @@ interface ConversationContainerProps {
   onRestartConversation: () => void;
   onEndConversation: () => void;
   onLogout?: () => void;
-  onPlaybackEnd?: () => void;
 }
 
 const ConversationContainer: React.FC<ConversationContainerProps> = ({
@@ -21,8 +20,7 @@ const ConversationContainer: React.FC<ConversationContainerProps> = ({
   onToggleAudio,
   onRestartConversation,
   onEndConversation,
-  onLogout,
-  onPlaybackEnd
+  onLogout
 }) => {
   return (
     <div className="flex-1 agent-card mb-6 overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -37,7 +35,6 @@ const ConversationContainer: React.FC<ConversationContainerProps> = ({
         onToggleAudio={(messageId, text, audioElement) => onToggleAudio(messageId, text, audioElement)}
         className="h-full" 
         onLogout={onLogout}
-        onPlaybackEnd={onPlaybackEnd}
       />
     </div>
   );

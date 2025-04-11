@@ -25,7 +25,6 @@ class ElevenLabsService {
     error: null
   };
   private stateListeners: ((state: ElevenLabsState) => void)[] = [];
-  private playbackEndListeners: (() => void)[] = [];
 
   private constructor() {
     console.log('Creating new ElevenLabsService instance');
@@ -44,18 +43,12 @@ class ElevenLabsService {
     this.audioElement.addEventListener('ended', () => {
       console.log('Audio finished playing');
       this.updateState({ isPlaying: false });
-      // Notify listeners that playback has ended
-      this.playbackEndListeners.forEach(listener => listener());
+      // Notify audio has ended - listeners will handle auto-start microphone
     });
     
     this.audioElement.addEventListener('pause', () => {
       console.log('Audio paused');
       this.updateState({ isPlaying: false });
-      // Check if we're at the end of the audio
-      if (this.audioElement && this.audioElement.currentTime >= this.audioElement.duration - 0.1) {
-        // Notify listeners that playback has ended
-        this.playbackEndListeners.forEach(listener => listener());
-      }
     });
     
     this.audioElement.addEventListener('error', (e) => {
@@ -64,8 +57,6 @@ class ElevenLabsService {
         isPlaying: false, 
         error: 'Error playing audio' 
       });
-      // Also notify listeners about end on error
-      this.playbackEndListeners.forEach(listener => listener());
     });
     
     // Add a canplaythrough event to ensure audio can play
@@ -87,14 +78,6 @@ class ElevenLabsService {
     
     return () => {
       this.stateListeners = this.stateListeners.filter(l => l !== listener);
-    };
-  }
-  
-  public onPlaybackEnd(listener: () => void): () => void {
-    this.playbackEndListeners.push(listener);
-    
-    return () => {
-      this.playbackEndListeners = this.playbackEndListeners.filter(l => l !== listener);
     };
   }
 
