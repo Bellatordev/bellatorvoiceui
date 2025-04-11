@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Play, Pause, Loader2 } from 'lucide-react';
+import { Play, Pause, Loader2, Music } from 'lucide-react';
 
 interface AudioVisualizerProps {
   isPlaying: boolean;
   isGenerating: boolean;
   onTogglePlayback: (e: React.MouseEvent) => void;
   className?: string;
+  hasAttachedAudio?: boolean;
 }
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
@@ -14,6 +15,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   isGenerating,
   onTogglePlayback,
   className = '',
+  hasAttachedAudio = false,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     // Ensure the event doesn't bubble up to parent elements
@@ -31,7 +33,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
           isPlaying 
             ? 'bg-agent-primary text-white' 
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }`}
+        } ${hasAttachedAudio ? 'border border-blue-300' : ''}`}
         aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
         type="button" // Explicitly set type to prevent form submission
       >
@@ -39,6 +41,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : isPlaying ? (
           <Pause className="w-4 h-4" />
+        ) : hasAttachedAudio ? (
+          <Music className="w-4 h-4" />
         ) : (
           <Play className="w-4 h-4" />
         )}
@@ -56,6 +60,10 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       
       {isGenerating && (
         <span className="text-xs text-gray-500">Generating audio...</span>
+      )}
+      
+      {!isPlaying && !isGenerating && hasAttachedAudio && (
+        <span className="text-xs text-blue-500">Audio available</span>
       )}
     </div>
   );

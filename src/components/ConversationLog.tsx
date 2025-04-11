@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
 
@@ -8,13 +7,14 @@ export type Message = {
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  audioElement?: HTMLAudioElement | null;
 };
 
 type ConversationLogProps = {
   messages: Message[];
   isGeneratingAudio?: boolean;
   isPlayingAudio?: boolean;
-  onToggleAudio?: (text: string) => void;
+  onToggleAudio?: (text: string, audioElement?: HTMLAudioElement | null) => void;
   className?: string;
   onLogout?: () => void;
 };
@@ -27,6 +27,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   className = '',
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
@@ -64,21 +65,22 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  let lastAssistantMessage: Message | undefined = undefined;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].sender === 'assistant') {
-      lastAssistantMessage = messages[i];
-      break;
-    }
-  }
-  
-  const handleToggleAudio = (messageText: string, e: React.MouseEvent) => {
+  // Handle toggling the audio playback and tracking which message is currently playing
+  const handleToggleAudio = (message: Message, e: React.MouseEvent) => {
     // Prevent event bubbling
     e.preventDefault();
     e.stopPropagation();
     
     if (onToggleAudio) {
-      onToggleAudio(messageText);
+      // If this message is currently playing, we're stopping it
+      if (currentlyPlayingId === message.id) {
+        setCurrentlyPlayingId(null);
+      } else {
+        // Otherwise we're starting to play this message
+        setCurrentlyPlayingId(message.id);
+      }
+      
+      onToggleAudio(message.text, message.audioElement);
     }
   };
   
@@ -126,10 +128,11 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                     
                     {message.sender === 'assistant' && onToggleAudio && (
                       <AudioVisualizer 
-                        isPlaying={isPlayingAudio && lastAssistantMessage?.id === message.id} 
-                        isGenerating={isGeneratingAudio && lastAssistantMessage?.id === message.id} 
-                        onTogglePlayback={(e) => handleToggleAudio(message.text, e)}
-                        className="ml-2" 
+                        isPlaying={isPlayingAudio && currentlyPlayingId === message.id} 
+                        isGenerating={isGeneratingAudio && currentlyPlayingId === message.id} 
+                        onTogglePlayback={(e) => handleToggleAudio(message, e)}
+                        className="ml-2"
+                        hasAttachedAudio={!!message.audioElement}
                       />
                     )}
                   </div>

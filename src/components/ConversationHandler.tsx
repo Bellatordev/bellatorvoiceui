@@ -65,6 +65,13 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       console.log("Cleaning up audio resources in ConversationHandler");
       const elevenLabsInstance = ElevenLabsService.getInstance();
       elevenLabsInstance.stopAudio();
+      
+      // Clean up any active audio elements in messages
+      messages.forEach(message => {
+        if (message.audioElement) {
+          message.audioElement.pause();
+        }
+      });
     } catch (err) {
       console.error('Error during ConversationHandler cleanup:', err);
     }
@@ -123,7 +130,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       previousWebhookUrlRef.current = webhookUrl;
       previousAgentNameRef.current = agentName;
     }
-  }, [webhookUrl, agentName, restartConversation]);
+  }, [webhookUrl, agentName, restartConversation, messages]);
 
   return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation })}</>;
 };

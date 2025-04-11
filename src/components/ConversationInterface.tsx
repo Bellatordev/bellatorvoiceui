@@ -31,6 +31,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const [autoStartMic, setAutoStartMic] = useState(true);
   const [ttsError, setTtsError] = useState<string | null>(null);
   const [currentAudioMessageId, setCurrentAudioMessageId] = useState<string | null>(null);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   
   // Initialize the ElevenLabs TTS service with the current agent's voice ID
   const { 
@@ -60,6 +61,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
       console.log('ConversationInterface unmounting, cleaning up resources');
       stopAudio();
       cleanup();
+      if (audioPlayer) {
+        audioPlayer.pause();
+        setAudioPlayer(null);
+      }
     };
   }, [stopAudio, cleanup]);
 
@@ -68,11 +73,17 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (isPlaying) {
       stopAudio();
     }
+    if (audioPlayer) {
+      audioPlayer.pause();
+    }
   };
 
   const handleVolumeChange = (value: number) => {
     console.log('Setting audio volume to', value);
     setVolume(value);
+    if (audioPlayer) {
+      audioPlayer.volume = value;
+    }
   };
 
   const handleSwitchToTextMode = () => {
@@ -94,6 +105,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const handleEndConversation = (resetSpeech: () => void, endConversation: () => void, stopListening: () => void) => {
     console.log("Ending conversation and shutting down all audio services");
     stopAudio();
+    if (audioPlayer) {
+      audioPlayer.pause();
+      setAudioPlayer(null);
+    }
     setIsMicMuted(true);
     resetSpeech();
     stopListening();
@@ -109,6 +124,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
   const handleRestartConversation = (resetSpeech: () => void, restartConversation: () => void) => {
     console.log("Restarting conversation");
     stopAudio();
+    if (audioPlayer) {
+      audioPlayer.pause();
+      setAudioPlayer(null);
+    }
     setIsMicMuted(true);
     resetSpeech();
     
@@ -126,12 +145,82 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     });
   };
 
-  const handleToggleAudio = (text: string) => {
+  const handleToggleAudio = (text: string, attachedAudio?: HTMLAudioElement | null) => {
     console.log('Toggle audio playback for:', text.substring(0, 30) + '...');
+    
+    // First stop any currently playing audio
     if (isPlaying) {
       stopAudio();
+    }
+    if (audioPlayer) {
+      audioPlayer.pause();
+    }
+    
+    // If we have an attached audio file, prioritize playing that
+    if (attachedAudio) {
+      console.log('Playing attached audio file');
+      if (audioPlayer === attachedAudio && audioPlayer.paused) {
+        // Resume the existing audio player
+        audioPlayer.volume = volume;
+        audioPlayer.play()
+          .then(() => {
+            toast({
+              title: "Playing Audio",
+              description: "Playing attached audio file",
+              duration: 2000,
+            });
+          })
+          .catch(err => {
+            console.error('Failed to play audio file:', err);
+            toast({
+              title: "Audio Playback Issue",
+              description: "There was a problem playing the audio file",
+              variant: "destructive"
+            });
+          });
+      } else {
+        // Set up a new audio player
+        if (audioPlayer && audioPlayer !== attachedAudio) {
+          audioPlayer.pause();
+        }
+        
+        attachedAudio.volume = volume;
+        setAudioPlayer(attachedAudio);
+        
+        // Add event listeners to handle playback state
+        attachedAudio.onended = () => {
+          console.log('Audio playback ended');
+          setAudioPlayer(null);
+        };
+        
+        attachedAudio.onpause = () => {
+          console.log('Audio playback paused');
+        };
+        
+        attachedAudio.onplay = () => {
+          console.log('Audio playback started');
+        };
+        
+        // Start playback
+        attachedAudio.play()
+          .then(() => {
+            toast({
+              title: "Playing Audio",
+              description: "Playing attached audio file",
+              duration: 2000,
+            });
+          })
+          .catch(err => {
+            console.error('Failed to play audio file:', err);
+            toast({
+              title: "Audio Playback Issue",
+              description: "There was a problem playing the audio file",
+              variant: "destructive"
+            });
+          });
+      }
     } else {
-      // Add a confirmation toast when starting speech generation
+      // No attached audio, use ElevenLabs to generate speech
       toast({
         title: "Generating Speech",
         description: "Preparing to play audio response...",
@@ -157,6 +246,10 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     if (onLogout) {
       console.log('Preparing for logout, cleaning up resources');
       stopAudio();
+      if (audioPlayer) {
+        audioPlayer.pause();
+        setAudioPlayer(null);
+      }
       cleanup();
       setTimeout(() => {
         onLogout();
@@ -170,7 +263,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         generateSpeech={generateSpeech}
         isMuted={isMuted}
         autoStartMic={autoStartMic}
-        isPlaying={isPlaying}
+        isPlaying={isPlaying || (audioPlayer !== null && !audioPlayer.paused)}
         isGenerating={isGenerating}
         startListening={null}
         ttsError={ttsError}
@@ -181,7 +274,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
           <SpeechHandler
             autoStartMic={autoStartMic}
             isMicMuted={isMicMuted}
-            isPlaying={isPlaying}
+            isPlaying={isPlaying || (audioPlayer !== null && !audioPlayer.paused)}
             isGenerating={isGenerating}
             inputMode={inputMode}
             onFinalTranscript={processUserInput}
@@ -195,7 +288,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                 <ConversationContainer 
                   messages={messages}
                   isGenerating={isGenerating}
-                  isPlaying={isPlaying}
+                  isPlaying={isPlaying || (audioPlayer !== null && !audioPlayer.paused)}
                   onToggleAudio={handleToggleAudio}
                   onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
                   onEndConversation={() => {
@@ -212,7 +305,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   transcript={transcript}
                   isMicMuted={isMicMuted}
                   isListening={isListening}
-                  isGeneratingVoice={isGenerating || isPlaying}
+                  isGeneratingVoice={isGenerating || (audioPlayer !== null && !audioPlayer.paused)}
                   inputMode={inputMode}
                 />
                 
@@ -223,8 +316,11 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   isMicMuted={isMicMuted}
                   volume={volume}
                   onToggleListening={async () => {
-                    if (isPlaying || isGenerating) {
+                    if (isPlaying || isGenerating || (audioPlayer !== null && !audioPlayer.paused)) {
                       stopAudio();
+                      if (audioPlayer) {
+                        audioPlayer.pause();
+                      }
                       await new Promise(resolve => setTimeout(resolve, 300));
                     }
                     await toggleListening();

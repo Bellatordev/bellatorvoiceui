@@ -109,8 +109,8 @@ export const sendWebhookRequest = async (
       console.log("Webhook multipart response processed:", result);
       return result;
     }
-    else if (contentType && contentType.includes('application/octet-stream')) {
-      // Handle binary response
+    else if (contentType && (contentType.includes('application/octet-stream') || contentType.includes('audio/mpeg'))) {
+      // Handle binary response (including audio/mpeg)
       const binaryData = await response.arrayBuffer();
       const base64Data = btoa(
         new Uint8Array(binaryData).reduce(
@@ -123,7 +123,7 @@ export const sendWebhookRequest = async (
         binaryFile: {
           data: base64Data,
           mimeType: contentType,
-          filename: 'file' // Default filename
+          filename: 'audio.mp3' // Default filename for audio
         }
       };
       
@@ -136,7 +136,7 @@ export const sendWebhookRequest = async (
         }
       }
       
-      console.log("Webhook binary response processed");
+      console.log("Webhook binary audio response processed");
       return result;
     }
     else {
@@ -188,5 +188,31 @@ export const processBinaryFile = (binaryFile: WebhookResponse['binaryFile']): st
     return `[PDF document received: ${binaryFile.filename}]`;
   } else {
     return `[File received: ${binaryFile.filename} (${binaryFile.mimeType})]`;
+  }
+};
+
+/**
+ * Create an audio element from a binary file
+ * @param binaryFile The binary file containing audio data
+ * @returns An HTMLAudioElement or null if not an audio file
+ */
+export const createAudioFromBinaryFile = (binaryFile: WebhookResponse['binaryFile']): HTMLAudioElement | null => {
+  if (!binaryFile || !binaryFile.mimeType.startsWith('audio/')) {
+    return null;
+  }
+  
+  try {
+    // Create a data URL for the audio file
+    const dataUrl = `data:${binaryFile.mimeType};base64,${binaryFile.data}`;
+    
+    // Create an audio element
+    const audio = new Audio();
+    audio.src = dataUrl;
+    
+    console.log(`Created audio element from binary file: ${binaryFile.filename}`);
+    return audio;
+  } catch (error) {
+    console.error("Error creating audio from binary file:", error);
+    return null;
   }
 };

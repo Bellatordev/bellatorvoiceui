@@ -1,8 +1,9 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
 import { toast } from '@/components/ui/use-toast';
-import { sendWebhookRequest, processBinaryFile } from '@/utils/webhookService';
+import { sendWebhookRequest, processBinaryFile, createAudioFromBinaryFile } from '@/utils/webhookService';
 
 interface UseConversationOptions {
   generateSpeech?: (text: string) => Promise<void>;
@@ -62,18 +63,34 @@ export const useConversation = ({
         if (webhookResponse) {
           let responseText = '';
           let responseMode = '';
+          let audioElement: HTMLAudioElement | null = null;
           
+          // Process binary files (including audio)
           if (webhookResponse.binaryFile) {
             const fileInfo = processBinaryFile(webhookResponse.binaryFile);
             
+            // If it's an audio file, create an audio element
+            if (webhookResponse.binaryFile.mimeType.startsWith('audio/')) {
+              audioElement = createAudioFromBinaryFile(webhookResponse.binaryFile);
+            }
+            
+            // Determine the text to display based on what's available
             if (webhookResponse.output) {
-              responseText = `${webhookResponse.output}\n\n${fileInfo}`;
+              // Remove file info from the text if it's audio we'll play
+              responseText = webhookResponse.binaryFile.mimeType.startsWith('audio/') 
+                ? webhookResponse.output
+                : `${webhookResponse.output}\n\n${fileInfo}`;
               responseMode = 'binary+text';
             } else if (webhookResponse.message) {
-              responseText = `${webhookResponse.message}\n\n${fileInfo}`;
+              // Remove file info from the text if it's audio we'll play
+              responseText = webhookResponse.binaryFile.mimeType.startsWith('audio/') 
+                ? webhookResponse.message
+                : `${webhookResponse.message}\n\n${fileInfo}`;
               responseMode = 'binary+message';
             } else {
-              responseText = fileInfo;
+              responseText = webhookResponse.binaryFile.mimeType.startsWith('audio/') 
+                ? 'Audio response'
+                : fileInfo;
               responseMode = 'binary-only';
             }
           } else if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
@@ -93,22 +110,35 @@ export const useConversation = ({
             console.warn("Response format not recognized, displaying raw response:", webhookResponse);
           }
           
-          const formattedResponse = `${responseMode}: ${responseText}`;
-          
+          // Create the assistant message
           const assistantMessage: Message = {
             id: uuidv4(),
-            text: formattedResponse,
+            text: responseText,
             sender: 'assistant',
             timestamp: new Date(),
+            audioElement: audioElement  // Attach audio element if available
           };
           
+          // Add message to the state
           setMessages(prev => [...prev, assistantMessage]);
           
-          if (!isMuted && generateSpeech) {
-            let speechText = responseText;
-            if (responseMode.includes('binary')) {
-              speechText = responseText.split('\n\n')[0];
+          // Handle speech generation or automatic listening based on response
+          if (audioElement) {
+            console.log("Audio file attached to response, ready for playback");
+            
+            if (!isMuted) {
+              // Automatically play the audio if not muted
+              toast({
+                title: "Audio Response",
+                description: "Received audio file with response",
+                duration: 2000,
+              });
+            } else {
+              console.log("Audio response received but muted");
             }
+          } else if (!isMuted && generateSpeech) {
+            // No audio file but we have text to speak
+            let speechText = responseText;
             
             try {
               generateSpeech(speechText);
@@ -138,11 +168,10 @@ export const useConversation = ({
     } else {
       setTimeout(() => {
         const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
-        const formattedResponse = `fallback: ${assistantResponse}`;
         
         const assistantMessage: Message = {
           id: uuidv4(),
-          text: formattedResponse,
+          text: assistantResponse,
           sender: 'assistant',
           timestamp: new Date(),
         };
