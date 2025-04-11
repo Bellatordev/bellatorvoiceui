@@ -167,7 +167,8 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
             const isThisMessagePlaying = message.audioElement ? 
               (message.audioElement.currentTime > 0 && !message.audioElement.paused && !message.audioElement.ended) || 
               audioPlaybackStates[message.id] || 
-              (currentlyPlayingId === message.id && isPlayingAudio);
+              (currentlyPlayingId === message.id && isPlayingAudio) : 
+              false;
               
             return (
               <div 
