@@ -20,6 +20,7 @@ type ConversationLogProps = {
   onToggleAudio?: (messageId: string, text: string, audioElement?: HTMLAudioElement | null) => void;
   className?: string;
   onLogout?: () => void;
+  onPlaybackEnd?: () => void; // Add the missing property
 };
 
 const ConversationLog: React.FC<ConversationLogProps> = ({
@@ -28,6 +29,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   isPlayingAudio = false,
   onToggleAudio,
   className = '',
+  onPlaybackEnd,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
@@ -135,9 +137,22 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                         className="ml-2"
                         hasAttachedAudio={!!message.audioElement}
                         showCompactUI={true}
+                        onPlaybackEnd={onPlaybackEnd} // Pass the onPlaybackEnd callback to AudioVisualizer
                       />
                     )}
                   </div>
+                  
+                  {/* If we have debug info, display it as pre-formatted code */}
+                  {message.debugInfo && (
+                    <div className="mt-2 text-xs border-t pt-2 border-gray-200 dark:border-gray-700">
+                      <details>
+                        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Debug Info</summary>
+                        <pre className="mt-2 p-2 bg-muted rounded text-[10px] overflow-x-auto">
+                          {message.debugInfo}
+                        </pre>
+                      </details>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
