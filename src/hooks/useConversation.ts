@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
 import { toast } from '@/components/ui/use-toast';
-import { sendWebhookRequest } from '@/utils/webhookService';
+import { sendWebhookRequest, processBinaryFile } from '@/utils/webhookService';
 
 interface UseConversationOptions {
   generateSpeech?: (text: string) => Promise<void>;
@@ -31,9 +31,8 @@ export const useConversation = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const webhookUrlRef = useRef<string | undefined>(webhookUrl);
-  const sessionIdRef = useRef<string>(uuidv4()); // Create a unique session ID when the hook initializes
-  
-  // Update the webhook URL ref when it changes
+  const sessionIdRef = useRef<string>(uuidv4());
+
   useEffect(() => {
     webhookUrlRef.current = webhookUrl;
   }, [webhookUrl]);
@@ -52,10 +51,8 @@ export const useConversation = ({
     
     setMessages(prev => [...prev, userMessage]);
     
-    // Send user message to webhook if configured and wait for response
     if (webhookUrlRef.current) {
       try {
-        // Send the user's message text and the session ID to the webhook
         const webhookResponse = await sendWebhookRequest(
           webhookUrlRef.current, 
           text,
@@ -63,24 +60,32 @@ export const useConversation = ({
         );
         
         if (webhookResponse) {
-          // Parse the webhook response and extract the actual output content
           let responseText = '';
           let responseMode = '';
           
-          if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
-            // Handle array response with output property
+          if (webhookResponse.binaryFile) {
+            const fileInfo = processBinaryFile(webhookResponse.binaryFile);
+            
+            if (webhookResponse.output) {
+              responseText = `${webhookResponse.output}\n\n${fileInfo}`;
+              responseMode = 'binary+text';
+            } else if (webhookResponse.message) {
+              responseText = `${webhookResponse.message}\n\n${fileInfo}`;
+              responseMode = 'binary+message';
+            } else {
+              responseText = fileInfo;
+              responseMode = 'binary-only';
+            }
+          } else if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
             responseText = webhookResponse[0].output;
             responseMode = 'array.output';
           } else if (webhookResponse.output) {
-            // Handle direct object with output property
             responseText = webhookResponse.output;
             responseMode = 'object.output';
           } else if (webhookResponse.message) {
-            // Fallback to message property if output doesn't exist
             responseText = webhookResponse.message;
             responseMode = 'object.message';
           } else {
-            // Last resort: stringify the response but with a warning
             responseText = typeof webhookResponse === 'string' 
               ? webhookResponse 
               : JSON.stringify(webhookResponse);
@@ -88,7 +93,6 @@ export const useConversation = ({
             console.warn("Response format not recognized, displaying raw response:", webhookResponse);
           }
           
-          // Format the response to include the mode used
           const formattedResponse = `${responseMode}: ${responseText}`;
           
           const assistantMessage: Message = {
@@ -100,10 +104,14 @@ export const useConversation = ({
           
           setMessages(prev => [...prev, assistantMessage]);
           
-          // Generate speech for the response if not muted
           if (!isMuted && generateSpeech) {
+            let speechText = responseText;
+            if (responseMode.includes('binary')) {
+              speechText = responseText.split('\n\n')[0];
+            }
+            
             try {
-              generateSpeech(responseText); // Use original text for speech, not the formatted one
+              generateSpeech(speechText);
             } catch (err) {
               console.error("Failed to generate speech:", err);
             }
@@ -111,7 +119,6 @@ export const useConversation = ({
             setTimeout(startListening, 1500);
           }
         } else {
-          // Handle case where webhook didn't return a valid response
           toast({
             title: "Error",
             description: "No valid response received from the webhook",
@@ -129,7 +136,6 @@ export const useConversation = ({
         setIsProcessing(false);
       }
     } else {
-      // Fallback behavior when no webhook is configured
       setTimeout(() => {
         const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
         const formattedResponse = `fallback: ${assistantResponse}`;
@@ -143,10 +149,9 @@ export const useConversation = ({
         
         setMessages(prev => [...prev, assistantMessage]);
         
-        // Always generate speech for assistant responses unless muted
         if (!isMuted && generateSpeech) {
           try {
-            generateSpeech(assistantResponse); // Use original text for speech
+            generateSpeech(assistantResponse);
           } catch (err) {
             console.error("Failed to generate speech:", err);
           }
@@ -159,15 +164,12 @@ export const useConversation = ({
     }
   }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, agentName]);
 
-  // Initialize with welcome message - now a memoized function
   const initializeConversation = useCallback(async () => {
     console.log("Initializing conversation with welcome message");
     
-    // Generate a new session ID for each new conversation
     sessionIdRef.current = uuidv4();
     console.log("New session initialized with ID:", sessionIdRef.current);
     
-    // Clear existing messages
     setMessages([]);
     
     const welcomeMessage: Message = {
@@ -180,7 +182,6 @@ export const useConversation = ({
     setMessages([welcomeMessage]);
     setIsInitialized(true);
     
-    // Generate speech for welcome message unless muted
     if (!isMuted && generateSpeech) {
       console.log("Generating speech for welcome message");
       setTimeout(() => {
@@ -191,22 +192,19 @@ export const useConversation = ({
         } catch (err) {
           console.error("Failed to generate speech for welcome message:", err);
         }
-      }, 300); // Small delay to ensure message is rendered first
+      }, 300);
     }
   }, [generateSpeech, isMuted]);
 
-  // Function to restart the conversation
   const restartConversation = useCallback(async () => {
     console.log("Restarting conversation");
     
-    // Generate a new session ID for the restarted conversation
     sessionIdRef.current = uuidv4();
     console.log("Conversation restarted with new session ID:", sessionIdRef.current);
     
     setIsInitialized(false);
     setMessages([]);
     
-    // Re-initialize with a slight delay to ensure clean state
     setTimeout(() => {
       initializeConversation();
     }, 300);
@@ -219,7 +217,7 @@ export const useConversation = ({
     initializeConversation,
     restartConversation,
     isProcessing,
-    sessionId: sessionIdRef.current // Expose session ID in case it's needed elsewhere
+    sessionId: sessionIdRef.current
   };
 };
 
