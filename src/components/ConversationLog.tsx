@@ -122,63 +122,19 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                 <div className="flex flex-col">
                   <span className="text-sm">{message.text}</span>
                   
-                  {message.debugInfo && (
-                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-xs font-mono overflow-auto max-h-[300px]">
-                      <details>
-                        <summary className="text-xs text-blue-500 cursor-pointer">Show Webhook Debug Info</summary>
-                        <div className="mt-1">
-                          <h4 className="text-xs font-semibold mb-1">Raw JSON Response:</h4>
-                          <pre className="whitespace-pre-wrap break-words">{message.debugInfo}</pre>
-                          
-                          {message.rawWebhookResponse && (
-                            <div className="mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
-                              <h4 className="text-xs font-semibold mb-1">Response Structure:</h4>
-                              <ul className="list-disc pl-4 space-y-1">
-                                {Object.keys(message.rawWebhookResponse).map(key => (
-                                  <li key={key} className="text-xs">
-                                    <span className="font-medium">{key}:</span> 
-                                    {typeof message.rawWebhookResponse[key] === 'object' ? 
-                                      ' [Object]' : 
-                                      ` ${String(message.rawWebhookResponse[key]).substring(0, 50)}${String(message.rawWebhookResponse[key]).length > 50 ? '...' : ''}`}
-                                  </li>
-                                ))}
-                              </ul>
-                              
-                              {/* Display kwargs content if available */}
-                              {message.rawWebhookResponse?.kwargs && (
-                                <div className="mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
-                                  <h4 className="text-xs font-semibold mb-1">kwargs:</h4>
-                                  <ul className="list-disc pl-4 space-y-1">
-                                    {Object.keys(message.rawWebhookResponse.kwargs).map(key => (
-                                      <li key={key} className="text-xs">
-                                        <span className="font-medium">{key}:</span> 
-                                        {typeof message.rawWebhookResponse.kwargs[key] === 'object' ? 
-                                          ' [Object]' : 
-                                          ` ${String(message.rawWebhookResponse.kwargs[key]).substring(0, 100)}${String(message.rawWebhookResponse.kwargs[key]).length > 100 ? '...' : ''}`}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </details>
-                    </div>
-                  )}
-                  
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs text-muted-foreground">
                       {formatTimestamp(message.timestamp)}
                     </span>
                     
-                    {message.sender === 'assistant' && onToggleAudio && (
+                    {message.sender === 'assistant' && onToggleAudio && message.audioElement && (
                       <AudioVisualizer 
                         isPlaying={isPlayingAudio && currentlyPlayingId === message.id} 
                         isGenerating={isGeneratingAudio && currentlyPlayingId === message.id} 
                         onTogglePlayback={(e) => handleToggleAudio(message, e)}
                         className="ml-2"
                         hasAttachedAudio={!!message.audioElement}
+                        showCompactUI={true}
                       />
                     )}
                   </div>

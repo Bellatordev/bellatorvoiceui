@@ -67,7 +67,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       const elevenLabsInstance = ElevenLabsService.getInstance();
       elevenLabsInstance.stopAudio();
       
-      // Clean up any active audio elements in messages
+      // Don't clean up or reset audio elements in messages - just stop playing
       messages.forEach(message => {
         if (message.audioElement) {
           message.audioElement.pause();

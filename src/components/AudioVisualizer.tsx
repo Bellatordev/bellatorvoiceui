@@ -8,6 +8,7 @@ interface AudioVisualizerProps {
   onTogglePlayback: (e: React.MouseEvent) => void;
   className?: string;
   hasAttachedAudio?: boolean;
+  showCompactUI?: boolean;
 }
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
@@ -16,6 +17,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   onTogglePlayback,
   className = '',
   hasAttachedAudio = false,
+  showCompactUI = false,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     // Ensure the event doesn't bubble up to parent elements
@@ -23,6 +25,26 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     e.stopPropagation();
     onTogglePlayback(e);
   };
+
+  if (showCompactUI) {
+    return (
+      <button
+        onClick={handleClick}
+        disabled={isGenerating}
+        className={`p-2 rounded-full bg-agent-primary text-white transition-colors focus-ring ${className}`}
+        aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+        type="button"
+      >
+        {isGenerating ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isPlaying ? (
+          <Pause className="w-4 h-4" />
+        ) : (
+          <Play className="w-4 h-4" />
+        )}
+      </button>
+    );
+  }
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>

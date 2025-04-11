@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -86,21 +85,18 @@ export const useConversation = ({
             
             // Determine the text to display based on what's available
             if (webhookResponse.output) {
-              // Remove file info from the text if it's audio we'll play
-              responseText = webhookResponse.binaryFile.mimeType.startsWith('audio/') 
-                ? webhookResponse.output
-                : `${webhookResponse.output}\n\n${fileInfo}`;
+              responseText = webhookResponse.output;
               responseMode = 'binary+text';
             } else if (webhookResponse.message) {
-              // Remove file info from the text if it's audio we'll play
-              responseText = webhookResponse.binaryFile.mimeType.startsWith('audio/') 
-                ? webhookResponse.message
-                : `${webhookResponse.message}\n\n${fileInfo}`;
+              responseText = webhookResponse.message;
               responseMode = 'binary+message';
             } else {
-              responseText = webhookResponse.binaryFile.mimeType.startsWith('audio/') 
-                ? 'Audio response'
-                : fileInfo;
+              // If no text found but we have kwargs.content, use that
+              if (webhookResponse.kwargs && webhookResponse.kwargs.content) {
+                responseText = webhookResponse.kwargs.content;
+              } else {
+                responseText = "I've received your message.";
+              }
               responseMode = 'binary-only';
             }
           } 
@@ -138,19 +134,18 @@ export const useConversation = ({
           // Add message to the state
           setMessages(prev => [...prev, assistantMessage]);
           
-          // Handle speech generation or automatic listening based on response
-          if (audioElement) {
-            console.log("Audio file attached to response, ready for playback");
-            
-            if (!isMuted) {
-              // Automatically play the audio if not muted
+          // Handle automatic audio playback if enabled
+          if (audioElement && !isMuted) {
+            try {
+              // Don't start playing here - let the UI handle it
+              console.log("Audio file attached to response, ready for playback");
               toast({
                 title: "Audio Response",
                 description: "Received audio file with response",
                 duration: 2000,
               });
-            } else {
-              console.log("Audio response received but muted");
+            } catch (err) {
+              console.error("Error with audio file:", err);
             }
           } else if (!isMuted && generateSpeech) {
             // No audio file but we have text to speak
@@ -191,39 +186,7 @@ export const useConversation = ({
         setIsProcessing(false);
       }
     } else {
-      setTimeout(() => {
-        const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
-        
-        const assistantMessage: Message = {
-          id: uuidv4(),
-          text: assistantResponse,
-          sender: 'assistant',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        
-        if (!isMuted && generateSpeech) {
-          try {
-            generateSpeech(assistantResponse);
-          } catch (err) {
-            console.error("Failed to generate speech:", err);
-          }
-        }
-        
-        // Only start listening after message is fully processed
-        if (autoStartMic && !isPlaying && !isGenerating && startListening) {
-          setTimeout(() => {
-            try {
-              startListening();
-            } catch (err) {
-              console.error("Failed to auto-start listening:", err);
-            }
-          }, 1500);
-        }
-        
-        setIsProcessing(false);
-      }, 1000);
+      setIsProcessing(false);
     }
   }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, agentName]);
 
