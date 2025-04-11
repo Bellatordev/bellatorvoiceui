@@ -120,7 +120,8 @@ export const useConversation = ({
             sender: 'assistant',
             timestamp: new Date(),
             audioElement: audioElement,  // Attach audio element if available
-            debugInfo: debugInfo  // Add debug info
+            debugInfo: debugInfo,  // Add debug info
+            rawWebhookResponse: webhookResponse // Store raw response for debugging
           };
           
           // Add message to the state

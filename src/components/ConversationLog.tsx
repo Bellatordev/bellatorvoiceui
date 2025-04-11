@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
@@ -10,6 +9,7 @@ export type Message = {
   timestamp: Date;
   audioElement?: HTMLAudioElement | null;
   debugInfo?: string; // Add debug info field for webhooks
+  rawWebhookResponse?: any; // Store the raw webhook response
 };
 
 type ConversationLogProps = {
@@ -49,7 +49,6 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   };
   
   const downloadConversation = (e: React.MouseEvent) => {
-    // Prevent event bubbling
     e.preventDefault();
     e.stopPropagation();
     
@@ -67,18 +66,14 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  // Handle toggling the audio playback and tracking which message is currently playing
   const handleToggleAudio = (message: Message, e: React.MouseEvent) => {
-    // Prevent event bubbling
     e.preventDefault();
     e.stopPropagation();
     
     if (onToggleAudio) {
-      // If this message is currently playing, we're stopping it
       if (currentlyPlayingId === message.id) {
         setCurrentlyPlayingId(null);
       } else {
-        // Otherwise we're starting to play this message
         setCurrentlyPlayingId(message.id);
       }
       
@@ -124,12 +119,30 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
                 <div className="flex flex-col">
                   <span className="text-sm">{message.text}</span>
                   
-                  {/* Add debug info display for webhook responses */}
                   {message.debugInfo && (
-                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-xs font-mono overflow-auto max-h-[200px]">
+                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-xs font-mono overflow-auto max-h-[300px]">
                       <details>
                         <summary className="text-xs text-blue-500 cursor-pointer">Show Webhook Debug Info</summary>
-                        <pre className="whitespace-pre-wrap break-words mt-1">{message.debugInfo}</pre>
+                        <div className="mt-1">
+                          <h4 className="text-xs font-semibold mb-1">Raw JSON Response:</h4>
+                          <pre className="whitespace-pre-wrap break-words">{message.debugInfo}</pre>
+                          
+                          {message.rawWebhookResponse && (
+                            <div className="mt-2 border-t border-gray-300 dark:border-gray-600 pt-2">
+                              <h4 className="text-xs font-semibold mb-1">Response Structure:</h4>
+                              <ul className="list-disc pl-4 space-y-1">
+                                {Object.keys(message.rawWebhookResponse).map(key => (
+                                  <li key={key} className="text-xs">
+                                    <span className="font-medium">{key}:</span> 
+                                    {typeof message.rawWebhookResponse[key] === 'object' ? 
+                                      ' [Object]' : 
+                                      ` ${String(message.rawWebhookResponse[key]).substring(0, 50)}${String(message.rawWebhookResponse[key]).length > 50 ? '...' : ''}`}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </details>
                     </div>
                   )}

@@ -1,4 +1,3 @@
-
 /**
  * Utility service for handling webhook interactions with n8n
  */
@@ -85,6 +84,9 @@ export const sendWebhookRequest = async (
       // Parse the response as JSON
       const result = await response.json();
       console.log("Webhook JSON response received:", result);
+      
+      // Log the raw response
+      console.log("Raw JSON response: ", JSON.stringify(result, null, 2));
       
       // Try to detect if there's an output field in the header
       const outputHeader = response.headers.get('output');
