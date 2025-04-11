@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/components/ConversationLog';
@@ -66,27 +65,35 @@ export const useConversation = ({
         if (webhookResponse) {
           // Parse the webhook response and extract the actual output content
           let responseText = '';
+          let responseMode = '';
           
           if (Array.isArray(webhookResponse) && webhookResponse.length > 0 && webhookResponse[0].output) {
             // Handle array response with output property
             responseText = webhookResponse[0].output;
+            responseMode = 'array.output';
           } else if (webhookResponse.output) {
             // Handle direct object with output property
             responseText = webhookResponse.output;
+            responseMode = 'object.output';
           } else if (webhookResponse.message) {
             // Fallback to message property if output doesn't exist
             responseText = webhookResponse.message;
+            responseMode = 'object.message';
           } else {
             // Last resort: stringify the response but with a warning
             responseText = typeof webhookResponse === 'string' 
               ? webhookResponse 
               : JSON.stringify(webhookResponse);
+            responseMode = 'last-resort';
             console.warn("Response format not recognized, displaying raw response:", webhookResponse);
           }
           
+          // Format the response to include the mode used
+          const formattedResponse = `${responseMode}: ${responseText}`;
+          
           const assistantMessage: Message = {
             id: uuidv4(),
-            text: responseText,
+            text: formattedResponse,
             sender: 'assistant',
             timestamp: new Date(),
           };
@@ -96,7 +103,7 @@ export const useConversation = ({
           // Generate speech for the response if not muted
           if (!isMuted && generateSpeech) {
             try {
-              generateSpeech(assistantMessage.text);
+              generateSpeech(responseText); // Use original text for speech, not the formatted one
             } catch (err) {
               console.error("Failed to generate speech:", err);
             }
@@ -125,9 +132,11 @@ export const useConversation = ({
       // Fallback behavior when no webhook is configured
       setTimeout(() => {
         const assistantResponse = "I understand you said: " + text + ". I'm here to help you with any questions or tasks.";
+        const formattedResponse = `fallback: ${assistantResponse}`;
+        
         const assistantMessage: Message = {
           id: uuidv4(),
-          text: assistantResponse,
+          text: formattedResponse,
           sender: 'assistant',
           timestamp: new Date(),
         };
@@ -137,7 +146,7 @@ export const useConversation = ({
         // Always generate speech for assistant responses unless muted
         if (!isMuted && generateSpeech) {
           try {
-            generateSpeech(assistantResponse);
+            generateSpeech(assistantResponse); // Use original text for speech
           } catch (err) {
             console.error("Failed to generate speech:", err);
           }
