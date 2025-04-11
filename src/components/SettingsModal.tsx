@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -138,7 +137,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <DialogDescription>Configure and manage voice agents with n8n webhooks.</DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4 py-4">
           <div className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="apiKey" className="text-sm font-medium leading-none">
@@ -183,7 +182,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>

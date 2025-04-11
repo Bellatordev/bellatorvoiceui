@@ -161,7 +161,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <div className="h-full">
+    <div className="flex flex-col h-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-medium text-gray-800 dark:text-white">Select Voice Agent</h2>
         <Button 
@@ -174,7 +174,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         </Button>
       </div>
       
-      <ScrollArea className="h-[calc(100%-180px)] mb-6">
+      {/* Updated agent list with fixed height to ensure scrollability */}
+      <ScrollArea className="flex-1 mb-6" style={{ height: '280px' }}>
         <div className="grid gap-3">
           {agents.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-gray-100 dark:bg-[#282838]">
@@ -199,7 +200,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         </div>
       </ScrollArea>
       
-      <form onSubmit={handleSubmit} className="space-y-6 mt-auto">
+      {/* Form with API key input and submit button */}
+      <form onSubmit={handleSubmit} className="mt-auto pt-4 space-y-6">
         <div className="space-y-2">
           <label htmlFor="apiKey" className="block text-gray-700 dark:text-gray-300 text-sm font-medium font-sans">
             Eleven Labs API Key
