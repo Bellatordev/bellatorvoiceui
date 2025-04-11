@@ -17,7 +17,7 @@ type ConversationLogProps = {
   messages: Message[];
   isGeneratingAudio?: boolean;
   isPlayingAudio?: boolean;
-  onToggleAudio?: (text: string, audioElement?: HTMLAudioElement | null) => void;
+  onToggleAudio?: (messageId: string, text: string, audioElement?: HTMLAudioElement | null) => void;
   className?: string;
   onLogout?: () => void;
 };
@@ -78,7 +78,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
         setCurrentlyPlayingId(message.id);
       }
       
-      onToggleAudio(message.text, message.audioElement);
+      onToggleAudio(message.id, message.text, message.audioElement);
     }
   };
   

@@ -7,7 +7,7 @@ interface ConversationContainerProps {
   messages: any[];
   isGenerating: boolean;
   isPlaying: boolean;
-  onToggleAudio: (text: string, audioElement?: HTMLAudioElement | null) => void;
+  onToggleAudio: (messageId: string, text: string, audioElement?: HTMLAudioElement | null) => void;
   onRestartConversation: () => void;
   onEndConversation: () => void;
   onLogout?: () => void;
@@ -32,7 +32,7 @@ const ConversationContainer: React.FC<ConversationContainerProps> = ({
         messages={messages} 
         isGeneratingAudio={isGenerating} 
         isPlayingAudio={isPlaying}
-        onToggleAudio={(text, audioElement) => onToggleAudio(text, audioElement)}
+        onToggleAudio={(messageId, text, audioElement) => onToggleAudio(messageId, text, audioElement)}
         className="h-full" 
         onLogout={onLogout}
       />

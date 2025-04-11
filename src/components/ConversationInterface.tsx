@@ -145,8 +145,9 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     });
   };
 
-  const handleToggleAudio = (text: string, attachedAudio?: HTMLAudioElement | null) => {
-    console.log('Toggle audio playback for:', text.substring(0, 30) + '...');
+  const handleToggleAudio = (messageId: string, text: string, attachedAudio?: HTMLAudioElement | null) => {
+    console.log('Toggle audio playback for message:', messageId);
+    setCurrentAudioMessageId(messageId);
     
     // First stop any currently playing audio
     if (isPlaying) {
@@ -191,6 +192,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
         attachedAudio.onended = () => {
           console.log('Audio playback ended');
           setAudioPlayer(null);
+          setCurrentAudioMessageId(null);
         };
         
         attachedAudio.onpause = () => {
