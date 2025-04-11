@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
@@ -147,80 +146,77 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
 
   const handleToggleAudio = (messageId: string, text: string, attachedAudio?: HTMLAudioElement | null) => {
     console.log('Toggle audio playback for message:', messageId);
-    setCurrentAudioMessageId(messageId);
     
     // First stop any currently playing audio
     if (isPlaying) {
       stopAudio();
     }
-    if (audioPlayer) {
+    
+    // If there's a currently playing audio that's different from the one we want to play,
+    // stop it first
+    if (audioPlayer && (!attachedAudio || audioPlayer !== attachedAudio)) {
       audioPlayer.pause();
+      setAudioPlayer(null);
     }
+    
+    // If we're clicking on the currently playing message, just toggle playback state
+    if (currentAudioMessageId === messageId) {
+      if (attachedAudio && attachedAudio === audioPlayer) {
+        if (audioPlayer.paused) {
+          // Resume playback
+          audioPlayer.play()
+            .then(() => {
+              console.log('Resumed playback of attached audio');
+            })
+            .catch(err => {
+              console.error('Error resuming audio playback:', err);
+            });
+        } else {
+          // Pause playback
+          audioPlayer.pause();
+          console.log('Paused playback of attached audio');
+        }
+        return;
+      } else if (isPlaying) {
+        // Toggle ElevenLabs audio
+        togglePlayback();
+        return;
+      }
+    }
+    
+    // Set the current message ID for playback tracking
+    setCurrentAudioMessageId(messageId);
     
     // If we have an attached audio file, prioritize playing that
     if (attachedAudio) {
       console.log('Playing attached audio file');
-      if (audioPlayer === attachedAudio && audioPlayer.paused) {
-        // Resume the existing audio player
-        audioPlayer.volume = volume;
-        audioPlayer.play()
-          .then(() => {
-            toast({
-              title: "Playing Audio",
-              description: "Playing attached audio file",
-              duration: 2000,
-            });
-          })
-          .catch(err => {
-            console.error('Failed to play audio file:', err);
-            toast({
-              title: "Audio Playback Issue",
-              description: "There was a problem playing the audio file",
-              variant: "destructive"
-            });
+      attachedAudio.volume = volume;
+      setAudioPlayer(attachedAudio);
+      
+      // Add event listeners to handle playback state
+      attachedAudio.onended = () => {
+        console.log('Audio playback ended');
+        // Don't reset the message ID or player - just mark as ended
+        // This way the UI can still show which message was just played
+      };
+      
+      // Start playback
+      attachedAudio.play()
+        .then(() => {
+          toast({
+            title: "Playing Audio",
+            description: "Playing attached audio file",
+            duration: 2000,
           });
-      } else {
-        // Set up a new audio player
-        if (audioPlayer && audioPlayer !== attachedAudio) {
-          audioPlayer.pause();
-        }
-        
-        attachedAudio.volume = volume;
-        setAudioPlayer(attachedAudio);
-        
-        // Add event listeners to handle playback state
-        attachedAudio.onended = () => {
-          console.log('Audio playback ended');
-          setAudioPlayer(null);
-          setCurrentAudioMessageId(null);
-        };
-        
-        attachedAudio.onpause = () => {
-          console.log('Audio playback paused');
-        };
-        
-        attachedAudio.onplay = () => {
-          console.log('Audio playback started');
-        };
-        
-        // Start playback
-        attachedAudio.play()
-          .then(() => {
-            toast({
-              title: "Playing Audio",
-              description: "Playing attached audio file",
-              duration: 2000,
-            });
-          })
-          .catch(err => {
-            console.error('Failed to play audio file:', err);
-            toast({
-              title: "Audio Playback Issue",
-              description: "There was a problem playing the audio file",
-              variant: "destructive"
-            });
+        })
+        .catch(err => {
+          console.error('Failed to play audio file:', err);
+          toast({
+            title: "Audio Playback Issue",
+            description: "There was a problem playing the audio file",
+            variant: "destructive"
           });
-      }
+        });
     } else {
       // No attached audio, use ElevenLabs to generate speech
       toast({

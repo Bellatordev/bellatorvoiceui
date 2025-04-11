@@ -39,6 +39,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
   const previousWebhookUrlRef = useRef<string | undefined>(webhookUrl);
   const previousAgentNameRef = useRef<string | undefined>(agentName);
   const restartingRef = useRef(false);
+  const isInitializedRef = useRef(false);
   
   const {
     messages,
@@ -79,24 +80,22 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
 
   // Initialize the conversation when the component mounts
   useEffect(() => {
-    // Clean up the storage to force initialization on page refresh
-    if (window.location.pathname.includes('/conversation')) {
-      sessionStorage.removeItem('conversation_initialized');
+    // Only initialize if not already initialized
+    if (!isInitializedRef.current) {
+      console.log("ConversationHandler mounted, initializing conversation");
+      
+      // Small delay to ensure all services are properly initialized before
+      // triggering the welcome message with speech
+      const timer = setTimeout(() => {
+        initializeConversation();
+        isInitializedRef.current = true;
+      }, 300);
+      
+      return () => {
+        clearTimeout(timer);
+        cleanupResources();
+      };
     }
-    
-    // Always initialize when this component mounts
-    console.log("ConversationHandler mounted, initializing conversation");
-    
-    // Small delay to ensure all services are properly initialized before
-    // triggering the welcome message with speech
-    const timer = setTimeout(() => {
-      initializeConversation();
-    }, 300);
-    
-    return () => {
-      clearTimeout(timer);
-      cleanupResources();
-    };
   }, [initializeConversation]);
 
   // Restart the conversation when the webhook URL or agent name changes
@@ -122,6 +121,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
           setTimeout(() => {
             restartConversation();
             restartingRef.current = false;
+            isInitializedRef.current = true;
           }, 500);
         }
       }
@@ -130,7 +130,7 @@ const ConversationHandler: React.FC<ConversationHandlerProps> = ({
       previousWebhookUrlRef.current = webhookUrl;
       previousAgentNameRef.current = agentName;
     }
-  }, [webhookUrl, agentName, restartConversation, messages]);
+  }, [webhookUrl, agentName, restartConversation]);
 
   return <>{children({ messages, setMessages, processUserInput, isProcessing, initializeConversation, restartConversation })}</>;
 };

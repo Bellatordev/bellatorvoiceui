@@ -33,6 +33,7 @@ export const useConversation = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const webhookUrlRef = useRef<string | undefined>(webhookUrl);
   const sessionIdRef = useRef<string>(uuidv4());
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     webhookUrlRef.current = webhookUrl;
@@ -160,8 +161,17 @@ export const useConversation = ({
             } catch (err) {
               console.error("Failed to generate speech:", err);
             }
-          } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
-            setTimeout(startListening, 1500);
+          }
+          
+          // Only start listening after message is fully processed
+          if (autoStartMic && !isPlaying && !isGenerating && startListening) {
+            setTimeout(() => {
+              try {
+                startListening();
+              } catch (err) {
+                console.error("Failed to auto-start listening:", err);
+              }
+            }, 1500);
           }
         } else {
           toast({
@@ -199,8 +209,17 @@ export const useConversation = ({
           } catch (err) {
             console.error("Failed to generate speech:", err);
           }
-        } else if (autoStartMic && !isPlaying && !isGenerating && startListening) {
-          setTimeout(startListening, 1500);
+        }
+        
+        // Only start listening after message is fully processed
+        if (autoStartMic && !isPlaying && !isGenerating && startListening) {
+          setTimeout(() => {
+            try {
+              startListening();
+            } catch (err) {
+              console.error("Failed to auto-start listening:", err);
+            }
+          }, 1500);
         }
         
         setIsProcessing(false);
@@ -209,36 +228,44 @@ export const useConversation = ({
   }, [generateSpeech, isMuted, autoStartMic, isPlaying, isGenerating, startListening, ttsError, isProcessing, agentName]);
 
   const initializeConversation = useCallback(async () => {
+    if (initializedRef.current) {
+      console.log("Conversation already initialized, skipping");
+      return;
+    }
+    
     console.log("Initializing conversation with welcome message");
     
     sessionIdRef.current = uuidv4();
     console.log("New session initialized with ID:", sessionIdRef.current);
     
-    setMessages([]);
-    
-    const welcomeMessage: Message = {
-      id: uuidv4(),
-      text: "Hello! How can I help you today?",
-      sender: 'assistant',
-      timestamp: new Date(),
-    };
-    
-    setMessages([welcomeMessage]);
-    setIsInitialized(true);
-    
-    if (!isMuted && generateSpeech) {
-      console.log("Generating speech for welcome message");
-      setTimeout(() => {
-        try {
-          generateSpeech(welcomeMessage.text).catch(err => {
-            console.error("Error generating welcome speech:", err);
-          });
-        } catch (err) {
-          console.error("Failed to generate speech for welcome message:", err);
-        }
-      }, 300);
+    // Only clear messages if it's a fresh initialization
+    if (messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: uuidv4(),
+        text: "Hello! How can I help you today?",
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages([welcomeMessage]);
+      
+      if (!isMuted && generateSpeech) {
+        console.log("Generating speech for welcome message");
+        setTimeout(() => {
+          try {
+            generateSpeech(welcomeMessage.text).catch(err => {
+              console.error("Error generating welcome speech:", err);
+            });
+          } catch (err) {
+            console.error("Failed to generate speech for welcome message:", err);
+          }
+        }, 300);
+      }
     }
-  }, [generateSpeech, isMuted]);
+    
+    setIsInitialized(true);
+    initializedRef.current = true;
+  }, [generateSpeech, isMuted, messages.length]);
 
   const restartConversation = useCallback(async () => {
     console.log("Restarting conversation");
@@ -246,6 +273,7 @@ export const useConversation = ({
     sessionIdRef.current = uuidv4();
     console.log("Conversation restarted with new session ID:", sessionIdRef.current);
     
+    initializedRef.current = false;
     setIsInitialized(false);
     setMessages([]);
     

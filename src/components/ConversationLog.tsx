@@ -73,7 +73,9 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     
     if (onToggleAudio) {
       if (currentlyPlayingId === message.id) {
-        setCurrentlyPlayingId(null);
+        // When clicking on the currently playing message, don't reset the ID
+        // This ensures the UI still shows which message was last played
+        // The actual audio toggling logic happens in the parent component
       } else {
         setCurrentlyPlayingId(message.id);
       }
