@@ -33,38 +33,65 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+  const [audioPlaybackStates, setAudioPlaybackStates] = useState<Record<string, boolean>>({});
   
-  // Add event listeners to each audio element to detect when playback ends
+  // Add event listeners to each audio element to detect when playback ends or pauses
   useEffect(() => {
+    const audioEventHandlers: Record<string, { element: HTMLAudioElement, handlers: Array<{event: string, handler: () => void}> }> = {};
+    
     messages.forEach(message => {
       if (message.audioElement) {
+        // Create handlers for this message's audio element
         const handleAudioEnded = () => {
           console.log('Audio playback completed for message:', message.id);
           setCurrentlyPlayingId(null);
+          setAudioPlaybackStates(prev => ({ ...prev, [message.id]: false }));
           if (onPlaybackEnd) {
             onPlaybackEnd();
           }
         };
         
-        message.audioElement.addEventListener('ended', handleAudioEnded);
-        
-        // Also add a paused event to track manual stops
-        message.audioElement.addEventListener('pause', () => {
-          // Only call onPlaybackEnd if the audio has ended naturally (currentTime reached the end)
-          if (message.audioElement.currentTime >= message.audioElement.duration - 0.1) {
-            console.log('Audio playback manually completed for message:', message.id);
-            setCurrentlyPlayingId(null);
-            if (onPlaybackEnd) {
-              onPlaybackEnd();
-            }
+        // Handle pause events
+        const handleAudioPaused = () => {
+          // Only handle genuine pauses (not automatic pauses at the end)
+          if (message.audioElement && 
+              message.audioElement.currentTime < message.audioElement.duration - 0.1) {
+            console.log('Audio playback manually paused for message:', message.id);
+            setAudioPlaybackStates(prev => ({ ...prev, [message.id]: false }));
           }
-        });
+        };
         
-        return () => {
-          message.audioElement.removeEventListener('ended', handleAudioEnded);
+        // Handle play events
+        const handleAudioPlay = () => {
+          console.log('Audio playback started/resumed for message:', message.id);
+          setAudioPlaybackStates(prev => ({ ...prev, [message.id]: true }));
+        };
+        
+        // Add all event listeners
+        message.audioElement.addEventListener('ended', handleAudioEnded);
+        message.audioElement.addEventListener('pause', handleAudioPaused);
+        message.audioElement.addEventListener('play', handleAudioPlay);
+        
+        // Track handlers so we can remove them on cleanup
+        audioEventHandlers[message.id] = {
+          element: message.audioElement,
+          handlers: [
+            { event: 'ended', handler: handleAudioEnded },
+            { event: 'pause', handler: handleAudioPaused },
+            { event: 'play', handler: handleAudioPlay }
+          ]
         };
       }
     });
+    
+    // Cleanup function to remove all event listeners
+    return () => {
+      Object.values(audioEventHandlers).forEach(({ element, handlers }) => {
+        handlers.forEach(({ event, handler }) => {
+          element.removeEventListener(event, handler);
+        });
+      });
+    };
   }, [messages, onPlaybackEnd]);
   
   const scrollToBottom = () => {
@@ -107,14 +134,7 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
     e.stopPropagation();
     
     if (onToggleAudio) {
-      if (currentlyPlayingId === message.id) {
-        // When clicking on the currently playing message, don't reset the ID
-        // This ensures the UI still shows which message was last played
-        // The actual audio toggling logic happens in the parent component
-      } else {
-        setCurrentlyPlayingId(message.id);
-      }
-      
+      setCurrentlyPlayingId(message.id);
       onToggleAudio(message.id, message.text, message.audioElement);
     }
   };
@@ -142,41 +162,49 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
             <p>No messages yet. Start a conversation!</p>
           </div>
         ) : (
-          messages.map(message => (
-            <div 
-              key={message.id} 
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
-            >
+          messages.map(message => {
+            // Determine if this specific message's audio is playing
+            const isThisMessagePlaying = message.audioElement ? 
+              (message.audioElement.currentTime > 0 && !message.audioElement.paused && !message.audioElement.ended) || 
+              audioPlaybackStates[message.id] || 
+              (currentlyPlayingId === message.id && isPlayingAudio);
+              
+            return (
               <div 
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.sender === 'user' 
-                    ? 'bg-primary/10 dark:bg-primary/20 text-foreground rounded-tr-none' 
-                    : 'bg-secondary dark:bg-secondary/30 text-foreground rounded-tl-none'
-                }`}
+                key={message.id} 
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
               >
-                <div className="flex flex-col">
-                  <span className="text-sm">{message.text}</span>
-                  
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-muted-foreground">
-                      {formatTimestamp(message.timestamp)}
-                    </span>
+                <div 
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                    message.sender === 'user' 
+                      ? 'bg-primary/10 dark:bg-primary/20 text-foreground rounded-tr-none' 
+                      : 'bg-secondary dark:bg-secondary/30 text-foreground rounded-tl-none'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm">{message.text}</span>
                     
-                    {message.sender === 'assistant' && onToggleAudio && message.audioElement && (
-                      <AudioVisualizer 
-                        isPlaying={isPlayingAudio && currentlyPlayingId === message.id} 
-                        isGenerating={isGeneratingAudio && currentlyPlayingId === message.id} 
-                        onTogglePlayback={(e) => handleToggleAudio(message, e)}
-                        className="ml-2"
-                        hasAttachedAudio={!!message.audioElement}
-                        showCompactUI={true}
-                      />
-                    )}
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {formatTimestamp(message.timestamp)}
+                      </span>
+                      
+                      {message.sender === 'assistant' && onToggleAudio && message.audioElement && (
+                        <AudioVisualizer 
+                          isPlaying={isThisMessagePlaying} 
+                          isGenerating={isGeneratingAudio && currentlyPlayingId === message.id} 
+                          onTogglePlayback={(e) => handleToggleAudio(message, e)}
+                          className="ml-2"
+                          hasAttachedAudio={!!message.audioElement}
+                          showCompactUI={true}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>

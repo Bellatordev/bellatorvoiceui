@@ -31,7 +31,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       <button
         onClick={handleClick}
         disabled={isGenerating}
-        className={`p-2 rounded-full bg-agent-primary text-white transition-colors focus-ring ${className}`}
+        className={`p-2 rounded-full ${isPlaying ? 'bg-agent-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-colors focus-ring ${className}`}
         aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
         type="button"
       >
