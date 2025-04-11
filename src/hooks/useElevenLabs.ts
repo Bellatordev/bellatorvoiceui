@@ -1,12 +1,12 @@
 
-import { useState, useEffect, useRef } from 'react';
-import ElevenLabsService from '../services/elevenLabsService';
-import { toast } from '@/components/ui/use-toast';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import ElevenLabsService from '@/services/elevenLabsService';
 
 interface UseElevenLabsOptions {
   apiKey: string;
   voiceId: string;
   modelId?: string;
+  onPlaybackEnd?: () => void;
 }
 
 interface UseElevenLabsReturn {
@@ -19,125 +19,129 @@ interface UseElevenLabsReturn {
   cleanup: () => void;
 }
 
-export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions): UseElevenLabsReturn => {
-  const [state, setState] = useState({
-    isGenerating: false,
-    isPlaying: false,
-    error: null as string | null
-  });
-  
-  // Track whether we've shown an error for this session
-  const hasDisplayedErrorThisSession = useRef(false);
-  const lastVoiceIdRef = useRef<string | null>(null);
-  
+export const useElevenLabs = ({
+  apiKey,
+  voiceId,
+  modelId = "eleven_multilingual_v2",
+  onPlaybackEnd
+}: UseElevenLabsOptions): UseElevenLabsReturn => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const serviceRef = useRef<ElevenLabsService | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const unsubscribePlaybackEndRef = useRef<(() => void) | null>(null);
+
+  // Initialize service on mount
   useEffect(() => {
-    if (!apiKey || !voiceId) {
-      setState(prev => ({ ...prev, error: "Missing API key or voice ID" }));
-      return;
-    }
-
-    const service = ElevenLabsService.getInstance();
-    
-    console.log(`useElevenLabs initialized with voice ID: ${voiceId}`);
-    
-    const unsubscribe = service.subscribe(setState);
-    
-    // Only reset error flag when voice ID changes
-    if (lastVoiceIdRef.current !== voiceId) {
-      console.log(`Voice ID changed from ${lastVoiceIdRef.current} to ${voiceId}, resetting error state`);
-      lastVoiceIdRef.current = voiceId;
-      hasDisplayedErrorThisSession.current = false; // Reset error flag for new voice ID
-    }
-    
-    // Cleanup function
-    return () => {
-      console.log('useElevenLabs hook unmounting, cleaning up subscription');
-      unsubscribe();
-    };
-  }, [apiKey, voiceId]);
-
-  const generateSpeech = async (text: string): Promise<void> => {
-    if (!text || !text.trim()) {
-      console.log('Empty text provided to generateSpeech, skipping');
-      return;
-    }
-    
-    // Skip voice generation if we've already had an error in this session
-    if (hasDisplayedErrorThisSession.current) {
-      console.log('Skipping speech generation due to previous error this session');
-      return;
-    }
-    
     try {
-      console.log(`Generating speech for text: "${text.substring(0, 30)}..."`, `using voice ID: ${voiceId}`);
       const service = ElevenLabsService.getInstance();
-      await service.generateSpeech({ text, voiceId, apiKey, modelId });
-    } catch (error) {
-      console.error('Error generating speech:', error);
+      serviceRef.current = service;
       
-      // Only show the error toast once for this entire session
-      if (!hasDisplayedErrorThisSession.current) {
-        hasDisplayedErrorThisSession.current = true;
-        
-        if (error instanceof Error) {
-          let errorMessage = "Speech generation issue";
-          
-          if (error.message.includes('voice_not_found')) {
-            errorMessage = "Voice ID not found. Speech generation has been disabled.";
-          } else if (error.message.includes('quota')) {
-            errorMessage = "Voice generation has been disabled due to API quota limits.";
-          } else if (error.message.includes('401')) {
-            errorMessage = "Invalid API key. Please check your ElevenLabs API key.";
-          }
-          
-          toast({
-            title: "Speech Generation Error",
-            description: errorMessage,
-            duration: 3000, // Short duration to prevent UI blocking
-            variant: "destructive"
-          });
-        }
+      // Subscribe to state changes
+      unsubscribeRef.current = service.subscribe(state => {
+        setIsGenerating(state.isGenerating);
+        setIsPlaying(state.isPlaying);
+        setError(state.error);
+      });
+      
+      // Subscribe to playback end events
+      if (onPlaybackEnd) {
+        unsubscribePlaybackEndRef.current = service.onPlaybackEnd(() => {
+          console.log('Playback end detected in hook');
+          onPlaybackEnd();
+        });
       }
       
-      // Set error state
-      setState(prev => ({ 
-        ...prev, 
-        error: error instanceof Error ? error.message : "Issue with speech generation" 
-      }));
+      return () => {
+        // Unsubscribe on cleanup
+        if (unsubscribeRef.current) {
+          unsubscribeRef.current();
+          unsubscribeRef.current = null;
+        }
+        
+        if (unsubscribePlaybackEndRef.current) {
+          unsubscribePlaybackEndRef.current();
+          unsubscribePlaybackEndRef.current = null;
+        }
+      };
+    } catch (error) {
+      console.error('Error initializing ElevenLabs service:', error);
+      setError('Failed to initialize speech service');
+      return () => {};
     }
-  };
+  }, [onPlaybackEnd]);
 
-  const stopAudio = (): void => {
-    console.log('Stopping audio playback from hook');
-    const service = ElevenLabsService.getInstance();
-    service.stopAudio();
-  };
-
-  const togglePlayback = (): void => {
-    console.log('Toggling audio playback from hook');
-    const service = ElevenLabsService.getInstance();
-    service.togglePlayback();
-  };
-
-  // Enhanced cleanup that ensures complete audio shutdown
-  const cleanup = (): void => {
-    console.log('Cleaning up ElevenLabs service from hook');
+  // Generate speech method
+  const generateSpeech = useCallback(async (text: string): Promise<void> => {
+    if (!serviceRef.current) {
+      console.error('ElevenLabs service not initialized');
+      setError('Speech service not initialized');
+      return;
+    }
+    
+    setError(null);
+    setIsGenerating(true);
     
     try {
-      const service = ElevenLabsService.getInstance();
-      service.stopAudio();
-      service.cleanup();
+      await serviceRef.current.generateSpeech({
+        text,
+        voiceId,
+        apiKey,
+        modelId
+      });
     } catch (error) {
-      console.error('Error during ElevenLabs cleanup:', error);
+      console.error('Error generating speech:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error generating speech';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setIsGenerating(false);
     }
-  };
+  }, [apiKey, voiceId, modelId]);
+
+  // Stop audio method
+  const stopAudio = useCallback(() => {
+    if (!serviceRef.current) return;
+    
+    console.log('Stopping audio playback from hook');
+    serviceRef.current.stopAudio();
+  }, []);
+
+  // Toggle playback method
+  const togglePlayback = useCallback(() => {
+    if (!serviceRef.current) return;
+    
+    serviceRef.current.togglePlayback();
+  }, []);
+
+  // Cleanup method
+  const cleanup = useCallback(() => {
+    console.log('Cleaning up ElevenLabs service from hook');
+    
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+    
+    if (unsubscribePlaybackEndRef.current) {
+      unsubscribePlaybackEndRef.current();
+      unsubscribePlaybackEndRef.current = null;
+    }
+    
+    if (serviceRef.current) {
+      serviceRef.current.cleanup();
+    }
+  }, []);
 
   return {
     generateSpeech,
     stopAudio,
     togglePlayback,
-    cleanup,
-    ...state
+    isGenerating,
+    isPlaying,
+    error,
+    cleanup
   };
 };
 
