@@ -43,7 +43,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
   
   // Update the editedAgent when the agent prop changes
   useEffect(() => {
-    setEditedAgent(agent);
+    setEditedAgent({...agent});
   }, [agent]);
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -67,6 +67,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
     e.stopPropagation(); // Prevent card click
     
     if (onUpdate) {
+      // Send the updated agent to parent components
       onUpdate(editedAgent);
     }
     
@@ -78,7 +79,7 @@ const VoiceAgentCard: React.FC<VoiceAgentCardProps> = ({
     e.stopPropagation(); // Prevent card click
     
     // Reset edited agent to original agent
-    setEditedAgent(agent);
+    setEditedAgent({...agent});
     
     // Exit edit mode
     setIsEditing(false);

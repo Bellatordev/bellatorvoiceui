@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentManager from './VoiceAgentManager';
 import ElevenLabsService from '@/services/elevenLabsService';
-import { getVoiceAgents } from '@/utils/voiceAgentStorage';
+import { getVoiceAgents, updateVoiceAgent } from '@/utils/voiceAgentStorage';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -99,8 +98,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     // Clean up any existing audio before updating agent
     safelyCleanupAudio();
     
-    // Force refresh parent components
-    window.dispatchEvent(new Event('storage'));
+    // Update the agent in storage
+    const updatedAgents = updateVoiceAgent(updatedAgent);
+    
+    // Update local state
+    setLocalAgents(updatedAgents);
     
     // If the updated agent is currently selected, notify parent
     if (updatedAgent.id === selectedAgentId) {
@@ -109,6 +111,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         onSelectAgent(updatedAgent);
       }, 10);
     }
+    
+    // Force refresh parent components
+    window.dispatchEvent(new Event('storage'));
+    
+    toast({
+      title: "Voice Agent Updated",
+      description: `${updatedAgent.name} has been updated`,
+      duration: 3000,
+    });
   };
 
   return (

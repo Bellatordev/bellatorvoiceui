@@ -37,9 +37,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
     else if (selectedAgent && !savedAgents.find(a => a.id === selectedAgent.id) && savedAgents.length > 0) {
       setSelectedAgent(savedAgents[0]);
     }
+    // If current agent is selected but was updated, refresh the selected agent too
+    else if (selectedAgent) {
+      const updatedAgent = savedAgents.find(a => a.id === selectedAgent.id);
+      if (updatedAgent) {
+        setSelectedAgent(updatedAgent);
+      }
+    }
   };
 
-  // Load saved agents on mount
+  // Load saved agents on mount and listen for changes
   useEffect(() => {
     refreshAgents();
     
