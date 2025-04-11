@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { VoiceAgent } from '@/types/voiceAgent';
 import VoiceAgentManager from './VoiceAgentManager';
 import ElevenLabsService from '@/services/elevenLabsService';
 import { getVoiceAgents, updateVoiceAgent } from '@/utils/voiceAgentStorage';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -130,54 +132,56 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         onClose();
       }
     }}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Configure and manage voice agents with n8n webhooks.</DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="apiKey" className="text-sm font-medium leading-none">
-              ElevenLabs API Key
-            </label>
-            <Input 
-              id="apiKey" 
-              value={inputApiKey} 
-              onChange={e => setInputApiKey(e.target.value)} 
-              placeholder="Enter your ElevenLabs API key" 
-              type="password" 
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="apiKey" className="text-sm font-medium leading-none">
+                ElevenLabs API Key
+              </label>
+              <Input 
+                id="apiKey" 
+                value={inputApiKey} 
+                onChange={e => setInputApiKey(e.target.value)} 
+                placeholder="Enter your ElevenLabs API key" 
+                type="password" 
+              />
+            </div>
+            
+            <VoiceAgentManager 
+              agents={localAgents} 
+              selectedAgentId={selectedAgentId} 
+              onSelectAgent={(agent) => {
+                // Clean up any existing audio before selecting agent
+                safelyCleanupAudio();
+                
+                // Use setTimeout to prevent UI freezing
+                setTimeout(() => {
+                  onSelectAgent(agent);
+                  // Force refresh parent components
+                  window.dispatchEvent(new Event('storage'));
+                }, 10);
+              }} 
+              onAddAgent={(agent) => {
+                // Clean up any existing audio before adding agent
+                safelyCleanupAudio();
+                
+                // Use setTimeout to prevent UI freezing
+                setTimeout(() => {
+                  onAddAgent(agent);
+                  // Force refresh parent components
+                  window.dispatchEvent(new Event('storage'));
+                }, 10);
+              }}
+              onUpdateAgent={handleUpdateAgent}
             />
           </div>
-          
-          <VoiceAgentManager 
-            agents={localAgents} 
-            selectedAgentId={selectedAgentId} 
-            onSelectAgent={(agent) => {
-              // Clean up any existing audio before selecting agent
-              safelyCleanupAudio();
-              
-              // Use setTimeout to prevent UI freezing
-              setTimeout(() => {
-                onSelectAgent(agent);
-                // Force refresh parent components
-                window.dispatchEvent(new Event('storage'));
-              }, 10);
-            }} 
-            onAddAgent={(agent) => {
-              // Clean up any existing audio before adding agent
-              safelyCleanupAudio();
-              
-              // Use setTimeout to prevent UI freezing
-              setTimeout(() => {
-                onAddAgent(agent);
-                // Force refresh parent components
-                window.dispatchEvent(new Event('storage'));
-              }, 10);
-            }}
-            onUpdateAgent={handleUpdateAgent}
-          />
-        </div>
+        </ScrollArea>
 
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onClose}>Cancel</Button>

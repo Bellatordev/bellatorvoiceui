@@ -62,13 +62,13 @@ const Login = () => {
       {/* Login Form with Lamp Component */}
       <div className="min-h-screen flex flex-col items-center">
         {/* Lamp Component - positioned above the login form */}
-        <div className="w-full h-[50vh] flex items-end">
+        <div className="w-full h-[30vh] flex items-end">
           <LampDemo />
         </div>
         
         {/* Login Form */}
         <div className="w-full flex-grow flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md bg-white dark:bg-[#1b1b2e] rounded-xl p-8 border border-gray-200 dark:border-gray-800 shadow-xl">
+          <div className="w-full max-w-md max-h-[70vh] bg-white dark:bg-[#1b1b2e] rounded-xl p-8 border border-gray-200 dark:border-gray-800 shadow-xl overflow-hidden flex flex-col">
             <h3 className="text-xl text-center font-serif text-gray-800 dark:text-gray-200 mb-8">Enter your credentials to start</h3>
             <LoginScreen onLogin={handleLogin} />
           </div>

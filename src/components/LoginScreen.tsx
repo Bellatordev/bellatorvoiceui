@@ -9,6 +9,7 @@ import SettingsModal from './SettingsModal';
 import { getVoiceAgents, addVoiceAgent, updateVoiceAgent, deleteVoiceAgent, getDefaultVoiceId } from '@/utils/voiceAgentStorage';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LoginScreenProps {
   onLogin: (apiKey: string, agentId: string) => void;
@@ -160,7 +161,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <div>
+    <div className="h-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-medium text-gray-800 dark:text-white">Select Voice Agent</h2>
         <Button 
@@ -173,30 +174,32 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
         </Button>
       </div>
       
-      <div className="grid gap-3 mb-6">
-        {agents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-gray-100 dark:bg-[#282838]">
-            <p className="text-gray-600 dark:text-gray-400 mb-3">No voice agents configured yet</p>
-            <Button onClick={() => setIsSettingsOpen(true)}>
-              <Plus size={16} className="mr-2" /> Add Your First Agent
-            </Button>
-          </div>
-        ) : (
-          agents.map(agent => (
-            <VoiceAgentCard
-              key={agent.id}
-              agent={agent}
-              isSelected={selectedAgent?.id === agent.id}
-              onClick={() => setSelectedAgent(agent)}
-              onUpdate={handleUpdateAgent}
-              onDelete={agents.length > 1 ? handleDeleteAgent : undefined}
-              hideControls={true} // Hide the edit and delete buttons on the login screen
-            />
-          ))
-        )}
-      </div>
+      <ScrollArea className="h-[calc(100%-180px)] mb-6">
+        <div className="grid gap-3">
+          {agents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-gray-100 dark:bg-[#282838]">
+              <p className="text-gray-600 dark:text-gray-400 mb-3">No voice agents configured yet</p>
+              <Button onClick={() => setIsSettingsOpen(true)}>
+                <Plus size={16} className="mr-2" /> Add Your First Agent
+              </Button>
+            </div>
+          ) : (
+            agents.map(agent => (
+              <VoiceAgentCard
+                key={agent.id}
+                agent={agent}
+                isSelected={selectedAgent?.id === agent.id}
+                onClick={() => setSelectedAgent(agent)}
+                onUpdate={handleUpdateAgent}
+                onDelete={agents.length > 1 ? handleDeleteAgent : undefined}
+                hideControls={true} // Hide the edit and delete buttons on the login screen
+              />
+            ))
+          )}
+        </div>
+      </ScrollArea>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 mt-auto">
         <div className="space-y-2">
           <label htmlFor="apiKey" className="block text-gray-700 dark:text-gray-300 text-sm font-medium font-sans">
             Eleven Labs API Key
