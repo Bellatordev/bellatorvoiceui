@@ -63,6 +63,12 @@ export const sendWebhookRequest = async (
     
     console.log(`Webhook response status: ${response.status}`);
     
+    // Log all response headers for debugging
+    console.log('Response headers:');
+    response.headers.forEach((value, name) => {
+      console.log(`${name}: ${value}`);
+    });
+    
     // Process the response
     if (!response.ok) {
       const errorText = await response.text();
@@ -72,12 +78,23 @@ export const sendWebhookRequest = async (
     
     // Check if the response is JSON
     const contentType = response.headers.get('content-type');
+    console.log(`Response content type: ${contentType}`);
     
     // Handle different content types
     if (contentType && contentType.includes('application/json')) {
       // Parse the response as JSON
       const result = await response.json();
       console.log("Webhook JSON response received:", result);
+      
+      // Try to detect if there's an output field in the header
+      const outputHeader = response.headers.get('output');
+      if (outputHeader) {
+        console.log("Found output in header:", outputHeader);
+        if (!result.output) {
+          result.output = outputHeader;
+        }
+      }
+      
       return result;
     } 
     else if (contentType && contentType.includes('multipart/form-data')) {
@@ -85,13 +102,18 @@ export const sendWebhookRequest = async (
       const formData = await response.formData();
       const result: WebhookResponse = {};
       
+      console.log("Processing multipart form data");
+      
       // Process form data fields
       for (const [key, value] of formData.entries()) {
+        console.log(`Form data field: ${key}`, value);
+        
         if (key === 'message' || key === 'output') {
           result[key] = value.toString();
         } 
         else if (value instanceof Blob) {
           // Process file
+          console.log(`Processing file blob: ${key}, type: ${value.type}, size: ${value.size}`);
           const fileReader = new FileReader();
           const binaryData = await new Promise<string>((resolve) => {
             fileReader.onload = () => resolve(fileReader.result as string);
@@ -103,6 +125,15 @@ export const sendWebhookRequest = async (
             mimeType: value.type,
             filename: (value as any).name || 'file'
           };
+        }
+      }
+      
+      // Check for output header
+      const outputHeader = response.headers.get('output');
+      if (outputHeader) {
+        console.log("Found output in header:", outputHeader);
+        if (!result.output) {
+          result.output = outputHeader;
         }
       }
       
@@ -118,7 +149,12 @@ export const sendWebhookRequest = async (
         )
       );
       
-      // Create a response object with the binary data
+      console.log(`Received binary data (${contentType}), size: ${binaryData.byteLength} bytes`);
+      
+      // Try to extract output from header
+      const outputHeader = response.headers.get('output');
+      
+      // Create a response object with the binary data and any header info
       const result: WebhookResponse = {
         binaryFile: {
           data: base64Data,
@@ -126,6 +162,11 @@ export const sendWebhookRequest = async (
           filename: 'audio.mp3' // Default filename for audio
         }
       };
+      
+      if (outputHeader) {
+        console.log("Found output in header:", outputHeader);
+        result.output = outputHeader;
+      }
       
       // Try to get filename from headers if available
       const disposition = response.headers.get('content-disposition');
@@ -136,7 +177,7 @@ export const sendWebhookRequest = async (
         }
       }
       
-      console.log("Webhook binary audio response processed");
+      console.log("Webhook binary audio response processed", result);
       return result;
     }
     else {
@@ -144,13 +185,31 @@ export const sendWebhookRequest = async (
       const textResponse = await response.text();
       console.log("Webhook text response received:", textResponse);
       
+      // Check for output header
+      const outputHeader = response.headers.get('output');
+      let result: WebhookResponse;
+      
       // Try to parse as JSON just in case the content-type header is wrong
       try {
         const jsonData = JSON.parse(textResponse);
-        return jsonData;
+        result = jsonData;
+        
+        if (outputHeader && !result.output) {
+          console.log("Found output in header:", outputHeader);
+          result.output = outputHeader;
+        }
+        
+        return result;
       } catch (e) {
-        // Not JSON, return as text message
-        return { message: textResponse };
+        // Not JSON, return as text message with header info if available
+        result = { message: textResponse };
+        
+        if (outputHeader) {
+          console.log("Found output in header:", outputHeader);
+          result.output = outputHeader;
+        }
+        
+        return result;
       }
     }
   } catch (error) {

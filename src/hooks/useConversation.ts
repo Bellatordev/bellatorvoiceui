@@ -65,6 +65,9 @@ export const useConversation = ({
           let responseMode = '';
           let audioElement: HTMLAudioElement | null = null;
           
+          // Create debug info with the complete webhook response
+          const debugInfo = JSON.stringify(webhookResponse, null, 2);
+          
           // Process binary files (including audio)
           if (webhookResponse.binaryFile) {
             const fileInfo = processBinaryFile(webhookResponse.binaryFile);
@@ -116,7 +119,8 @@ export const useConversation = ({
             text: responseText,
             sender: 'assistant',
             timestamp: new Date(),
-            audioElement: audioElement  // Attach audio element if available
+            audioElement: audioElement,  // Attach audio element if available
+            debugInfo: debugInfo  // Add debug info
           };
           
           // Add message to the state

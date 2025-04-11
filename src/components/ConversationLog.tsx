@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { DownloadIcon } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
@@ -8,6 +9,7 @@ export type Message = {
   sender: 'user' | 'assistant';
   timestamp: Date;
   audioElement?: HTMLAudioElement | null;
+  debugInfo?: string; // Add debug info field for webhooks
 };
 
 type ConversationLogProps = {
@@ -121,6 +123,17 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
               >
                 <div className="flex flex-col">
                   <span className="text-sm">{message.text}</span>
+                  
+                  {/* Add debug info display for webhook responses */}
+                  {message.debugInfo && (
+                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-xs font-mono overflow-auto max-h-[200px]">
+                      <details>
+                        <summary className="text-xs text-blue-500 cursor-pointer">Show Webhook Debug Info</summary>
+                        <pre className="whitespace-pre-wrap break-words mt-1">{message.debugInfo}</pre>
+                      </details>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs text-muted-foreground">
                       {formatTimestamp(message.timestamp)}
