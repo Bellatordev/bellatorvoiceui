@@ -49,6 +49,9 @@ export const useElevenLabs = ({ apiKey, voiceId, modelId }: UseElevenLabsOptions
       hasDisplayedErrorThisSession.current = false; // Reset error flag for new voice ID
     }
     
+    // Add a listener to the audio element to detect when playback completes
+    service.addPlaybackEndListener();
+    
     // Cleanup function
     return () => {
       console.log('useElevenLabs hook unmounting, cleaning up subscription');

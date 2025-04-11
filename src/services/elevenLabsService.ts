@@ -1,4 +1,3 @@
-
 // Service to handle Eleven Labs TTS API integration
 
 interface TTSOptions {
@@ -48,6 +47,14 @@ class ElevenLabsService {
     
     this.audioElement.addEventListener('pause', () => {
       console.log('Audio paused');
+      
+      // Check if the audio has reached the end (with a small margin for timing issues)
+      if (this.audioElement && 
+          this.audioElement.duration > 0 && 
+          this.audioElement.currentTime >= this.audioElement.duration - 0.1) {
+        console.log('Audio completed playing (paused at end)');
+      }
+      
       this.updateState({ isPlaying: false });
     });
     
@@ -180,6 +187,9 @@ class ElevenLabsService {
           // Set volume to ensure it's audible
           this.audioElement.volume = 1.0;
           
+          // Ensure the ended event will fire by setting the audio element to loop=false
+          this.audioElement.loop = false;
+          
           // Use the play() promise to catch any autoplay issues
           const playPromise = this.audioElement.play();
           
@@ -272,7 +282,23 @@ class ElevenLabsService {
     return this.currentVoiceId;
   }
 
-  // Add a cleanup method to properly dispose of the service
+  public addPlaybackEndListener() {
+    if (!this.audioElement) return;
+    
+    // First remove any existing listeners to avoid duplicates
+    this.audioElement.removeEventListener('ended', this.handlePlaybackEnd);
+    
+    // Add the listener
+    this.audioElement.addEventListener('ended', this.handlePlaybackEnd);
+    
+    console.log('Added playback end listener to audio element');
+  }
+  
+  private handlePlaybackEnd = () => {
+    console.log('Audio playback completed');
+    this.updateState({ isPlaying: false });
+  }
+
   public cleanup(): void {
     console.log('Cleaning up ElevenLabs service resources');
     
@@ -288,6 +314,9 @@ class ElevenLabsService {
         element.onended = null;
         element.onerror = null;
         element.oncanplaythrough = null;
+        
+        // Remove specific listeners
+        element.removeEventListener('ended', this.handlePlaybackEnd);
         
         // Release audio resources
         const src = element.src;
@@ -318,7 +347,6 @@ class ElevenLabsService {
     this.currentApiKey = null;
   }
   
-  // Method to destroy the singleton instance
   public static destroyInstance(): void {
     if (ElevenLabsService.instance) {
       try {

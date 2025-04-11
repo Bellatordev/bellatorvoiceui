@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TranscriptDisplay from './TranscriptDisplay';
 import SpeechHandler from './SpeechHandler';
@@ -145,6 +144,22 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
     });
   };
 
+  const handlePlaybackEnd = () => {
+    console.log('Audio playback ended, reactivating microphone');
+    setCurrentAudioMessageId(null);
+    setAudioPlayer(null);
+    
+    // Only unmute mic if we're in voice mode
+    if (inputMode === 'voice') {
+      // Short delay to avoid picking up system sounds
+      setTimeout(() => {
+        if (!isMicMuted) {
+          setIsMicMuted(false);
+        }
+      }, 500);
+    }
+  };
+
   const handleToggleAudio = (messageId: string, text: string, attachedAudio?: HTMLAudioElement | null) => {
     console.log('Toggle audio playback for message:', messageId);
     
@@ -289,6 +304,7 @@ const ConversationInterface: React.FC<ConversationInterfaceProps> = ({
                   isGenerating={isGenerating}
                   isPlaying={isPlaying || (audioPlayer !== null && !audioPlayer.paused)}
                   onToggleAudio={handleToggleAudio}
+                  onPlaybackEnd={handlePlaybackEnd}
                   onRestartConversation={() => handleRestartConversation(resetSpeech, restartConversation)}
                   onEndConversation={() => {
                     handleEndConversation(

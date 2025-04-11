@@ -18,6 +18,7 @@ type ConversationLogProps = {
   isGeneratingAudio?: boolean;
   isPlayingAudio?: boolean;
   onToggleAudio?: (messageId: string, text: string, audioElement?: HTMLAudioElement | null) => void;
+  onPlaybackEnd?: () => void;
   className?: string;
   onLogout?: () => void;
 };
@@ -27,10 +28,44 @@ const ConversationLog: React.FC<ConversationLogProps> = ({
   isGeneratingAudio = false,
   isPlayingAudio = false,
   onToggleAudio,
+  onPlaybackEnd,
   className = '',
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+  
+  // Add event listeners to each audio element to detect when playback ends
+  useEffect(() => {
+    messages.forEach(message => {
+      if (message.audioElement) {
+        const handleAudioEnded = () => {
+          console.log('Audio playback completed for message:', message.id);
+          setCurrentlyPlayingId(null);
+          if (onPlaybackEnd) {
+            onPlaybackEnd();
+          }
+        };
+        
+        message.audioElement.addEventListener('ended', handleAudioEnded);
+        
+        // Also add a paused event to track manual stops
+        message.audioElement.addEventListener('pause', () => {
+          // Only call onPlaybackEnd if the audio has ended naturally (currentTime reached the end)
+          if (message.audioElement.currentTime >= message.audioElement.duration - 0.1) {
+            console.log('Audio playback manually completed for message:', message.id);
+            setCurrentlyPlayingId(null);
+            if (onPlaybackEnd) {
+              onPlaybackEnd();
+            }
+          }
+        });
+        
+        return () => {
+          message.audioElement.removeEventListener('ended', handleAudioEnded);
+        };
+      }
+    });
+  }, [messages, onPlaybackEnd]);
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
