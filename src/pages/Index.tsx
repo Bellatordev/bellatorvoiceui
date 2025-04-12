@@ -4,13 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatedHero } from '@/components/ui/animated-hero';
 import ThemeToggle from '@/components/ThemeToggle';
 import { RainbowButton } from '@/components/ui/rainbow-button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, UserRound } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
     navigate('/login');
+  };
+
+  const handleSheldonClick = () => {
+    navigate('/caller');
   };
 
   return (
@@ -42,19 +46,29 @@ const Index = () => {
             my best to provide helpful and relevant information.
           </p>
           
-          <div className="flex gap-4 justify-center">
-            <button 
-              className="px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-medium flex items-center gap-2 hover:bg-secondary/90 transition-colors"
-            >
-              About AI
-            </button>
+          <div className="flex flex-col gap-4 items-center">
+            <div className="flex gap-4 justify-center">
+              <button 
+                className="px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-medium flex items-center gap-2 hover:bg-secondary/90 transition-colors"
+              >
+                About AI
+              </button>
+              
+              <RainbowButton 
+                onClick={handleGetStarted}
+                className="h-12 rounded-full font-medium flex items-center gap-2"
+              >
+                Get Started <ArrowRight size={18} />
+              </RainbowButton>
+            </div>
             
-            <RainbowButton 
-              onClick={handleGetStarted}
-              className="h-12 rounded-full font-medium flex items-center gap-2"
+            <button 
+              onClick={handleSheldonClick}
+              className="mt-4 px-6 py-3 rounded-full bg-amber-500 hover:bg-amber-600 dark:bg-[#9583f4] dark:hover:bg-[#8070e6] text-white font-medium flex items-center gap-2 transition-colors"
             >
-              Get Started <ArrowRight size={18} />
-            </RainbowButton>
+              <UserRound size={18} />
+              Sheldon
+            </button>
           </div>
         </div>
       </div>
