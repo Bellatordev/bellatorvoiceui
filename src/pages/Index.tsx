@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatedHero } from '@/components/ui/animated-hero';
 import ThemeToggle from '@/components/ThemeToggle';
 import { RainbowButton } from '@/components/ui/rainbow-button';
-import { ArrowRight, UserRound } from 'lucide-react';
+import { ArrowRight, UserRound, Brain } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -15,6 +15,10 @@ const Index = () => {
 
   const handleSheldonClick = () => {
     navigate('/caller');
+  };
+
+  const handleHolmesClick = () => {
+    navigate('/holmes');
   };
 
   return (
@@ -62,13 +66,23 @@ const Index = () => {
               </RainbowButton>
             </div>
             
-            <button 
-              onClick={handleSheldonClick}
-              className="mt-4 px-6 py-3 rounded-full bg-amber-500 hover:bg-amber-600 dark:bg-[#9583f4] dark:hover:bg-[#8070e6] text-white font-medium flex items-center gap-2 transition-colors"
-            >
-              <UserRound size={18} />
-              Sheldon
-            </button>
+            <div className="flex gap-4 mt-4">
+              <button 
+                onClick={handleSheldonClick}
+                className="px-6 py-3 rounded-full bg-amber-500 hover:bg-amber-600 dark:bg-[#9583f4] dark:hover:bg-[#8070e6] text-white font-medium flex items-center gap-2 transition-colors"
+              >
+                <UserRound size={18} />
+                Sheldon
+              </button>
+              
+              <button 
+                onClick={handleHolmesClick}
+                className="px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium flex items-center gap-2 transition-colors"
+              >
+                <Brain size={18} />
+                Holmes
+              </button>
+            </div>
           </div>
         </div>
       </div>

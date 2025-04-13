@@ -9,6 +9,7 @@ import Conversation from "./pages/Conversation";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Caller from "./pages/Caller";
+import Holmes from "./pages/Holmes";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/conversation" element={<Conversation />} />
           <Route path="/caller" element={<Caller />} />
+          <Route path="/holmes" element={<Holmes />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
