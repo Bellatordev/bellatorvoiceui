@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap, Phone } from 'lucide-react';
@@ -60,13 +61,14 @@ const Holmes = () => {
 
       <div className="flex-1 overflow-hidden relative z-10">
         <div className="container mx-auto px-4 py-8 h-full flex flex-col items-center justify-center">
-          <div className="w-full max-w-md mx-auto mb-8">
-            <PulsatingCircle />
+          <div className="w-full flex justify-center mb-8">
+            <div className="relative w-64 h-64">
+              <PulsatingCircle />
+            </div>
           </div>
           
-          <Button 
-            size="lg"
-            className="bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-full px-8 py-6 mb-8 flex items-center gap-3 shadow-lg shadow-[#0EA5E9]/20"
+          <button 
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white rounded-full px-6 py-3 border border-white/20 shadow-lg hover:bg-white/15 transition-all mb-8"
             onClick={() => {
               const embedElement = document.querySelector('elevenlabs-convai');
               if (embedElement) {
@@ -74,9 +76,11 @@ const Holmes = () => {
               }
             }}
           >
-            <Phone className="w-5 h-5" />
-            <span>Call Holmes</span>
-          </Button>
+            <div className="rounded-full bg-black p-1.5">
+              <Phone size={16} className="text-white" />
+            </div>
+            <span>Talk to Holmes</span>
+          </button>
 
           <div className="w-full max-w-2xl mx-auto">
             <div className="relative rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl">
