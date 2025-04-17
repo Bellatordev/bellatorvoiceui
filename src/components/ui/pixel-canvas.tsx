@@ -1,4 +1,3 @@
-
 "use client"
 
 // Сначала определяем класс Pixel
@@ -355,7 +354,7 @@ const PixelCanvas = React.forwardRef<HTMLDivElement, PixelCanvasProps>(
         data-speed={speed}
         data-colors={colors?.join(",")}
         data-variant={variant}
-        {...(noFocus && { "data-no-focus": "" })}
+        {...(noFocus ? { "data-no-focus": true } : {})}
         style={{
           position: 'absolute',
           inset: 0,
@@ -372,4 +371,3 @@ const PixelCanvas = React.forwardRef<HTMLDivElement, PixelCanvasProps>(
 PixelCanvas.displayName = "PixelCanvas"
 
 export { PixelCanvas }
-
