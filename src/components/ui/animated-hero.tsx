@@ -1,13 +1,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 
 function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
-    () => ["smart", "intelligent", "friendly", "efficient"],
+    () => ["bellator", "intelligent", "efficient", "trusty"],
     []
   );
 
@@ -25,15 +25,15 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative">
       <div className="max-w-3xl text-center">
-        <h1 className="text-6xl md:text-7xl font-serif mb-8 text-[#a8a0f0] leading-tight">
+        <h1 className="text-6xl md:text-7xl font-serif mb-8 text-primary leading-tight">
           Meet your Agentic AI
           <br />
-          <span className="text-white">that is</span>
+          <span className="text-foreground">that is</span>
         </h1>
         
-        {/* Animated words section with increased spacing */}
+        {/* Animated words section */}
         <div className="h-20 md:h-24 mb-8 relative flex justify-center">
-          <span className="relative flex w-full justify-center overflow-visible text-white text-6xl md:text-7xl font-serif">
+          <span className="relative flex w-full justify-center overflow-visible text-foreground text-6xl md:text-7xl font-serif">
             {titles.map((title, index) => (
               <motion.span
                 key={index}
@@ -58,7 +58,7 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
           </span>
         </div>
         
-        <p className="text-xl font-sans text-gray-400 mb-12 max-w-2xl mx-auto">
+        <p className="text-xl font-sans text-muted-foreground mb-12 max-w-2xl mx-auto">
           I'm here to help you with your tasks, answer your questions, and assist you
           in making your workflow more efficient. Just ask me anything, and I'll do
           my best to provide helpful and relevant information.
@@ -66,9 +66,9 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
         
         <div className="flex gap-4 justify-center">
           <button 
-            className="px-6 py-3 rounded-full bg-[#2b2a3d] text-white font-medium flex items-center gap-2 hover:bg-[#3a3952] transition-colors"
+            className="px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-medium flex items-center gap-2 hover:bg-secondary/90 transition-colors"
           >
-            About Us <Info size={18} />
+            About Us
           </button>
           
           <RainbowButton 
