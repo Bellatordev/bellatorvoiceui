@@ -35,8 +35,8 @@ const Holmes = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
-      {/* Background pixel effect */}
-      <div className="fixed inset-0 z-0 opacity-70">
+      {/* Background pixel effect - making sure it's visible with higher z-index and opacity */}
+      <div className="fixed inset-0 z-0 opacity-50">
         <PixelCanvas
           gap={12}
           speed={25}
@@ -62,10 +62,27 @@ const Holmes = () => {
 
       <div className="flex-1 overflow-hidden relative z-10">
         <div className="container mx-auto px-4 py-8 h-full flex flex-col items-center justify-center">
-          <div className="w-full flex justify-center mb-8">
-            <div className="relative w-64 h-64">
+          <div className="w-full flex flex-col items-center justify-center">
+            <div className="relative w-64 h-64 mb-8">
               <PulsatingCircle />
             </div>
+            
+            {/* Talk to Holmes button */}
+            <Button 
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/15 backdrop-blur-md text-white rounded-full px-6 py-6 border border-white/20 shadow-lg transition-all"
+              onClick={() => {
+                const widget = document.querySelector('elevenlabs-convai');
+                if (widget) {
+                  // Trigger a click on the widget to open the conversation
+                  widget.click();
+                }
+              }}
+            >
+              <div className="rounded-full bg-black p-1.5">
+                <Phone size={16} className="text-white" />
+              </div>
+              <span>Talk to Holmes</span>
+            </Button>
           </div>
         </div>
       </div>
