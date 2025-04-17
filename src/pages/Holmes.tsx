@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Zap, Phone } from 'lucide-react';
+import { ChevronLeft, Zap } from 'lucide-react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 
@@ -9,21 +9,27 @@ const Holmes = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Add a script dynamically to the document
   useEffect(() => {
+    // Check if the script already exists to prevent duplication
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
     
     if (!existingScript) {
+      // Create the script element
       const script = document.createElement('script');
       script.src = 'https://elevenlabs.io/convai-widget/index.js';
       script.async = true;
       script.type = 'text/javascript';
       
+      // Set loaded state when script loads
       script.onload = () => {
         setIsLoaded(true);
       };
       
+      // Append to document
       document.body.appendChild(script);
       
+      // Clean up function to remove the script when component unmounts
       return () => {
         document.body.removeChild(script);
       };
@@ -34,6 +40,7 @@ const Holmes = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
+      {/* Pixel Canvas Background - Fixed to be visible */}
       <div className="fixed inset-0 z-0 opacity-70">
         <PixelCanvas
           gap={12}
@@ -44,6 +51,7 @@ const Holmes = () => {
         />
       </div>
 
+      {/* Content Layer */}
       <header className="relative z-10 bg-black/40 backdrop-blur-lg border-b border-white/10 p-4 flex items-center justify-between">
         <button 
           onClick={() => navigate('/')}
@@ -58,52 +66,39 @@ const Holmes = () => {
         <div className="w-10" />
       </header>
 
-      <div className="flex-1 overflow-hidden relative z-10">
-        <div className="container mx-auto px-4 py-8 h-full flex flex-col items-center justify-center">
-          <div className="w-full flex justify-center mb-8">
-            <div className="relative w-64 h-64">
-              <PulsatingCircle />
-            </div>
-          </div>
-          
-          <button 
-            className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white rounded-full px-6 py-3 border border-white/20 shadow-lg hover:bg-white/15 transition-all mb-8"
-            onClick={() => {
-              const embedElement = document.querySelector('elevenlabs-convai');
-              if (embedElement) {
-                embedElement.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
-            <div className="rounded-full bg-black p-1.5">
-              <Phone size={16} className="text-white" />
-            </div>
-            <span>Talk to Holmes</span>
-          </button>
-
-          <div className="fixed right-8 bottom-8 w-[400px] h-[600px] z-50">
-            <div className="relative rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
-              {isLoaded ? (
-                <elevenlabs-convai 
-                  agent-id="5qz2KX4KuWwAIL3QErpF"
-                  className="rounded-xl overflow-hidden backdrop-filter"
-                  style={{
-                    backgroundColor: 'transparent',
-                    borderRadius: '16px',
-                    height: '100%',
-                    display: 'block',
-                    width: '100%',
-                  } as React.CSSProperties}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-white/70">
-                  <div className="animate-spin mr-2">
-                    <Zap className="w-6 h-6" />
-                  </div>
-                  Loading Holmes...
+      {/* Main Content with ElevenLabs */}
+      <div className="flex-1 overflow-hidden p-6 flex items-center justify-center relative z-10">
+        <div className="relative">
+          <PulsatingCircle />
+        </div>
+        
+        <div className="w-full max-w-2xl mx-auto">
+          <div className="relative z-10 rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl">
+            {isLoaded ? (
+              <elevenlabs-convai 
+                agent-id="5qz2KX4KuWwAIL3QErpF"
+                className="rounded-xl overflow-hidden backdrop-filter"
+                style={{
+                  '--theme-color': '#0EA5E9',
+                  '--button-color': '#0EA5E9',
+                  '--button-text-color': '#FFFFFF',
+                  '--background-color': 'transparent',
+                  '--bubble-background-color': 'rgba(14, 165, 233, 0.1)',
+                  '--bubble-text-color': '#FFFFFF',
+                  '--border-radius': '16px',
+                  minHeight: '500px',
+                  display: 'block',
+                  width: '100%'
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[500px] text-white/70">
+                <div className="animate-spin mr-2">
+                  <Zap className="w-6 h-6" />
                 </div>
-              )}
-            </div>
+                Loading Holmes...
+              </div>
+            )}
           </div>
         </div>
       </div>
