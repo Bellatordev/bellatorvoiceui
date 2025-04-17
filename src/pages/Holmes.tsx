@@ -54,8 +54,8 @@ const Holmes = () => {
           </div>
           
           <div className="w-full flex justify-center mt-4">
-            <div className="relative w-auto h-auto">
-              <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl">
+            <div className="relative w-[250px] h-[400px]">
+              <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
                 {isLoaded ? (
                   <elevenlabs-convai 
                     agent-id="5qz2KX4KuWwAIL3QErpF" 
@@ -63,6 +63,7 @@ const Holmes = () => {
                     style={{
                       backgroundColor: 'transparent',
                       borderRadius: '16px',
+                      height: '100%',
                       display: 'block',
                       width: '100%'
                     } as React.CSSProperties} 
@@ -85,4 +86,3 @@ const Holmes = () => {
 };
 
 export default Holmes;
-
