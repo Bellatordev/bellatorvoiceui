@@ -202,6 +202,7 @@
   .gradient-button {
     background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
     transition: all 0.3s ease;
+    @apply text-white font-medium rounded-lg;
   }
 
   .gradient-button:hover {
@@ -212,6 +213,7 @@
 
   .gradient-button-variant {
     background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+    @apply text-white font-medium rounded-lg;
   }
 
   .gradient-button-variant:hover {
