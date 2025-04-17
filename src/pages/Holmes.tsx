@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
@@ -44,27 +45,27 @@ const Holmes = () => {
         <div className="w-10" />
       </header>
 
-      <div className="flex-1 overflow-hidden relative z-10">
-        <div className="container mx-auto px-4 py-8 h-full flex flex-col items-center justify-center">
+      <div className="flex-1 overflow-hidden relative z-10 px-4">
+        <div className="container mx-auto py-8 h-full flex flex-col items-center justify-center">
           <div className="w-full flex justify-center mb-8">
-            <div className="relative w-64 h-64">
+            <div className="relative w-64 h-64 max-w-full">
               <PulsatingCircle />
             </div>
           </div>
           
           <div className="w-full flex justify-center mt-4">
-            <div className="relative w-[290px] h-[130px]">
+            <div className="relative w-full max-w-[290px] h-[130px]">
               <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
                 {isLoaded ? (
                   <elevenlabs-convai 
                     agent-id="5qz2KX4KuWwAIL3QErpF" 
-                    className="rounded-xl overflow-hidden backdrop-filter" 
+                    className="rounded-xl overflow-hidden backdrop-filter w-full h-full" 
                     style={{
                       backgroundColor: 'transparent',
                       borderRadius: '16px',
+                      width: '100%',
                       height: '100%',
-                      display: 'block',
-                      width: '100%'
+                      display: 'block'
                     } as React.CSSProperties} 
                   />
                 ) : (
