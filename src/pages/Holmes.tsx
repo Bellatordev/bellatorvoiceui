@@ -71,7 +71,7 @@ const Holmes = () => {
             <Button 
               className="flex items-center gap-2 bg-white/10 hover:bg-white/15 backdrop-blur-md text-white rounded-full px-6 py-6 border border-white/20 shadow-lg transition-all"
               onClick={() => {
-                const widget = document.querySelector('elevenlabs-convai');
+                const widget = document.querySelector('elevenlabs-convai') as HTMLElement;
                 if (widget) {
                   // Trigger a click on the widget to open the conversation
                   widget.click();
