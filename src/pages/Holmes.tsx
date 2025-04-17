@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import PulsatingCircle from '@/components/ui/pulsating-circle';
 
 const Holmes = () => {
   const navigate = useNavigate();
@@ -44,9 +45,9 @@ const Holmes = () => {
       </header>
 
       {/* Main Content - ElevenLabs Widget */}
-      <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
-        <div className="w-full max-w-2xl mx-auto">
-          {/* ElevenLabs Widget */}
+      <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center relative">
+        <PulsatingCircle />
+        <div className="w-full max-w-2xl mx-auto relative z-10">
           <elevenlabs-convai agent-id="5qz2KX4KuWwAIL3QErpF"></elevenlabs-convai>
         </div>
       </div>
