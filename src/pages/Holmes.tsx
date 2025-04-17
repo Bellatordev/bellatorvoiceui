@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Zap, Phone } from 'lucide-react';
+import { ChevronLeft, Zap } from 'lucide-react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 
@@ -53,8 +53,8 @@ const Holmes = () => {
             </div>
           </div>
           
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="relative w-[300px] h-[500px] pointer-events-auto">
+          <div className="w-full flex justify-center mt-4">
+            <div className="relative w-[250px] h-[400px]">
               <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
                 {isLoaded ? (
                   <elevenlabs-convai 
