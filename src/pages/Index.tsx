@@ -28,9 +28,9 @@ const Index = () => {
           frontText="Meet Holmes" 
           backText="Let's go!" 
           onClick={handleHolmesClick}
-          className="px-8 py-4 text-lg" // Increased size
-          frontClassName="bg-blue-600 text-white hover:bg-blue-700" // Blue front
-          backClassName="bg-purple-700 text-white" // Purple back
+          className="px-8 py-4 text-lg"
+          frontClassName="bg-blue-600 text-white hover:bg-blue-700"
+          backClassName="bg-blue-700 text-white"
         />
       </div>
     </div>
@@ -38,4 +38,3 @@ const Index = () => {
 };
 
 export default Index;
-
