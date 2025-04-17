@@ -256,6 +256,8 @@ class PixelCanvasElement extends HTMLElement {
     this.ctx.scale(dpr, dpr)
 
     this.createPixels()
+    
+    this.handleAnimation("appear")
   }
 
   getDistanceToCenter(x: number, y: number) {
