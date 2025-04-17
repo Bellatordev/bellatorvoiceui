@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
@@ -54,7 +53,7 @@ const Holmes = () => {
           </div>
           
           <div className="w-full flex justify-center mt-4">
-            <div className="relative w-[250px] h-[350px]">
+            <div className="relative w-[250px] h-[150px]">
               <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
                 {isLoaded ? (
                   <elevenlabs-convai 
