@@ -1,11 +1,14 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap, Phone } from 'lucide-react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
+
 const Holmes = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
+  
   useEffect(() => {
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
     if (!existingScript) {
@@ -24,7 +27,9 @@ const Holmes = () => {
       setIsLoaded(true);
     }
   }, []);
-  return <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
       <div className="fixed inset-0 z-0 opacity-70">
         <PixelCanvas gap={12} speed={25} colors={['#0EA5E9', '#6366f1', '#8B5CF6']} variant="default" noFocus={true} />
       </div>
@@ -48,26 +53,36 @@ const Holmes = () => {
             </div>
           </div>
           
-          
-
-          <div className="fixed right-8 bottom-8 w-[400px] h-[600px] z-50">
-            <div className="relative rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
-              {isLoaded ? <elevenlabs-convai agent-id="5qz2KX4KuWwAIL3QErpF" className="rounded-xl overflow-hidden backdrop-filter" style={{
-              backgroundColor: 'transparent',
-              borderRadius: '16px',
-              height: '100%',
-              display: 'block',
-              width: '100%'
-            } as React.CSSProperties} /> : <div className="flex items-center justify-center h-full text-white/70">
-                  <div className="animate-spin mr-2">
-                    <Zap className="w-6 h-6" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="relative w-[300px] h-[500px] pointer-events-auto">
+              <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
+                {isLoaded ? (
+                  <elevenlabs-convai 
+                    agent-id="5qz2KX4KuWwAIL3QErpF" 
+                    className="rounded-xl overflow-hidden backdrop-filter" 
+                    style={{
+                      backgroundColor: 'transparent',
+                      borderRadius: '16px',
+                      height: '100%',
+                      display: 'block',
+                      width: '100%'
+                    } as React.CSSProperties} 
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-white/70">
+                    <div className="animate-spin mr-2">
+                      <Zap className="w-6 h-6" />
+                    </div>
+                    Loading Holmes...
                   </div>
-                  Loading Holmes...
-                </div>}
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Holmes;
