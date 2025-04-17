@@ -1,8 +1,9 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Zap } from 'lucide-react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
+import { PixelCanvas } from '@/components/ui/pixel-canvas';
 
 const Holmes = () => {
   const navigate = useNavigate();
@@ -30,25 +31,40 @@ const Holmes = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#121212] text-white">
-      {/* Header Bar */}
-      <header className="bg-[#1a1a1a] border-b border-[#333] p-4 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
+      {/* Animated Background Layer */}
+      <div className="absolute inset-0 opacity-30">
+        <PixelCanvas
+          gap={20}
+          speed={15}
+          colors={['#0EA5E9', '#33C3F0', '#8B5CF6']}
+          variant="default"
+        />
+      </div>
+
+      {/* Content Layer */}
+      <header className="relative z-10 bg-[#1a1a1a]/80 backdrop-blur-lg border-b border-[#333] p-4 flex items-center justify-between">
         <button 
           onClick={() => navigate('/')}
-          className="p-2 rounded-full hover:bg-[#333] transition-colors"
+          className="p-2 rounded-full hover:bg-[#333] transition-colors flex items-center gap-2 group"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
         </button>
-        <h1 className="text-2xl font-bold">Holmes</h1>
-        <div className="w-10"> {/* Empty div for symmetrical spacing */}
-        </div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          Holmes
+          <Zap className="w-5 h-5 text-[#0EA5E9] animate-pulse" />
+        </h1>
+        <div className="w-10" />
       </header>
 
-      {/* Main Content - ElevenLabs Widget */}
+      {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center relative">
         <PulsatingCircle />
-        <div className="w-full max-w-2xl mx-auto relative z-10">
-          <elevenlabs-convai agent-id="5qz2KX4KuWwAIL3QErpF"></elevenlabs-convai>
+        <div className="w-full max-w-2xl mx-auto relative z-10 glass">
+          <elevenlabs-convai 
+            agent-id="5qz2KX4KuWwAIL3QErpF"
+            className="rounded-xl overflow-hidden backdrop-blur-sm"
+          />
         </div>
       </div>
     </div>
