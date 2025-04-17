@@ -10,22 +10,24 @@ const PulsatingCircle = () => {
           animation: 'pulsate 2s ease-in-out infinite'
         }}
       />
-      <style jsx>{`
-        @keyframes pulsate {
-          0% {
-            transform: scale(0.95);
-            opacity: 0.5;
+      <style>
+        {`
+          @keyframes pulsate {
+            0% {
+              transform: scale(0.95);
+              opacity: 0.5;
+            }
+            50% {
+              transform: scale(1.05);
+              opacity: 0.2;
+            }
+            100% {
+              transform: scale(0.95);
+              opacity: 0.5;
+            }
           }
-          50% {
-            transform: scale(1.05);
-            opacity: 0.2;
-          }
-          100% {
-            transform: scale(0.95);
-            opacity: 0.5;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
