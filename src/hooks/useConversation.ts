@@ -65,25 +65,40 @@ export const useConversation = ({
           let responseMode = '';
           let audioElement: HTMLAudioElement | null = null;
           
-          // Create debug info with the complete webhook response
           const debugInfo = JSON.stringify(webhookResponse, null, 2);
           
-          // Check for content in kwargs first (based on your n8n setup)
           if (webhookResponse.kwargs && webhookResponse.kwargs.content) {
             responseText = webhookResponse.kwargs.content;
             responseMode = 'kwargs.content';
             console.log("Using kwargs.content for response:", responseText);
           }
-          // Then process binary files if available
           else if (webhookResponse.binaryFile) {
             const fileInfo = processBinaryFile(webhookResponse.binaryFile);
             
-            // If it's an audio file, create an audio element
             if (webhookResponse.binaryFile.mimeType.startsWith('audio/')) {
               audioElement = createAudioFromBinaryFile(webhookResponse.binaryFile);
+              if (audioElement && !isMuted) {
+                audioElement.volume = 0.8;
+                audioElement.play()
+                  .then(() => {
+                    console.log('Auto-playing received audio');
+                    toast({
+                      title: "Playing Audio",
+                      description: "Playing received audio response",
+                      duration: 2000,
+                    });
+                  })
+                  .catch(err => {
+                    console.error('Failed to auto-play audio file:', err);
+                    toast({
+                      title: "Auto-play Failed",
+                      description: "Click the play button to listen to the response",
+                      variant: "destructive"
+                    });
+                  });
+              }
             }
             
-            // Determine the text to display based on what's available
             if (webhookResponse.output) {
               responseText = webhookResponse.output;
               responseMode = 'binary+text';
@@ -91,7 +106,6 @@ export const useConversation = ({
               responseText = webhookResponse.message;
               responseMode = 'binary+message';
             } else {
-              // If no text found but we have kwargs.content, use that
               if (webhookResponse.kwargs && webhookResponse.kwargs.content) {
                 responseText = webhookResponse.kwargs.content;
               } else {
@@ -99,9 +113,7 @@ export const useConversation = ({
               }
               responseMode = 'binary-only';
             }
-          } 
-          // Then try other response formats
-          else if (webhookResponse.output) {
+          } else if (webhookResponse.output) {
             responseText = webhookResponse.output;
             responseMode = 'object.output';
           } else if (webhookResponse.message) {
@@ -120,24 +132,20 @@ export const useConversation = ({
           
           console.log(`Final response text (${responseMode}):`, responseText);
           
-          // Create the assistant message
           const assistantMessage: Message = {
             id: uuidv4(),
             text: responseText,
             sender: 'assistant',
             timestamp: new Date(),
-            audioElement: audioElement,  // Attach audio element if available
-            debugInfo: debugInfo,  // Add debug info
-            rawWebhookResponse: webhookResponse // Store raw response for debugging
+            audioElement: audioElement,
+            debugInfo: debugInfo,
+            rawWebhookResponse: webhookResponse
           };
           
-          // Add message to the state
           setMessages(prev => [...prev, assistantMessage]);
           
-          // Handle automatic audio playback if enabled
           if (audioElement && !isMuted) {
             try {
-              // Don't start playing here - let the UI handle it
               console.log("Audio file attached to response, ready for playback");
               toast({
                 title: "Audio Response",
@@ -148,7 +156,6 @@ export const useConversation = ({
               console.error("Error with audio file:", err);
             }
           } else if (!isMuted && generateSpeech) {
-            // No audio file but we have text to speak
             let speechText = responseText;
             
             try {
@@ -158,7 +165,6 @@ export const useConversation = ({
             }
           }
           
-          // Only start listening after message is fully processed
           if (autoStartMic && !isPlaying && !isGenerating && startListening) {
             setTimeout(() => {
               try {
@@ -201,7 +207,6 @@ export const useConversation = ({
     sessionIdRef.current = uuidv4();
     console.log("New session initialized with ID:", sessionIdRef.current);
     
-    // Only clear messages if it's a fresh initialization
     if (messages.length === 0) {
       const welcomeMessage: Message = {
         id: uuidv4(),
