@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -54,7 +55,7 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
                   background: 'linear-gradient(90deg, hsla(45, 100%, 60%, 1) 0%, hsla(45, 100%, 70%, 1) 100%)',
                   WebkitBackgroundClip: 'text',
                   color: 'transparent',
-                  fontWeight: 'bold'
+                  fontWeight: 'normal' // Changed from 'bold' to 'normal'
                 }}
               >
                 {title}
