@@ -33,7 +33,7 @@ const Holmes = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
       {/* Animated Background Layer */}
-      <div className="absolute inset-0 opacity-30">
+      <div className="absolute inset-0">
         <PixelCanvas
           gap={20}
           speed={15}
@@ -57,13 +57,13 @@ const Holmes = () => {
         <div className="w-10" />
       </header>
 
-      {/* Main Content */}
+      {/* Main Content with ElevenLabs */}
       <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center relative">
         <PulsatingCircle />
         <div className="w-full max-w-2xl mx-auto relative z-10 glass">
           <elevenlabs-convai 
             agent-id="5qz2KX4KuWwAIL3QErpF"
-            className="rounded-xl overflow-hidden backdrop-blur-sm"
+            className="rounded-xl overflow-hidden backdrop-blur-sm bg-[#1a1a1a]/50 border border-[#333]"
           />
         </div>
       </div>
