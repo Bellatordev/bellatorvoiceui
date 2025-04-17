@@ -7,7 +7,7 @@ import { RainbowButton } from "@/components/ui/rainbow-button";
 function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
-    () => ["bellator", "intelligent", "efficient", "trusty"],
+    () => ["Bellator", "Intelligent", "Trusty"],
     []
   );
 
