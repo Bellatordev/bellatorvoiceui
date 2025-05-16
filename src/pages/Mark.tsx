@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
@@ -14,6 +15,7 @@ const Mark = () => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isCallActive, setIsCallActive] = useState(false);
   const lastProcessedMessageRef = useRef<string>('');
+  const conversationInitializedRef = useRef<boolean>(false);
   
   // Initialize the ElevenLabs conversation hook with the agent ID
   const conversation = useConversation({
@@ -59,8 +61,17 @@ const Mark = () => {
   
   useEffect(() => {
     // Start the conversation with the Mark agent ID when the component mounts
+    // But only if it hasn't been started already
     const initConversation = async () => {
+      if (conversationInitializedRef.current) {
+        console.log('Conversation already initialized, skipping');
+        return;
+      }
+      
       try {
+        // Set the flag before starting to prevent multiple initializations
+        conversationInitializedRef.current = true;
+        
         // Start the conversation with the agent ID
         await conversation.startSession({ 
           agentId: 'K6sb3ZDw0wg0oK8OzFEg'
@@ -70,12 +81,14 @@ const Mark = () => {
       } catch (error) {
         console.error('Error starting conversation:', error);
         setIsCallActive(false);
+        // Reset the flag if initialization fails, allowing retry
+        conversationInitializedRef.current = false;
       }
     };
     
-    // Load the ElevenLabs widget script
+    // Only load the script once
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
-    if (!existingScript) {
+    if (!existingScript && !isLoaded) {
       const script = document.createElement('script');
       script.src = 'https://elevenlabs.io/convai-widget/index.js';
       script.async = true;
@@ -84,28 +97,38 @@ const Mark = () => {
         setIsLoaded(true);
         console.log('ElevenLabs widget script loaded');
         // Initialize the conversation after the widget is loaded
-        initConversation();
+        setTimeout(() => {
+          initConversation();
+        }, 500); // Add a small delay to ensure widget is fully initialized
       };
       document.body.appendChild(script);
       return () => {
         document.body.removeChild(script);
         // End the conversation when component unmounts
-        conversation.endSession();
+        if (conversationInitializedRef.current) {
+          conversation.endSession();
+          conversationInitializedRef.current = false;
+        }
         setIsCallActive(false);
       };
-    } else {
-      setIsLoaded(true);
+    } else if (isLoaded && !conversationInitializedRef.current) {
       console.log('ElevenLabs widget script already loaded');
       // Initialize the conversation if widget is already loaded
-      initConversation();
+      // but conversation hasn't been started yet
+      setTimeout(() => {
+        initConversation();
+      }, 500);
     }
     
     return () => {
       // End the conversation when component unmounts
-      conversation.endSession();
+      if (conversationInitializedRef.current) {
+        conversation.endSession();
+        conversationInitializedRef.current = false;
+      }
       setIsCallActive(false);
     };
-  }, [conversation]);
+  }, [conversation, isLoaded]);
   
   // Helper function to capture user input from the ElevenLabs widget
   useEffect(() => {
