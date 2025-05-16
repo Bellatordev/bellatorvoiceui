@@ -3,42 +3,61 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { useConversation } from '@11labs/react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 import TranscriptChatWindow from '@/components/TranscriptChatWindow';
 import { MessageType } from '@/components/TranscriptChatWindow';
-
-interface ElevenlabsMessage {
-  content: string;
-  type: 'transcription' | 'llm_response' | 'debug';
-  is_final?: boolean;
-}
 
 const Mark = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [messages, setMessages] = useState<MessageType[]>([]);
   
-  useEffect(() => {
-    // Set up event listeners for the widget
-    const handleWidgetMessage = (event: CustomEvent) => {
-      const message = event.detail;
+  // Initialize the ElevenLabs conversation hook with the agent ID
+  const conversation = useConversation({
+    onMessage: (props) => {
+      // The useConversation hook provides a different message structure
+      // Convert it to our internal format
+      const { message, source } = props;
       
-      // Only add final transcriptions and LLM responses to the chat
-      if ((message.type === 'transcription' && message.is_final) || message.type === 'llm_response') {
+      // Only add messages from user or assistant to the chat
+      if (source === 'user' || source === 'assistant') {
         const newMessage: MessageType = {
           id: uuidv4(),
-          text: message.content,
-          sender: message.type === 'transcription' ? 'user' : 'assistant',
+          text: message,
+          sender: source === 'user' ? 'user' : 'assistant',
           timestamp: new Date(),
         };
         
         setMessages((prevMessages) => [...prevMessages, newMessage]);
+        console.log('New message added:', newMessage);
+      }
+    },
+    onConnect: () => {
+      console.log('Connected to ElevenLabs conversation');
+    },
+    onDisconnect: () => {
+      console.log('Disconnected from ElevenLabs conversation');
+    },
+    onError: (error) => {
+      console.error('ElevenLabs conversation error:', error);
+    }
+  });
+  
+  useEffect(() => {
+    // Start the conversation with the Mark agent ID when the component mounts
+    const initConversation = async () => {
+      try {
+        // Start the conversation with the agent ID
+        await conversation.startSession({ 
+          agentId: 'K6sb3ZDw0wg0oK8OzFEg'
+        });
+        console.log('Conversation started with Mark agent');
+      } catch (error) {
+        console.error('Error starting conversation:', error);
       }
     };
-    
-    // Add event listener for custom elevenlabs-message events
-    window.addEventListener('elevenlabs-message', handleWidgetMessage as EventListener);
     
     // Load the ElevenLabs widget script
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
@@ -50,21 +69,27 @@ const Mark = () => {
       script.onload = () => {
         setIsLoaded(true);
         console.log('ElevenLabs widget script loaded');
+        // Initialize the conversation after the widget is loaded
+        initConversation();
       };
       document.body.appendChild(script);
       return () => {
         document.body.removeChild(script);
-        window.removeEventListener('elevenlabs-message', handleWidgetMessage as EventListener);
+        // End the conversation when component unmounts
+        conversation.endSession();
       };
     } else {
       setIsLoaded(true);
       console.log('ElevenLabs widget script already loaded');
+      // Initialize the conversation if widget is already loaded
+      initConversation();
     }
     
     return () => {
-      window.removeEventListener('elevenlabs-message', handleWidgetMessage as EventListener);
+      // End the conversation when component unmounts
+      conversation.endSession();
     };
-  }, []);
+  }, [conversation]);
   
   // Helper function to clear the conversation history
   const clearConversation = () => {
