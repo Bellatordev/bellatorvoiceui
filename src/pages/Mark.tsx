@@ -14,6 +14,7 @@ const Mark = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isCallActive, setIsCallActive] = useState(false);
+  const [userInitiatedCall, setUserInitiatedCall] = useState(false);
   const lastProcessedMessageRef = useRef<string>('');
   const conversationInitializedRef = useRef<boolean>(false);
   
@@ -33,7 +34,7 @@ const Mark = () => {
       
       // Only add messages from user or ai to the chat when call is active
       // The @11labs/react library uses 'ai' for assistant messages
-      if (isCallActive && (source === 'user' || source === 'ai')) {
+      if (isCallActive && userInitiatedCall && (source === 'user' || source === 'ai')) {
         const newMessage: MessageType = {
           id: uuidv4(),
           text: message,
@@ -52,40 +53,16 @@ const Mark = () => {
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs conversation');
       setIsCallActive(false);
+      setUserInitiatedCall(false);
     },
     onError: (error) => {
       console.error('ElevenLabs conversation error:', error);
       setIsCallActive(false);
+      setUserInitiatedCall(false);
     }
   });
   
   useEffect(() => {
-    // Start the conversation with the Mark agent ID when the component mounts
-    // But only if it hasn't been started already
-    const initConversation = async () => {
-      if (conversationInitializedRef.current) {
-        console.log('Conversation already initialized, skipping');
-        return;
-      }
-      
-      try {
-        // Set the flag before starting to prevent multiple initializations
-        conversationInitializedRef.current = true;
-        
-        // Start the conversation with the agent ID
-        await conversation.startSession({ 
-          agentId: 'K6sb3ZDw0wg0oK8OzFEg'
-        });
-        console.log('Conversation started with Mark agent');
-        setIsCallActive(true);
-      } catch (error) {
-        console.error('Error starting conversation:', error);
-        setIsCallActive(false);
-        // Reset the flag if initialization fails, allowing retry
-        conversationInitializedRef.current = false;
-      }
-    };
-    
     // Only load the script once
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
     if (!existingScript && !isLoaded) {
@@ -96,10 +73,6 @@ const Mark = () => {
       script.onload = () => {
         setIsLoaded(true);
         console.log('ElevenLabs widget script loaded');
-        // Initialize the conversation after the widget is loaded
-        setTimeout(() => {
-          initConversation();
-        }, 500); // Add a small delay to ensure widget is fully initialized
       };
       document.body.appendChild(script);
       return () => {
@@ -110,14 +83,10 @@ const Mark = () => {
           conversationInitializedRef.current = false;
         }
         setIsCallActive(false);
+        setUserInitiatedCall(false);
       };
     } else if (isLoaded && !conversationInitializedRef.current) {
       console.log('ElevenLabs widget script already loaded');
-      // Initialize the conversation if widget is already loaded
-      // but conversation hasn't been started yet
-      setTimeout(() => {
-        initConversation();
-      }, 500);
     }
     
     return () => {
@@ -127,15 +96,68 @@ const Mark = () => {
         conversationInitializedRef.current = false;
       }
       setIsCallActive(false);
+      setUserInitiatedCall(false);
     };
   }, [conversation, isLoaded]);
+
+  // Add listener for clicks on the widget to ensure user initiated the conversation
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const handleWidgetClick = () => {
+      if (!userInitiatedCall) {
+        console.log('User clicked on widget, initiating conversation');
+        setUserInitiatedCall(true);
+        
+        // Only initialize conversation when user clicks on widget
+        if (!conversationInitializedRef.current) {
+          const initConversation = async () => {
+            try {
+              // Set the flag before starting to prevent multiple initializations
+              conversationInitializedRef.current = true;
+              
+              // Start the conversation with the agent ID
+              await conversation.startSession({ 
+                agentId: 'K6sb3ZDw0wg0oK8OzFEg'
+              });
+              console.log('Conversation started with Mark agent');
+              setIsCallActive(true);
+            } catch (error) {
+              console.error('Error starting conversation:', error);
+              setIsCallActive(false);
+              // Reset the flag if initialization fails, allowing retry
+              conversationInitializedRef.current = false;
+            }
+          };
+          initConversation();
+        }
+      }
+    };
+
+    // Target the widget container that gets created dynamically
+    const widgetCheck = setInterval(() => {
+      const widgetElement = document.querySelector('elevenlabs-convai');
+      if (widgetElement) {
+        clearInterval(widgetCheck);
+        widgetElement.addEventListener('click', handleWidgetClick);
+      }
+    }, 500);
+
+    return () => {
+      clearInterval(widgetCheck);
+      const widgetElement = document.querySelector('elevenlabs-convai');
+      if (widgetElement) {
+        widgetElement.removeEventListener('click', handleWidgetClick);
+      }
+    };
+  }, [isLoaded, conversation, userInitiatedCall]);
   
   // Helper function to capture user input from the ElevenLabs widget
   useEffect(() => {
     const captureUserInput = () => {
       // Listen for custom events from the ElevenLabs widget
       const handleUserInput = (event: CustomEvent) => {
-        if (event.detail && event.detail.text) {
+        if (event.detail && event.detail.text && userInitiatedCall) {
           console.log('User input captured:', event.detail.text);
           // Create a user message from the captured input
           const userMessage: MessageType = {
@@ -162,11 +184,37 @@ const Mark = () => {
     if (isLoaded) {
       return captureUserInput();
     }
-  }, [isLoaded, isCallActive]);
+  }, [isLoaded, isCallActive, userInitiatedCall]);
   
   // Helper function to clear the conversation history
   const clearConversation = () => {
     setMessages([]);
+  };
+
+  // Function to start the call
+  const startCall = async () => {
+    if (!userInitiatedCall) {
+      setUserInitiatedCall(true);
+      
+      if (!conversationInitializedRef.current) {
+        try {
+          // Set the flag before starting to prevent multiple initializations
+          conversationInitializedRef.current = true;
+          
+          // Start the conversation with the agent ID
+          await conversation.startSession({ 
+            agentId: 'K6sb3ZDw0wg0oK8OzFEg'
+          });
+          console.log('Conversation started with Mark agent');
+          setIsCallActive(true);
+        } catch (error) {
+          console.error('Error starting conversation:', error);
+          setIsCallActive(false);
+          // Reset the flag if initialization fails, allowing retry
+          conversationInitializedRef.current = false;
+        }
+      }
+    }
   };
 
   return (
@@ -203,17 +251,30 @@ const Mark = () => {
             <div className="relative w-full max-w-[400px] h-[130px]">
               <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
                 {isLoaded ? (
-                  <elevenlabs-convai 
-                    agent-id="K6sb3ZDw0wg0oK8OzFEg" 
-                    className="rounded-xl overflow-hidden backdrop-filter w-full h-full" 
-                    style={{
-                      backgroundColor: 'transparent',
-                      borderRadius: '16px',
-                      width: '100%',
-                      height: '100%',
-                      display: 'block'
-                    } as React.CSSProperties} 
-                  />
+                  <>
+                    {!userInitiatedCall && (
+                      <div 
+                        className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/60"
+                        onClick={startCall}
+                      >
+                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                          <Zap className="w-5 h-5" />
+                          Click to Start Conversation
+                        </button>
+                      </div>
+                    )}
+                    <elevenlabs-convai 
+                      agent-id="K6sb3ZDw0wg0oK8OzFEg" 
+                      className="rounded-xl overflow-hidden backdrop-filter w-full h-full" 
+                      style={{
+                        backgroundColor: 'transparent',
+                        borderRadius: '16px',
+                        width: '100%',
+                        height: '100%',
+                        display: 'block'
+                      } as React.CSSProperties} 
+                    />
+                  </>
                 ) : (
                   <div className="flex items-center justify-center h-full text-white/70">
                     <div className="animate-spin mr-2">
@@ -229,9 +290,9 @@ const Mark = () => {
           {/* Status Indicator */}
           <div className="mt-4 text-center">
             <span className={`inline-block px-3 py-1 text-sm rounded-full ${
-              isCallActive ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'
+              isCallActive && userInitiatedCall ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'
             }`}>
-              {isCallActive ? 'Call Active' : 'Call Inactive'}
+              {isCallActive && userInitiatedCall ? 'Call Active' : 'Call Inactive'}
             </span>
           </div>
           
@@ -240,7 +301,7 @@ const Mark = () => {
             <div className="w-full max-w-[500px]">
               <TranscriptChatWindow 
                 messages={messages} 
-                className={isCallActive ? '' : 'opacity-60'}
+                className={isCallActive && userInitiatedCall ? '' : 'opacity-60'}
               />
             </div>
           </div>
