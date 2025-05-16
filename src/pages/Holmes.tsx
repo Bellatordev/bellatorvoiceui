@@ -54,7 +54,7 @@ const Holmes = () => {
           </div>
           
           <div className="w-full flex justify-center mt-4">
-            <div className="relative w-full max-w-[290px] h-[130px]">
+            <div className="relative w-full max-w-[310px] h-[130px]">
               <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
                 {isLoaded ? (
                   <elevenlabs-convai 
