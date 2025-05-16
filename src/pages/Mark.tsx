@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { useConversation } from '@11labs/react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 import TranscriptChatWindow from '@/components/TranscriptChatWindow';
@@ -15,52 +14,11 @@ const Mark = () => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isCallActive, setIsCallActive] = useState(false);
   const [userInitiatedCall, setUserInitiatedCall] = useState(false);
-  const lastProcessedMessageRef = useRef<string>('');
+
+  // Reference to prevent duplicate message processing
+  const processedMessagesRef = useRef<Set<string>>(new Set());
+  // Ref to track if the conversation has been initialized
   const conversationInitializedRef = useRef<boolean>(false);
-  
-  // Initialize the ElevenLabs conversation hook with the agent ID
-  const conversation = useConversation({
-    onMessage: (props) => {
-      // The useConversation hook provides a different message structure
-      // Convert it to our internal format
-      const { message, source } = props;
-      
-      // Prevent duplicate messages by checking if we've already processed this exact message
-      if (message === lastProcessedMessageRef.current) {
-        return;
-      }
-      
-      lastProcessedMessageRef.current = message;
-      
-      // Only add messages from user or ai to the chat when call is active
-      // The @11labs/react library uses 'ai' for assistant messages
-      if (isCallActive && userInitiatedCall && (source === 'user' || source === 'ai')) {
-        const newMessage: MessageType = {
-          id: uuidv4(),
-          text: message,
-          sender: source === 'user' ? 'user' : 'assistant', // Map 'ai' to 'assistant' for our MessageType
-          timestamp: new Date(),
-        };
-        
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
-        console.log('New message added:', newMessage);
-      }
-    },
-    onConnect: () => {
-      console.log('Connected to ElevenLabs conversation');
-      setIsCallActive(true);
-    },
-    onDisconnect: () => {
-      console.log('Disconnected from ElevenLabs conversation');
-      setIsCallActive(false);
-      setUserInitiatedCall(false);
-    },
-    onError: (error) => {
-      console.error('ElevenLabs conversation error:', error);
-      setIsCallActive(false);
-      setUserInitiatedCall(false);
-    }
-  });
   
   useEffect(() => {
     // Only load the script once
@@ -77,28 +35,38 @@ const Mark = () => {
       document.body.appendChild(script);
       return () => {
         document.body.removeChild(script);
-        // End the conversation when component unmounts
-        if (conversationInitializedRef.current) {
-          conversation.endSession();
-          conversationInitializedRef.current = false;
-        }
         setIsCallActive(false);
         setUserInitiatedCall(false);
       };
-    } else if (isLoaded && !conversationInitializedRef.current) {
+    } else if (isLoaded) {
       console.log('ElevenLabs widget script already loaded');
     }
-    
-    return () => {
-      // End the conversation when component unmounts
-      if (conversationInitializedRef.current) {
-        conversation.endSession();
-        conversationInitializedRef.current = false;
-      }
-      setIsCallActive(false);
-      setUserInitiatedCall(false);
+  }, [isLoaded]);
+
+  // Add listener for call state changes from the widget
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    // Custom event handlers for the widget's status
+    const handleCallStart = () => {
+      console.log('Call started');
+      setIsCallActive(true);
     };
-  }, [conversation, isLoaded]);
+
+    const handleCallEnd = () => {
+      console.log('Call ended');
+      setIsCallActive(false);
+    };
+
+    // Set up custom event listeners for the widget
+    window.addEventListener('elevenlabs-call-start', handleCallStart);
+    window.addEventListener('elevenlabs-call-end', handleCallEnd);
+
+    return () => {
+      window.removeEventListener('elevenlabs-call-start', handleCallStart);
+      window.removeEventListener('elevenlabs-call-end', handleCallEnd);
+    };
+  }, [isLoaded]);
 
   // Add listener for clicks on the widget to ensure user initiated the conversation
   useEffect(() => {
@@ -108,29 +76,6 @@ const Mark = () => {
       if (!userInitiatedCall) {
         console.log('User clicked on widget, initiating conversation');
         setUserInitiatedCall(true);
-        
-        // Only initialize conversation when user clicks on widget
-        if (!conversationInitializedRef.current) {
-          const initConversation = async () => {
-            try {
-              // Set the flag before starting to prevent multiple initializations
-              conversationInitializedRef.current = true;
-              
-              // Start the conversation with the agent ID
-              await conversation.startSession({ 
-                agentId: 'K6sb3ZDw0wg0oK8OzFEg'
-              });
-              console.log('Conversation started with Mark agent');
-              setIsCallActive(true);
-            } catch (error) {
-              console.error('Error starting conversation:', error);
-              setIsCallActive(false);
-              // Reset the flag if initialization fails, allowing retry
-              conversationInitializedRef.current = false;
-            }
-          };
-          initConversation();
-        }
       }
     };
 
@@ -150,70 +95,89 @@ const Mark = () => {
         widgetElement.removeEventListener('click', handleWidgetClick);
       }
     };
-  }, [isLoaded, conversation, userInitiatedCall]);
+  }, [isLoaded]);
   
-  // Helper function to capture user input from the ElevenLabs widget
+  // Custom event listeners for capturing conversation messages
   useEffect(() => {
-    const captureUserInput = () => {
-      // Listen for custom events from the ElevenLabs widget
-      const handleUserInput = (event: CustomEvent) => {
-        if (event.detail && event.detail.text && userInitiatedCall) {
-          console.log('User input captured:', event.detail.text);
-          // Create a user message from the captured input
-          const userMessage: MessageType = {
-            id: uuidv4(),
-            text: event.detail.text,
-            sender: 'user',
-            timestamp: new Date(),
-          };
-          
-          if (isCallActive) {
-            setMessages((prevMessages) => [...prevMessages, userMessage]);
-          }
-        }
+    if (!isLoaded || !userInitiatedCall) return;
+
+    const captureConversation = () => {
+      // Listen for custom events from the widget
+      const handleUserMessage = (event: CustomEvent) => {
+        if (!event.detail || !event.detail.text || !isCallActive) return;
+        
+        const messageText = event.detail.text;
+        // Check if we've already processed this message
+        if (processedMessagesRef.current.has(messageText)) return;
+        
+        console.log('User message captured:', messageText);
+        processedMessagesRef.current.add(messageText);
+        
+        const userMessage: MessageType = {
+          id: uuidv4(),
+          text: messageText,
+          sender: 'user',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
       };
       
-      // Add event listener for user input
-      window.addEventListener('elevenlabs-user-input', handleUserInput as EventListener);
+      const handleAssistantMessage = (event: CustomEvent) => {
+        if (!event.detail || !event.detail.text || !isCallActive) return;
+        
+        const messageText = event.detail.text;
+        // Check if we've already processed this message
+        if (processedMessagesRef.current.has(messageText)) return;
+        
+        console.log('Assistant message captured:', messageText);
+        processedMessagesRef.current.add(messageText);
+        
+        const assistantMessage: MessageType = {
+          id: uuidv4(),
+          text: messageText,
+          sender: 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+      };
+      
+      // Add event listeners
+      window.addEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
+      window.addEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
       
       return () => {
-        window.removeEventListener('elevenlabs-user-input', handleUserInput as EventListener);
+        window.removeEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
+        window.removeEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
       };
     };
     
-    if (isLoaded) {
-      return captureUserInput();
-    }
-  }, [isLoaded, isCallActive, userInitiatedCall]);
+    return captureConversation();
+  }, [isLoaded, userInitiatedCall, isCallActive]);
   
   // Helper function to clear the conversation history
   const clearConversation = () => {
     setMessages([]);
+    processedMessagesRef.current.clear();
   };
 
   // Function to start the call
-  const startCall = async () => {
+  const startCall = () => {
     if (!userInitiatedCall) {
       setUserInitiatedCall(true);
       
-      if (!conversationInitializedRef.current) {
-        try {
-          // Set the flag before starting to prevent multiple initializations
-          conversationInitializedRef.current = true;
-          
-          // Start the conversation with the agent ID
-          await conversation.startSession({ 
-            agentId: 'K6sb3ZDw0wg0oK8OzFEg'
-          });
-          console.log('Conversation started with Mark agent');
-          setIsCallActive(true);
-        } catch (error) {
-          console.error('Error starting conversation:', error);
-          setIsCallActive(false);
-          // Reset the flag if initialization fails, allowing retry
-          conversationInitializedRef.current = false;
+      // Dispatch a custom event to simulate clicking the widget
+      setTimeout(() => {
+        const widgetElement = document.querySelector('elevenlabs-convai');
+        if (widgetElement) {
+          widgetElement.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          }));
         }
-      }
+      }, 100);
     }
   };
 
@@ -241,12 +205,14 @@ const Mark = () => {
 
       <div className="flex-1 overflow-hidden relative z-10 px-4">
         <div className="container mx-auto py-8 h-full flex flex-col items-center">
+          {/* Visualization */}
           <div className="w-full flex justify-center mb-8">
             <div className="relative w-64 h-64 max-w-full">
               <PulsatingCircle />
             </div>
           </div>
           
+          {/* Widget Container (Completely Independent) */}
           <div className="w-full flex justify-center">
             <div className="relative w-full max-w-[400px] h-[130px]">
               <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-black/30 border border-white/10 shadow-2xl h-full">
@@ -296,7 +262,7 @@ const Mark = () => {
             </span>
           </div>
           
-          {/* Transcript Chat Window */}
+          {/* Transcript Chat Window (Completely Independent) */}
           <div className="w-full flex justify-center mt-4">
             <div className="w-full max-w-[500px]">
               <TranscriptChatWindow 
