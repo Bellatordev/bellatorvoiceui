@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { useConversation } from '@11labs/react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 import TranscriptChatWindow from '@/components/TranscriptChatWindow';
@@ -20,9 +19,11 @@ const Mark = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [messages, setMessages] = useState<MessageType[]>([]);
   
-  // Initialize the ElevenLabs conversation hook
-  const conversation = useConversation({
-    onMessage: (message: ElevenlabsMessage) => {
+  useEffect(() => {
+    // Set up event listeners for the widget
+    const handleWidgetMessage = (event: CustomEvent) => {
+      const message = event.detail;
+      
       // Only add final transcriptions and LLM responses to the chat
       if ((message.type === 'transcription' && message.is_final) || message.type === 'llm_response') {
         const newMessage: MessageType = {
@@ -34,31 +35,10 @@ const Mark = () => {
         
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
-    },
-    onConnect: () => {
-      console.log('Connected to ElevenLabs conversation');
-    },
-    onDisconnect: () => {
-      console.log('Disconnected from ElevenLabs conversation');
-    },
-    onError: (error) => {
-      console.error('ElevenLabs conversation error:', error);
-    }
-  });
-  
-  useEffect(() => {
-    // Set up the conversation when the page loads
-    const setUpConversation = async () => {
-      try {
-        // For using the widget, we don't need to manually start the conversation
-        // The widget handles this for us, but we still set up the hooks to listen for messages
-        console.log('Setting up conversation listeners for Mark agent');
-      } catch (error) {
-        console.error('Error setting up conversation:', error);
-      }
     };
     
-    setUpConversation();
+    // Add event listener for custom elevenlabs-message events
+    window.addEventListener('elevenlabs-message', handleWidgetMessage as EventListener);
     
     // Load the ElevenLabs widget script
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
@@ -69,18 +49,20 @@ const Mark = () => {
       script.type = 'text/javascript';
       script.onload = () => {
         setIsLoaded(true);
+        console.log('ElevenLabs widget script loaded');
       };
       document.body.appendChild(script);
       return () => {
         document.body.removeChild(script);
+        window.removeEventListener('elevenlabs-message', handleWidgetMessage as EventListener);
       };
     } else {
       setIsLoaded(true);
+      console.log('ElevenLabs widget script already loaded');
     }
     
-    // Cleanup function
     return () => {
-      // If needed, end the conversation when the component unmounts
+      window.removeEventListener('elevenlabs-message', handleWidgetMessage as EventListener);
     };
   }, []);
   
