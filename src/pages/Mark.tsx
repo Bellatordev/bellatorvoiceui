@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,6 +12,8 @@ const Mark = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [isCallActive, setIsCallActive] = useState(false);
+  const lastProcessedMessageRef = useRef<string>('');
   
   // Initialize the ElevenLabs conversation hook with the agent ID
   const conversation = useConversation({
@@ -21,9 +22,16 @@ const Mark = () => {
       // Convert it to our internal format
       const { message, source } = props;
       
-      // Only add messages from user or ai to the chat
+      // Prevent duplicate messages by checking if we've already processed this exact message
+      if (message === lastProcessedMessageRef.current) {
+        return;
+      }
+      
+      lastProcessedMessageRef.current = message;
+      
+      // Only add messages from user or ai to the chat when call is active
       // The @11labs/react library uses 'ai' for assistant messages
-      if (source === 'user' || source === 'ai') {
+      if (isCallActive && (source === 'user' || source === 'ai')) {
         const newMessage: MessageType = {
           id: uuidv4(),
           text: message,
@@ -37,12 +45,15 @@ const Mark = () => {
     },
     onConnect: () => {
       console.log('Connected to ElevenLabs conversation');
+      setIsCallActive(true);
     },
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs conversation');
+      setIsCallActive(false);
     },
     onError: (error) => {
       console.error('ElevenLabs conversation error:', error);
+      setIsCallActive(false);
     }
   });
   
@@ -55,8 +66,10 @@ const Mark = () => {
           agentId: 'K6sb3ZDw0wg0oK8OzFEg'
         });
         console.log('Conversation started with Mark agent');
+        setIsCallActive(true);
       } catch (error) {
         console.error('Error starting conversation:', error);
+        setIsCallActive(false);
       }
     };
     
@@ -78,6 +91,7 @@ const Mark = () => {
         document.body.removeChild(script);
         // End the conversation when component unmounts
         conversation.endSession();
+        setIsCallActive(false);
       };
     } else {
       setIsLoaded(true);
@@ -89,8 +103,43 @@ const Mark = () => {
     return () => {
       // End the conversation when component unmounts
       conversation.endSession();
+      setIsCallActive(false);
     };
   }, [conversation]);
+  
+  // Helper function to capture user input from the ElevenLabs widget
+  useEffect(() => {
+    const captureUserInput = () => {
+      // Listen for custom events from the ElevenLabs widget
+      const handleUserInput = (event: CustomEvent) => {
+        if (event.detail && event.detail.text) {
+          console.log('User input captured:', event.detail.text);
+          // Create a user message from the captured input
+          const userMessage: MessageType = {
+            id: uuidv4(),
+            text: event.detail.text,
+            sender: 'user',
+            timestamp: new Date(),
+          };
+          
+          if (isCallActive) {
+            setMessages((prevMessages) => [...prevMessages, userMessage]);
+          }
+        }
+      };
+      
+      // Add event listener for user input
+      window.addEventListener('elevenlabs-user-input', handleUserInput as EventListener);
+      
+      return () => {
+        window.removeEventListener('elevenlabs-user-input', handleUserInput as EventListener);
+      };
+    };
+    
+    if (isLoaded) {
+      return captureUserInput();
+    }
+  }, [isLoaded, isCallActive]);
   
   // Helper function to clear the conversation history
   const clearConversation = () => {
@@ -154,10 +203,22 @@ const Mark = () => {
             </div>
           </div>
           
+          {/* Status Indicator */}
+          <div className="mt-4 text-center">
+            <span className={`inline-block px-3 py-1 text-sm rounded-full ${
+              isCallActive ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'
+            }`}>
+              {isCallActive ? 'Call Active' : 'Call Inactive'}
+            </span>
+          </div>
+          
           {/* Transcript Chat Window */}
-          <div className="w-full flex justify-center mt-8">
+          <div className="w-full flex justify-center mt-4">
             <div className="w-full max-w-[500px]">
-              <TranscriptChatWindow messages={messages} />
+              <TranscriptChatWindow 
+                messages={messages} 
+                className={isCallActive ? '' : 'opacity-60'}
+              />
             </div>
           </div>
         </div>
