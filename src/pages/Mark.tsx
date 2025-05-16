@@ -21,12 +21,13 @@ const Mark = () => {
       // Convert it to our internal format
       const { message, source } = props;
       
-      // Only add messages from user or assistant to the chat
-      if (source === 'user' || source === 'assistant') {
+      // Only add messages from user or ai to the chat
+      // The @11labs/react library uses 'ai' for assistant messages
+      if (source === 'user' || source === 'ai') {
         const newMessage: MessageType = {
           id: uuidv4(),
           text: message,
-          sender: source === 'user' ? 'user' : 'assistant',
+          sender: source === 'user' ? 'user' : 'assistant', // Map 'ai' to 'assistant' for our MessageType
           timestamp: new Date(),
         };
         
