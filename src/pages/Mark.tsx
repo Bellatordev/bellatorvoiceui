@@ -7,6 +7,7 @@ import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 import TranscriptChatWindow from '@/components/TranscriptChatWindow';
 import { MessageType } from '@/components/TranscriptChatWindow';
+import { toast } from '@/components/ui/use-toast';
 
 const Mark = () => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const Mark = () => {
   const processedMessagesRef = useRef<Set<string>>(new Set());
   // Ref to track if the conversation has been initialized
   const conversationInitializedRef = useRef<boolean>(false);
+  // Debug ref to track message events
+  const messageEventCountRef = useRef<{user: number, assistant: number}>({user: 0, assistant: 0});
   
   useEffect(() => {
     // Only load the script once
@@ -98,68 +101,76 @@ const Mark = () => {
   }, [isLoaded]);
   
   // Custom event listeners for capturing conversation messages
+  // This useEffect is now separated from the userInitiatedCall condition
   useEffect(() => {
-    if (!isLoaded || !userInitiatedCall) return;
+    if (!isLoaded) return;
 
-    const captureConversation = () => {
-      // Listen for custom events from the widget
-      const handleUserMessage = (event: CustomEvent) => {
-        if (!event.detail || !event.detail.text || !isCallActive) return;
-        
-        const messageText = event.detail.text;
-        // Check if we've already processed this message
-        if (processedMessagesRef.current.has(messageText)) return;
-        
-        console.log('User message captured:', messageText);
-        processedMessagesRef.current.add(messageText);
-        
-        const userMessage: MessageType = {
-          id: uuidv4(),
-          text: messageText,
-          sender: 'user',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, userMessage]);
+    const handleUserMessage = (event: CustomEvent) => {
+      if (!event.detail || !event.detail.text) return;
+      
+      const messageText = event.detail.text;
+      // Check if we've already processed this message
+      if (processedMessagesRef.current.has(messageText)) return;
+      
+      console.log('User message captured:', messageText);
+      processedMessagesRef.current.add(messageText);
+      
+      const userMessage: MessageType = {
+        id: uuidv4(),
+        text: messageText,
+        sender: 'user',
+        timestamp: new Date(),
       };
       
-      const handleAssistantMessage = (event: CustomEvent) => {
-        if (!event.detail || !event.detail.text || !isCallActive) return;
-        
-        const messageText = event.detail.text;
-        // Check if we've already processed this message
-        if (processedMessagesRef.current.has(messageText)) return;
-        
-        console.log('Assistant message captured:', messageText);
-        processedMessagesRef.current.add(messageText);
-        
-        const assistantMessage: MessageType = {
-          id: uuidv4(),
-          text: messageText,
-          sender: 'assistant',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-      };
-      
-      // Add event listeners
-      window.addEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
-      window.addEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
-      
-      return () => {
-        window.removeEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
-        window.removeEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
-      };
+      setMessages(prev => [...prev, userMessage]);
+      messageEventCountRef.current.user += 1;
+      console.log(`Total user messages: ${messageEventCountRef.current.user}`);
     };
     
-    return captureConversation();
-  }, [isLoaded, userInitiatedCall, isCallActive]);
+    const handleAssistantMessage = (event: CustomEvent) => {
+      if (!event.detail || !event.detail.text) return;
+      
+      const messageText = event.detail.text;
+      // Check if we've already processed this message
+      if (processedMessagesRef.current.has(messageText)) return;
+      
+      console.log('Assistant message captured:', messageText);
+      processedMessagesRef.current.add(messageText);
+      
+      const assistantMessage: MessageType = {
+        id: uuidv4(),
+        text: messageText,
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      messageEventCountRef.current.assistant += 1;
+      console.log(`Total assistant messages: ${messageEventCountRef.current.assistant}`);
+    };
+    
+    // Add event listeners for message capture regardless of call state
+    window.addEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
+    window.addEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
+    
+    // Log that we've set up the listeners
+    console.log('Message event listeners registered');
+    
+    return () => {
+      window.removeEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
+      window.removeEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
+      console.log('Message event listeners removed');
+    };
+  }, [isLoaded]); // Only depend on isLoaded, not userInitiatedCall or isCallActive
   
   // Helper function to clear the conversation history
   const clearConversation = () => {
     setMessages([]);
     processedMessagesRef.current.clear();
+    toast({
+      title: "Conversation Cleared",
+      description: "The transcript has been cleared."
+    });
   };
 
   // Function to start the call
@@ -180,6 +191,24 @@ const Mark = () => {
       }, 100);
     }
   };
+
+  // Manually add a welcome message when conversation starts
+  useEffect(() => {
+    if (userInitiatedCall && !conversationInitializedRef.current) {
+      // Only add the welcome message once
+      conversationInitializedRef.current = true;
+      
+      // Add a welcome message from Mark to the transcript
+      const welcomeMessage: MessageType = {
+        id: uuidv4(),
+        text: "Hello! I'm Mark, your virtual assistant. How can I help you today?",
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, welcomeMessage]);
+    }
+  }, [userInitiatedCall]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
@@ -265,9 +294,12 @@ const Mark = () => {
           {/* Transcript Chat Window (Completely Independent) */}
           <div className="w-full flex justify-center mt-4">
             <div className="w-full max-w-[500px]">
+              <div className="text-sm text-white/50 mb-2 text-center">
+                Message count: {messages.length} (User: {messageEventCountRef.current.user}, Assistant: {messageEventCountRef.current.assistant})
+              </div>
               <TranscriptChatWindow 
                 messages={messages} 
-                className={isCallActive && userInitiatedCall ? '' : 'opacity-60'}
+                className=""
               />
             </div>
           </div>
