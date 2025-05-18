@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { useConversation } from '@11labs/react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 import TranscriptChatWindow from '@/components/TranscriptChatWindow';
@@ -16,13 +17,43 @@ const Mark = () => {
   const [isCallActive, setIsCallActive] = useState(false);
   const [userInitiatedCall, setUserInitiatedCall] = useState(false);
 
-  // Reference to prevent duplicate message processing
-  const processedMessagesRef = useRef<Set<string>>(new Set());
   // Ref to track if the conversation has been initialized
   const conversationInitializedRef = useRef<boolean>(false);
-  // Debug ref to track message events
-  const messageEventCountRef = useRef<{user: number, assistant: number}>({user: 0, assistant: 0});
   
+  // Initialize the ElevenLabs conversation hook
+  const conversation = useConversation({
+    onMessage: ({ message, source }) => {
+      if (source === 'user' || source === 'ai') {
+        console.log(`Message received from ${source}:`, message);
+        
+        const newMessage: MessageType = {
+          id: uuidv4(),
+          text: message,
+          sender: source === 'user' ? 'user' : 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, newMessage]);
+      }
+    },
+    onConnect: () => {
+      console.log('Connected to ElevenLabs');
+      setIsCallActive(true);
+    },
+    onDisconnect: () => {
+      console.log('Disconnected from ElevenLabs');
+      setIsCallActive(false);
+    },
+    onError: (err) => {
+      console.error('ElevenLabs error:', err);
+      toast({
+        title: "Connection Error",
+        description: "There was a problem connecting to the voice service.",
+        variant: "destructive"
+      });
+    },
+  });
+
   useEffect(() => {
     // Only load the script once
     const existingScript = document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]');
@@ -100,73 +131,53 @@ const Mark = () => {
     };
   }, [isLoaded]);
   
-  // Custom event listeners for capturing conversation messages
-  // This useEffect is now separated from the userInitiatedCall condition
+  // Initialize the conversation when user starts call
   useEffect(() => {
-    if (!isLoaded) return;
-
-    const handleUserMessage = (event: CustomEvent) => {
-      if (!event.detail || !event.detail.text) return;
+    if (userInitiatedCall && isLoaded && !conversationInitializedRef.current) {
+      console.log('Starting ElevenLabs conversation session');
       
-      const messageText = event.detail.text;
-      // Check if we've already processed this message
-      if (processedMessagesRef.current.has(messageText)) return;
-      
-      console.log('User message captured:', messageText);
-      processedMessagesRef.current.add(messageText);
-      
-      const userMessage: MessageType = {
-        id: uuidv4(),
-        text: messageText,
-        sender: 'user',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-      messageEventCountRef.current.user += 1;
-      console.log(`Total user messages: ${messageEventCountRef.current.user}`);
-    };
-    
-    const handleAssistantMessage = (event: CustomEvent) => {
-      if (!event.detail || !event.detail.text) return;
-      
-      const messageText = event.detail.text;
-      // Check if we've already processed this message
-      if (processedMessagesRef.current.has(messageText)) return;
-      
-      console.log('Assistant message captured:', messageText);
-      processedMessagesRef.current.add(messageText);
-      
-      const assistantMessage: MessageType = {
-        id: uuidv4(),
-        text: messageText,
-        sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      messageEventCountRef.current.assistant += 1;
-      console.log(`Total assistant messages: ${messageEventCountRef.current.assistant}`);
-    };
-    
-    // Add event listeners for message capture regardless of call state
-    window.addEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
-    window.addEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
-    
-    // Log that we've set up the listeners
-    console.log('Message event listeners registered');
-    
+      // Start a conversation session with the agent ID
+      conversation.startSession({ 
+        agentId: "K6sb3ZDw0wg0oK8OzFEg" 
+      }).then(sessionId => {
+        console.log('Conversation session started with ID:', sessionId);
+        conversationInitializedRef.current = true;
+        
+        // Add a welcome message from Mark to the transcript
+        const welcomeMessage: MessageType = {
+          id: uuidv4(),
+          text: "Hello! I'm Mark, your virtual assistant. How can I help you today?",
+          sender: 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, welcomeMessage]);
+      }).catch(err => {
+        console.error('Failed to start conversation:', err);
+        toast({
+          title: "Connection Failed",
+          description: "Could not connect to the voice service. Please try again.",
+          variant: "destructive"
+        });
+      });
+    }
+  }, [userInitiatedCall, isLoaded, conversation]);
+  
+  // Cleanup on component unmount
+  useEffect(() => {
     return () => {
-      window.removeEventListener('elevenlabs-user-message', handleUserMessage as EventListener);
-      window.removeEventListener('elevenlabs-assistant-message', handleAssistantMessage as EventListener);
-      console.log('Message event listeners removed');
+      if (conversationInitializedRef.current) {
+        console.log('Ending ElevenLabs conversation session');
+        conversation.endSession().catch(err => {
+          console.error('Error ending conversation:', err);
+        });
+      }
     };
-  }, [isLoaded]); // Only depend on isLoaded, not userInitiatedCall or isCallActive
+  }, [conversation]);
   
   // Helper function to clear the conversation history
   const clearConversation = () => {
     setMessages([]);
-    processedMessagesRef.current.clear();
     toast({
       title: "Conversation Cleared",
       description: "The transcript has been cleared."
@@ -191,24 +202,6 @@ const Mark = () => {
       }, 100);
     }
   };
-
-  // Manually add a welcome message when conversation starts
-  useEffect(() => {
-    if (userInitiatedCall && !conversationInitializedRef.current) {
-      // Only add the welcome message once
-      conversationInitializedRef.current = true;
-      
-      // Add a welcome message from Mark to the transcript
-      const welcomeMessage: MessageType = {
-        id: uuidv4(),
-        text: "Hello! I'm Mark, your virtual assistant. How can I help you today?",
-        sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, welcomeMessage]);
-    }
-  }, [userInitiatedCall]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
@@ -295,7 +288,7 @@ const Mark = () => {
           <div className="w-full flex justify-center mt-4">
             <div className="w-full max-w-[500px]">
               <div className="text-sm text-white/50 mb-2 text-center">
-                Message count: {messages.length} (User: {messageEventCountRef.current.user}, Assistant: {messageEventCountRef.current.assistant})
+                Message count: {messages.length} (Using ElevenLabs SDK)
               </div>
               <TranscriptChatWindow 
                 messages={messages} 
