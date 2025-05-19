@@ -28,10 +28,10 @@ export const useElevenLabsConversation = ({ agentId }: UseElevenLabsConversation
 
   // Initialize the ElevenLabs conversation hook
   const conversation = useConversation({
-    onMessage: ({ message, source, isFinal }) => {
-      console.log(`[MARK SDK] Received ${source} message:`, message, '| Final:', isFinal);
+    onMessage: ({ message, source }) => {
+      console.log(`[MARK SDK] Received ${source} message:`, message);
       
-      if ((source === 'user' || source === 'ai') && isFinal) {
+      if (source === 'user' || source === 'ai') {
         console.log(`Message received from ${source}:`, message);
         
         const newMessage: MessageType = {
