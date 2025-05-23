@@ -9,7 +9,6 @@ import Conversation from "./pages/Conversation";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Holmes from "./pages/Holmes";
-import Mark from "./pages/Mark";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +23,6 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/conversation" element={<Conversation />} />
           <Route path="/holmes" element={<Holmes />} />
-          <Route path="/mark" element={<Mark />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -256,8 +256,6 @@ class PixelCanvasElement extends HTMLElement {
     this.ctx.scale(dpr, dpr)
 
     this.createPixels()
-    
-    this.handleAnimation("appear")
   }
 
   getDistanceToCenter(x: number, y: number) {
@@ -329,7 +327,6 @@ class PixelCanvasElement extends HTMLElement {
   }
 }
 
-// React-компонент обертка
 import * as React from "react"
 
 export interface PixelCanvasProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -343,7 +340,6 @@ export interface PixelCanvasProps extends React.HTMLAttributes<HTMLDivElement> {
 const PixelCanvas = React.forwardRef<HTMLDivElement, PixelCanvasProps>(
   ({ gap, speed, colors, variant, noFocus, style, ...props }, ref) => {
     React.useEffect(() => {
-      // Регистрируем веб-компонент при первом рендере
       if (typeof window !== "undefined") {
         if (!customElements.get("pixel-canvas")) {
           customElements.define("pixel-canvas", PixelCanvasElement)
@@ -358,7 +354,7 @@ const PixelCanvas = React.forwardRef<HTMLDivElement, PixelCanvasProps>(
         data-speed={speed}
         data-colors={colors?.join(",")}
         data-variant={variant}
-        {...(noFocus && { "data-no-focus": true })}
+        {...(noFocus ? { "data-no-focus": true } : {})}
         style={{
           position: 'absolute',
           inset: 0,

@@ -13,9 +13,6 @@ const Index = () => {
   const handleHolmesClick = () => {
     navigate('/holmes');
   };
-  const handleMarkClick = () => {
-    navigate('/mark');
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -26,19 +23,11 @@ const Index = () => {
       
       <AnimatedHero onScrollToLogin={handleGetStarted} />
       
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2">
         <GradientFlipButton
           frontText="Meet Holmes"
           backText="Let's go!"
           onClick={handleHolmesClick}
-          className="px-8 py-4 text-lg"
-          frontVariant="default"
-          backVariant="variant"
-        />
-        <GradientFlipButton
-          frontText="Meet Mark"
-          backText="Let's go!"
-          onClick={handleMarkClick}
           className="px-8 py-4 text-lg"
           frontVariant="default"
           backVariant="variant"
