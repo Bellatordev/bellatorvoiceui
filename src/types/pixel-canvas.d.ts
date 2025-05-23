@@ -6,7 +6,7 @@ declare namespace JSX {
       'data-speed'?: number;
       'data-colors'?: string;
       'data-variant'?: "default" | "icon";
-      'data-no-focus'?: boolean | string;
+      'data-no-focus'?: boolean;
     }, HTMLElement>;
   }
 }
