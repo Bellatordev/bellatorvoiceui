@@ -6,8 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { useConversation } from '@11labs/react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
-import TranscriptChatWindow from '@/components/TranscriptChatWindow';
-import { MessageType } from '@/components/TranscriptChatWindow';
 
 interface ElevenlabsMessage {
   content: string;
@@ -18,22 +16,11 @@ interface ElevenlabsMessage {
 const Mark = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [messages, setMessages] = useState<MessageType[]>([]);
   
   // Initialize the ElevenLabs conversation hook
   const conversation = useConversation({
     onMessage: (message: ElevenlabsMessage) => {
-      // Only add final transcriptions and LLM responses to the chat
-      if ((message.type === 'transcription' && message.is_final) || message.type === 'llm_response') {
-        const newMessage: MessageType = {
-          id: uuidv4(),
-          text: message.content,
-          sender: message.type === 'transcription' ? 'user' : 'assistant',
-          timestamp: new Date(),
-        };
-        
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
-      }
+      console.log('Received message:', message);
     },
     onConnect: () => {
       console.log('Connected to ElevenLabs conversation');
@@ -83,11 +70,6 @@ const Mark = () => {
       // If needed, end the conversation when the component unmounts
     };
   }, []);
-  
-  // Helper function to clear the conversation history
-  const clearConversation = () => {
-    setMessages([]);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#121212] text-white relative overflow-hidden">
@@ -103,12 +85,7 @@ const Mark = () => {
           Mark
           <Zap className="w-5 h-5 text-[#0EA5E9] animate-pulse" />
         </h1>
-        <button 
-          onClick={clearConversation}
-          className="text-xs text-white/60 hover:text-white/90 transition-colors p-2"
-        >
-          Clear Chat
-        </button>
+        <div className="w-10" />
       </header>
 
       <div className="flex-1 overflow-hidden relative z-10 px-4">
@@ -143,13 +120,6 @@ const Mark = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-          
-          {/* Transcript Chat Window */}
-          <div className="w-full flex justify-center mt-8">
-            <div className="w-full max-w-[500px]">
-              <TranscriptChatWindow messages={messages} />
             </div>
           </div>
         </div>
