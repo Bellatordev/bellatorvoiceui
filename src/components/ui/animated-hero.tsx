@@ -1,8 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
-import { RainbowButton } from "@/components/ui/rainbow-button";
+import { Info } from "lucide-react";
 
 function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   const [titleNumber, setTitleNumber] = useState(0);
@@ -55,7 +54,7 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
                   background: 'linear-gradient(90deg, hsla(45, 100%, 60%, 1) 0%, hsla(45, 100%, 70%, 1) 100%)',
                   WebkitBackgroundClip: 'text',
                   color: 'transparent',
-                  fontWeight: 'normal' // Changed from 'bold' to 'normal'
+                  fontWeight: 'normal'
                 }}
               >
                 {title}
@@ -69,22 +68,16 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
           in making your workflow more efficient. Just ask me anything, and I'll do
           my best to provide helpful and relevant information.
         </p>
-        
-        <div className="flex gap-4 justify-center">
-          <button 
-            className="px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-medium flex items-center gap-2 hover:bg-secondary/90 transition-colors"
-          >
-            About Us
-          </button>
-          
-          <RainbowButton 
-            onClick={onScrollToLogin}
-            className="h-12 rounded-full font-medium flex items-center gap-2"
-          >
-            Get Started <ArrowRight size={18} />
-          </RainbowButton>
-        </div>
       </div>
+      
+      {/* Information icon in bottom right */}
+      <button 
+        onClick={onScrollToLogin}
+        className="fixed bottom-6 right-6 p-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg z-10"
+        aria-label="Get started"
+      >
+        <Info size={24} />
+      </button>
     </div>
   );
 }
