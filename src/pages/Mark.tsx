@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Zap } from 'lucide-react';
@@ -7,20 +6,14 @@ import { useConversation } from '@11labs/react';
 import PulsatingCircle from '@/components/ui/pulsating-circle';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
 
-interface ElevenlabsMessage {
-  content: string;
-  type: 'transcription' | 'llm_response' | 'debug';
-  is_final?: boolean;
-}
-
 const Mark = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Initialize the ElevenLabs conversation hook
   const conversation = useConversation({
-    onMessage: (message: ElevenlabsMessage) => {
-      console.log('Received message:', message);
+    onMessage: (props: { message: string; source: any }) => {
+      console.log('Received message:', props);
     },
     onConnect: () => {
       console.log('Connected to ElevenLabs conversation');
