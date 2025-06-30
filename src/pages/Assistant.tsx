@@ -1,10 +1,28 @@
 
 import React from 'react';
-import { Bot } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bot, ChevronLeft } from 'lucide-react';
 
 const Assistant = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground relative">
+      {/* Header with back button */}
+      <header className="relative z-10 bg-background/80 backdrop-blur-lg border-b border-border p-4 flex items-center justify-between">
+        <button 
+          onClick={() => navigate('/')} 
+          className="p-2 rounded-full hover:bg-accent transition-colors flex items-center gap-2 group"
+        >
+          <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+        </button>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          Assistant
+          <Bot className="w-5 h-5 text-primary animate-pulse" />
+        </h1>
+        <div className="w-10" />
+      </header>
+
       {/* Main content area */}
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
