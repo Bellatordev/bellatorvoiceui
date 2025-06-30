@@ -16,6 +16,9 @@ const Index = () => {
   const handleMarkClick = () => {
     navigate('/mark');
   };
+  const handleAssistantClick = () => {
+    navigate('/assistant');
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -39,6 +42,14 @@ const Index = () => {
           frontText="Meet Mark"
           backText="Let's go!"
           onClick={handleMarkClick}
+          className="px-8 py-4 text-lg"
+          frontVariant="default"
+          backVariant="variant"
+        />
+        <GradientFlipButton
+          frontText="Assistant"
+          backText="Let's go!"
+          onClick={handleAssistantClick}
           className="px-8 py-4 text-lg"
           frontVariant="default"
           backVariant="variant"
