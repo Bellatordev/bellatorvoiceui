@@ -2,8 +2,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Info, Bot } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
+  const navigate = useNavigate();
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
     () => ["Bellator", "Intelligent", "Trusty", "Efficient", "Amazing"],
@@ -22,7 +24,7 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   }, [titleNumber, titles]);
 
   const handleAssistantClick = () => {
-    window.location.href = '/assistant';
+    navigate('/assistant');
   };
 
   return (
