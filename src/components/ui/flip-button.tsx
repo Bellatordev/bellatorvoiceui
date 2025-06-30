@@ -100,6 +100,7 @@ const FlipButton = React.forwardRef<HTMLButtonElement, FlipButtonProps>(
         >
           {backText}
         </motion.span>
+        <span className="invisible">{frontText}</span>
       </motion.button>
     );
   },
