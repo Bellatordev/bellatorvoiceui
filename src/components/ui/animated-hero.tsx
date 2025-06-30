@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Info } from "lucide-react";
+import { Info, Bot } from "lucide-react";
 
 function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
   const [titleNumber, setTitleNumber] = useState(0);
@@ -20,6 +20,10 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
     }, 2000);
     return () => clearTimeout(timeoutId);
   }, [titleNumber, titles]);
+
+  const handleAssistantClick = () => {
+    window.location.href = '/assistant';
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative">
@@ -77,6 +81,15 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
         aria-label="Get started"
       >
         <Info size={24} />
+      </button>
+
+      {/* Small assistant icon below the info icon */}
+      <button 
+        onClick={handleAssistantClick}
+        className="fixed bottom-6 right-20 p-2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors shadow-md z-10"
+        aria-label="Assistant"
+      >
+        <Bot size={16} />
       </button>
     </div>
   );
