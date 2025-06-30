@@ -1,15 +1,40 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, ChevronLeft } from 'lucide-react';
+import AssistantChat from '@/components/AssistantChat';
+import ApiKeyInput from '@/components/ApiKeyInput';
 
 const Assistant = () => {
   const navigate = useNavigate();
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, []);
+
+  const handleApiKeySubmit = (key: string) => {
+    localStorage.setItem('openai_api_key', key);
+    setApiKey(key);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('openai_api_key');
+    setApiKey(null);
+  };
+
+  if (!apiKey) {
+    return <ApiKeyInput onApiKeySubmit={handleApiKeySubmit} />;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground relative">
-      {/* Header with back button */}
-      <header className="relative z-10 bg-background/80 backdrop-blur-lg border-b border-border p-4 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      {/* Header */}
+      <header className="bg-background/80 backdrop-blur-lg border-b border-border p-4 flex items-center justify-between">
         <button 
           onClick={() => navigate('/')} 
           className="p-2 rounded-full hover:bg-accent transition-colors flex items-center gap-2 group"
@@ -17,24 +42,21 @@ const Assistant = () => {
           <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
         </button>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          Assistant
+          Document Assistant
           <Bot className="w-5 h-5 text-primary animate-pulse" />
         </h1>
-        <div className="w-10" />
+        <button
+          onClick={handleLogout}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Disconnect
+        </button>
       </header>
 
-      {/* Main content area */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Assistant Page</h1>
-          <p className="text-lg text-muted-foreground">Welcome to your AI assistant page</p>
-        </div>
+      {/* Chat Interface */}
+      <div className="flex-1">
+        <AssistantChat apiKey={apiKey} />
       </div>
-      
-      {/* Assistant button in bottom left */}
-      <button className="fixed bottom-6 left-6 p-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
-        <Bot size={24} />
-      </button>
     </div>
   );
 };
