@@ -19,6 +19,9 @@ const Index = () => {
   const handleResearchAgentClick = () => {
     navigate('/research-agent');
   };
+  const handleRA2Click = () => {
+    navigate('/ra2');
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -50,15 +53,25 @@ const Index = () => {
           />
         </div>
         
-        {/* Research Agent button - centered below */}
-        <GradientFlipButton
-          frontText="Research Agent"
-          backText="Explore!"
-          onClick={handleResearchAgentClick}
-          className="px-8 py-4 text-lg"
-          frontVariant="default"
-          backVariant="variant"
-        />
+        {/* Research Agent and RA2 buttons - centered below */}
+        <div className="flex gap-4">
+          <GradientFlipButton
+            frontText="Research Agent"
+            backText="Explore!"
+            onClick={handleResearchAgentClick}
+            className="px-8 py-4 text-lg"
+            frontVariant="default"
+            backVariant="variant"
+          />
+          <GradientFlipButton
+            frontText="RA2"
+            backText="Explore!"
+            onClick={handleRA2Click}
+            className="px-8 py-4 text-lg"
+            frontVariant="default"
+            backVariant="variant"
+          />
+        </div>
       </div>
     </div>
   );
