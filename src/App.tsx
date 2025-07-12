@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Holmes from "./pages/Holmes";
 import Mark from "./pages/Mark";
 import Assistant from "./pages/Assistant";
+import ResearchAgent from "./pages/ResearchAgent";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/holmes" element={<Holmes />} />
           <Route path="/mark" element={<Mark />} />
           <Route path="/assistant" element={<Assistant />} />
+          <Route path="/research-agent" element={<ResearchAgent />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

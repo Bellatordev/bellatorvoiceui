@@ -16,6 +16,9 @@ const Index = () => {
   const handleMarkClick = () => {
     navigate('/mark');
   };
+  const handleResearchAgentClick = () => {
+    navigate('/research-agent');
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -26,19 +29,32 @@ const Index = () => {
       
       <AnimatedHero onScrollToLogin={handleGetStarted} />
       
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
+        {/* Holmes and Mark buttons */}
+        <div className="flex gap-4">
+          <GradientFlipButton
+            frontText="Meet Holmes"
+            backText="Let's go!"
+            onClick={handleHolmesClick}
+            className="px-8 py-4 text-lg"
+            frontVariant="default"
+            backVariant="variant"
+          />
+          <GradientFlipButton
+            frontText="Meet Mark"
+            backText="Let's go!"
+            onClick={handleMarkClick}
+            className="px-8 py-4 text-lg"
+            frontVariant="default"
+            backVariant="variant"
+          />
+        </div>
+        
+        {/* Research Agent button - centered below */}
         <GradientFlipButton
-          frontText="Meet Holmes"
-          backText="Let's go!"
-          onClick={handleHolmesClick}
-          className="px-8 py-4 text-lg"
-          frontVariant="default"
-          backVariant="variant"
-        />
-        <GradientFlipButton
-          frontText="Meet Mark"
-          backText="Let's go!"
-          onClick={handleMarkClick}
+          frontText="Research Agent"
+          backText="Explore!"
+          onClick={handleResearchAgentClick}
           className="px-8 py-4 text-lg"
           frontVariant="default"
           backVariant="variant"
