@@ -37,6 +37,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -88,6 +90,79 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } catch (error) {
       console.error('Error loading messages:', error);
     }
+  };
+
+  const updateChatTitle = async (chatId: string, newTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ title: newTitle })
+        .eq('chat_id', chatId);
+
+      if (error) throw error;
+
+      setChats(chats.map(chat => 
+        chat.chat_id === chatId ? { ...chat, title: newTitle } : chat
+      ));
+
+      toast({
+        title: "Chat renamed",
+        description: "Chat title has been updated."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to rename chat.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteChat = async (chatId: string) => {
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('chat_id', chatId);
+
+      if (error) throw error;
+
+      setChats(chats.filter(chat => chat.chat_id !== chatId));
+      
+      if (currentChatId === chatId) {
+        setCurrentChatId(null);
+        setMessages([]);
+      }
+      
+      toast({
+        title: "Chat deleted",
+        description: "Chat and all its messages have been removed."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete chat.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startEditing = (chatId: string, currentTitle: string) => {
+    setEditingChatId(chatId);
+    setEditingTitle(currentTitle || 'New Chat');
+  };
+
+  const saveEdit = () => {
+    if (editingChatId) {
+      updateChatTitle(editingChatId, editingTitle);
+      setEditingChatId(null);
+      setEditingTitle('');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingChatId(null);
+    setEditingTitle('');
   };
 
   const createNewChat = async () => {

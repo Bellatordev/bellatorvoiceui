@@ -9,6 +9,7 @@ import { Plus, MessageSquare, LogOut } from 'lucide-react';
 interface Session {
   session_id: string;
   created_at: string;
+  title?: string;
 }
 
 interface ChatDashboardProps {
@@ -20,6 +21,8 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
     try {
       const { data, error } = await supabase
         .from('sessions')
-        .select('session_id, created_at')
+        .select('session_id, created_at, title')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -51,7 +54,7 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
     try {
       const { data, error } = await supabase
         .from('sessions')
-        .insert({ user_id: userId })
+        .insert({ user_id: userId, title: 'New Session' })
         .select('session_id')
         .single();
 
