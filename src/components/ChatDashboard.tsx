@@ -28,7 +28,6 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
 
   const loadSessions = async () => {
     try {
-
       const { data, error } = await supabase
         .from('sessions')
         .select('session_id, created_at')
@@ -50,7 +49,6 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
   const createNewSession = async () => {
     setIsLoading(true);
     try {
-
       const { data, error } = await supabase
         .from('sessions')
         .insert({ user_id: userId })

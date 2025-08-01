@@ -60,7 +60,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const loadChats = async () => {
     try {
-
       const { data, error } = await supabase
         .from('chats')
         .select('chat_id, title, created_at')
@@ -78,7 +77,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (!currentChatId) return;
 
     try {
-
       const { data, error } = await supabase
         .from('messages')
         .select('message_id, role, content, created_at')
@@ -94,7 +92,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const createNewChat = async () => {
     try {
-
       const { data, error } = await supabase
         .from('chats')
         .insert({ session_id: sessionId, title: 'New Chat' })
@@ -124,7 +121,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     setIsLoading(true);
     try {
-
       // Add user message
       const { error: userError } = await supabase
         .from('messages')

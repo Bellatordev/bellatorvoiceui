@@ -28,7 +28,6 @@ export const ChatLogin: React.FC<ChatLoginProps> = ({ onLogin }) => {
 
     setIsLoading(true);
     try {
-
       // Validate user credentials
       const { data, error } = await supabase
         .from('users')
@@ -84,7 +83,7 @@ export const ChatLogin: React.FC<ChatLoginProps> = ({ onLogin }) => {
             <div>
               <Input
                 type="number"
-                placeholder="User ID (e.g., 10234)"
+                placeholder="User ID (e.g., 12345)"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 disabled={isLoading}
