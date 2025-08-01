@@ -19,6 +19,9 @@ const Index = () => {
   const handleResearchAgentClick = () => {
     navigate('/research-agent');
   };
+  const handleIDchatTestClick = () => {
+    navigate('/idchat-test');
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -56,6 +59,18 @@ const Index = () => {
             frontText="Research Agent"
             backText="Explore!"
             onClick={handleResearchAgentClick}
+            className="px-8 py-4 text-lg"
+            frontVariant="default"
+            backVariant="variant"
+          />
+        </div>
+        
+        {/* IDchat-test button - centered below */}
+        <div className="flex justify-center">
+          <GradientFlipButton
+            frontText="IDchat-test"
+            backText="Test it!"
+            onClick={handleIDchatTestClick}
             className="px-8 py-4 text-lg"
             frontVariant="default"
             backVariant="variant"
