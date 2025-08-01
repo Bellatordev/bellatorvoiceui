@@ -261,15 +261,65 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           {chats.map((chat) => (
             <div
               key={chat.chat_id}
-              className={`p-2 rounded cursor-pointer hover:bg-accent ${
+              className={`p-2 rounded hover:bg-accent ${
                 currentChatId === chat.chat_id ? 'bg-accent' : ''
               }`}
-              onClick={() => setCurrentChatId(chat.chat_id)}
             >
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-sm truncate">{chat.title || 'Untitled Chat'}</span>
-              </div>
+              {editingChatId === chat.chat_id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    className="flex-1 px-2 py-1 border rounded text-xs"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') saveEdit();
+                      if (e.key === 'Escape') cancelEdit();
+                    }}
+                    autoFocus
+                  />
+                  <Button variant="ghost" size="sm" onClick={saveEdit}>
+                    ✓
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                    ✕
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div 
+                    className="flex items-center gap-2 flex-1 cursor-pointer"
+                    onClick={() => setCurrentChatId(chat.chat_id)}
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="text-sm truncate">{chat.title || 'Untitled Chat'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(chat.chat_id, chat.title || 'New Chat');
+                      }}
+                      className="h-6 w-6 p-0"
+                    >
+                      ✎
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteChat(chat.chat_id);
+                      }}
+                      className="h-6 w-6 p-0"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

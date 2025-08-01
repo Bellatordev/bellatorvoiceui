@@ -79,6 +79,74 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
     }
   };
 
+  const updateSessionTitle = async (sessionId: string, newTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ title: newTitle })
+        .eq('session_id', sessionId);
+
+      if (error) throw error;
+
+      setSessions(sessions.map(session => 
+        session.session_id === sessionId ? { ...session, title: newTitle } : session
+      ));
+
+      toast({
+        title: "Session renamed",
+        description: "Session title has been updated."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to rename session.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteSession = async (sessionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('sessions')
+        .delete()
+        .eq('session_id', sessionId);
+
+      if (error) throw error;
+
+      setSessions(sessions.filter(session => session.session_id !== sessionId));
+      
+      toast({
+        title: "Session deleted",
+        description: "Session and all its chats have been removed."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete session.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startEditing = (sessionId: string, currentTitle: string) => {
+    setEditingSessionId(sessionId);
+    setEditingTitle(currentTitle || 'New Session');
+  };
+
+  const saveEdit = () => {
+    if (editingSessionId) {
+      updateSessionTitle(editingSessionId, editingTitle);
+      setEditingSessionId(null);
+      setEditingTitle('');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingSessionId(null);
+    setEditingTitle('');
+  };
+
   if (currentSessionId) {
     return (
       <ChatInterface
@@ -136,18 +204,66 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
                   {sessions.map((session) => (
                     <div
                       key={session.session_id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                      onClick={() => setCurrentSessionId(session.session_id)}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent"
                     >
-                      <div>
-                        <p className="font-medium">Session</p>
-                        <p className="text-sm text-muted-foreground">
-                          Created: {new Date(session.created_at).toLocaleString()}
-                        </p>
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => setCurrentSessionId(session.session_id)}
+                      >
+                        {editingSessionId === session.session_id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              className="flex-1 px-2 py-1 border rounded text-sm"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') saveEdit();
+                                if (e.key === 'Escape') cancelEdit();
+                              }}
+                              autoFocus
+                            />
+                            <Button variant="ghost" size="sm" onClick={saveEdit}>
+                              Save
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-medium">{session.title || 'Untitled Session'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Created: {new Date(session.created_at).toLocaleString()}
+                            </p>
+                          </>
+                        )}
                       </div>
-                      <Button variant="ghost" size="sm">
-                        Open
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditing(session.session_id, session.title || 'New Session');
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteSession(session.session_id);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setCurrentSessionId(session.session_id)}>
+                          Open
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
