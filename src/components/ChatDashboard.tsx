@@ -15,9 +15,10 @@ interface Session {
 interface ChatDashboardProps {
   userId: number;
   onLogout: () => void;
+  webhookUrl?: string;
 }
 
-export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }) => {
+export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout, webhookUrl }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -154,6 +155,7 @@ export const ChatDashboard: React.FC<ChatDashboardProps> = ({ userId, onLogout }
         userId={userId}
         onBackToDashboard={() => setCurrentSessionId(null)}
         onLogout={onLogout}
+        webhookUrl={webhookUrl}
       />
     );
   }

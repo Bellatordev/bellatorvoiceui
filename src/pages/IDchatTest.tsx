@@ -8,6 +8,7 @@ import { ChatDashboard } from '@/components/ChatDashboard';
 const IDchatTest = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<number | null>(null);
+  const webhookUrl = 'https://bellatorai1.app.n8n.cloud/webhook/38156d19-0551-4653-8754-ba6d6834d4e6';
 
   const handleLogin = (userId: number) => {
     setCurrentUser(userId);
@@ -18,7 +19,7 @@ const IDchatTest = () => {
   };
 
   if (currentUser) {
-    return <ChatDashboard userId={currentUser} onLogout={handleLogout} />;
+    return <ChatDashboard userId={currentUser} onLogout={handleLogout} webhookUrl={webhookUrl} />;
   }
 
   return (

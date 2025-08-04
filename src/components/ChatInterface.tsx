@@ -24,13 +24,15 @@ interface ChatInterfaceProps {
   userId: number;
   onBackToDashboard: () => void;
   onLogout: () => void;
+  webhookUrl?: string;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   sessionId,
   userId,
   onBackToDashboard,
-  onLogout
+  onLogout,
+  webhookUrl
 }) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
@@ -207,8 +209,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       if (userError) throw userError;
 
-      // Simulate assistant response
-      const assistantResponse = `I received your message: "${newMessage}". This is a simulated response from the assistant.`;
+      let assistantResponse: string;
+
+      if (webhookUrl) {
+        // Send to n8n webhook
+        try {
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: userId,
+              chatId: currentChatId,
+              message: newMessage
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Webhook request failed: ${response.status}`);
+          }
+
+          const data = await response.json();
+          assistantResponse = data.response || 'No response received from assistant.';
+        } catch (webhookError) {
+          console.error('Webhook error:', webhookError);
+          assistantResponse = 'Sorry, I encountered an error processing your request.';
+        }
+      } else {
+        // Use simulated response for other pages
+        assistantResponse = `I received your message: "${newMessage}". This is a simulated response from the assistant.`;
+      }
       
       const { error: assistantError } = await supabase
         .from('messages')
