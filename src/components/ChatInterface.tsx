@@ -231,7 +231,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           }
 
           const data = await response.json();
-          assistantResponse = data.response || 'No response received from assistant.';
+          
+          // Handle different response formats from n8n
+          let responseText = 'No response received from assistant.';
+          
+          if (data.response) {
+            if (typeof data.response === 'string') {
+              responseText = data.response;
+            } else if (typeof data.response === 'object' && data.response.response) {
+              responseText = data.response.response;
+            }
+          } else if (data.output) {
+            try {
+              const parsedOutput = JSON.parse(data.output);
+              responseText = parsedOutput.response || responseText;
+            } catch (e) {
+              responseText = data.output;
+            }
+          }
+          
+          assistantResponse = responseText;
         } catch (webhookError) {
           console.error('Webhook error:', webhookError);
           assistantResponse = 'Sorry, I encountered an error processing your request.';
