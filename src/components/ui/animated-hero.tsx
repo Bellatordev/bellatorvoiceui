@@ -85,13 +85,13 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
         Version 1.0
       </button>
 
-      {/* Small assistant icon below the info icon */}
+      {/* Open AI Assistants API button */}
       <button 
         onClick={handleAssistantClick}
-        className="fixed bottom-6 right-20 p-2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors shadow-md z-10"
-        aria-label="Assistant"
+        className="fixed bottom-6 right-20 px-3 py-2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors shadow-md z-10 text-xs font-medium"
+        aria-label="Open AI Assistants API"
       >
-        <Bot size={16} />
+        Open AI Assistants API
       </button>
     </div>
   );
