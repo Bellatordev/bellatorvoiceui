@@ -76,13 +76,13 @@ function AnimatedHero({ onScrollToLogin }: { onScrollToLogin: () => void }) {
         </p>
       </div>
       
-      {/* Information icon in bottom right */}
+      {/* Version button in bottom right */}
       <button 
         onClick={onScrollToLogin}
-        className="fixed bottom-6 right-6 p-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg z-10"
-        aria-label="Get started"
+        className="fixed bottom-6 right-6 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg z-10 text-sm font-medium"
+        aria-label="Version 1.0"
       >
-        <Info size={24} />
+        Version 1.0
       </button>
 
       {/* Small assistant icon below the info icon */}
